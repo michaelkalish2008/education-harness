@@ -1,0 +1,102 @@
+# The default program: How to be a data scientist.
+# A path of six ideas. It carries no examples: the lesson planner builds every
+# step around a tiny example (5 to 20 numbers, or a handful of words or vectors)
+# drawn from the learner's own interests. Standards are reference points only;
+# they never set the order. "(written by the program)" marks outcomes Common Core
+# has no code for. Every code is to be checked against Learning Commons before release.
+schema: 1
+track: data-scientist
+title: How to be a data scientist
+example_rules:
+  size: 5 to 20 numbers, or a handful of words or vectors
+  workable_by_hand: true
+  from_interests: true
+  numbers_computed_by_code: true      # principle 7: run it before calling it correct
+ideas:
+  - id: fit
+    order: 1
+    idea: A model is a function fitted to data
+    concepts:
+      - {id: variables, name: variables and what they measure}
+      - {id: scatter-plot, name: scatter plots}
+      - {id: linear-function, name: linear functions}
+      - {id: slope-as-rate, name: slope as a rate of change}
+      - {id: correlation, name: correlation}
+      - {id: correlation-vs-cause, name: correlation is not cause}
+    standards: [HSF-LE.A.1b, HSS-ID.B.6, HSS-ID.C.7, HSS-ID.C.8, HSS-ID.C.9]
+    example_hint: Two quantities from the learner's life that might move together, eight or so pairs
+    requires: []
+  - id: descent
+    order: 2
+    idea: Training is walking downhill on a loss
+    concepts:
+      - {id: exponential-function, name: exponential growth and decay}
+      - {id: logarithm, name: logarithms as the inverse of exponentials}
+      - {id: squared-error, name: error as squared distance}
+      - {id: minimize-two-variables, name: minimizing a function of two variables}
+      - {id: partial-derivative, name: partial derivatives}
+      - {id: gradient, name: the gradient and a step downhill}
+    standards: [HSF-LE.A.2, HSF-LE.A.4, HSF-IF.C.8b, HSF-BF.B.5]
+    written_by_program: [partial-derivative, gradient]
+    example_hint: Something that shrinks or grows by a steady fraction over time
+    requires: [fit]
+  - id: classify
+    order: 3
+    idea: Classification as a probability
+    concepts:
+      - {id: logistic-function, name: the logistic function}
+      - {id: probability, name: probability}
+      - {id: conditional-probability, name: conditional probability}
+      - {id: log-loss, name: log-loss}
+      - {id: train-test, name: judging a model on unseen cases}
+    standards: [HSF-IF.C.7e, HSS-CP.A.2, HSS-CP.A.3, HSS-CP.B.6, HSS-IC.B.5]
+    example_hint: A yes-or-no outcome the learner has seen a dozen times
+    requires: [descent]
+  - id: embed
+    order: 4
+    idea: Meaning as direction (embeddings)
+    concepts:
+      - {id: vector, name: vectors}
+      - {id: distance, name: distance between points}
+      - {id: dot-product, name: the dot product}
+      - {id: angle, name: the angle between vectors}
+      - {id: cosine-similarity, name: cosine similarity}
+      - {id: nearest-neighbors, name: nearest neighbors}
+    standards: [8.G.B.8, HSG-SRT.C.8, HSN-VM.A.1, HSN-VM.A.3, HSN-VM.B.4, HSN-VM.B.5]
+    written_by_program: [dot-product, cosine-similarity]
+    example_hint: Four or five things the learner knows well, each described by three or four numbers
+    requires: [fit]
+  - id: backprop
+    order: 5
+    idea: A feed-forward network and backpropagation
+    concepts:
+      - {id: matrix, name: matrices}
+      - {id: matrix-vector-product, name: matrix-vector products}
+      - {id: function-composition, name: composing functions (layers)}
+      - {id: softmax, name: softmax and its exponentials}
+      - {id: chain-rule, name: the chain rule through nested functions}
+      - {id: backpropagation, name: backpropagation}
+    standards: [HSN-VM.C.6, HSN-VM.C.8, HSN-VM.C.11, HSN-VM.C.12, HSF-BF.A.1c]
+    written_by_program: [chain-rule, backpropagation]
+    build: numpy before any library
+    example_hint: A dozen points the learner picked, in two or three groups
+    requires: [descent, classify, embed]
+  - id: transformer
+    order: 6
+    idea: A transformer small enough to trace by hand
+    concepts:
+      - {id: embedding-table, name: token embeddings}
+      - {id: positional-encoding, name: positional encodings from sine and cosine}
+      - {id: periodic-function, name: periodic functions and the unit circle}
+      - {id: attention, name: attention as scaled dot products}
+      - {id: cross-entropy, name: softmax and cross-entropy}
+      - {id: sampling, name: probability distributions and sampling}
+    standards: [HSF-TF.A.2, HSF-TF.B.5, HSN-VM.C.8, HSN-VM.C.11, HSS-MD.A.1, HSS-MD.A.2]
+    written_by_program: [attention]
+    build: numpy before any library
+    example_hint: A four-word sentence from the learner's own writing
+    requires: [backprop]
+starting_suggestions:     # offered only when the learner has no idea where to start; never assigned
+  - Are shadier streets cooler?
+  - How fast does a used car lose value?
+  - Does practice time predict progress?

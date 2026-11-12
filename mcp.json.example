@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "education-harness": {
+      "command": "${CLAUDE_PLUGIN_ROOT}/mcp/.venv/bin/eh-mcp",
+      "env": {
+        "EH_WORKSPACE": "${HOME}/learning"
+      }
+    }
+  }
+}

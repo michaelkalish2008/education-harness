@@ -1,0 +1,25 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "education-harness"
+version = "0.1.0.dev0"
+description = "Local MCP server for a backward-designed learning harness"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+  "mcp>=1.12,<2",
+  "PyYAML>=6,<7",
+]
+
+[project.scripts]
+education-harness = "education_harness.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["mcp/src/education_harness"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+

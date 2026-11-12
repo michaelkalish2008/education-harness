@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.venv/
+.DS_Store
+# a learner workspace created inside the repo by mistake
+learning/
+*.egg-info/
+build/
