@@ -11,10 +11,11 @@ def test_visible_portable_manifest_and_starter_prompts():
     plugin = json.loads((ROOT / "plugin.json").read_text())
     ui = plugin["extensions"]["com.openai"]["interface"]
     assert plugin["$schema"] == "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
-    assert plugin["name"] == "education-harness" and plugin["version"] == "0.7.0"
+    assert plugin["name"] == "education-harness" and plugin["version"] == "0.7.1"
     assert ui["displayName"] == "Education Harness"
     assert len(ui["shortDescription"]) <= 30
     assert len(ui["defaultPrompt"]) == 3
+    assert ui["defaultPrompt"][0].startswith("Let's learn")
     assert any("data-science" in prompt for prompt in ui["defaultPrompt"])
 
 
@@ -23,7 +24,7 @@ def test_compatibility_manifests_keep_identity_in_sync():
     codex = json.loads((ROOT / ".codex-plugin/plugin.json").read_text())
     claude = json.loads((ROOT / ".claude-plugin/plugin.json").read_text())
     assert {(m["name"], m["version"]) for m in (root, codex, claude)} == {
-        ("education-harness", "0.7.0")}
+        ("education-harness", "0.7.1")}
 
 
 def test_local_mcp_and_start_skill_are_discoverable():
@@ -38,3 +39,4 @@ def test_local_mcp_and_start_skill_are_discoverable():
     skill = (ROOT / "skills/start/SKILL.md").read_text()
     assert "ordinary language is the interface" in skill.lower()
     assert "teach me <topic>" in skill.lower()
+    assert "let's learn" in skill.lower()

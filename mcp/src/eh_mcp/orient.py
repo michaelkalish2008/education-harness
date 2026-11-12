@@ -26,6 +26,7 @@ NAMED_SOFT_CAP = 12  # past this many of the learner's own bookmarks, saving one
 # What the learner can say. Shown on the help card and in MAP.md; the start skill
 # answers all of them. Plain phrases, no commands to memorize.
 PHRASES = [
+    ("Let's learn", "start a new learning path"),
     ("Let's go", "pick up where you left off, or start"),
     ("Where am I?", "what's done, what's now, what's next"),
     ("Note this", "keep a thought in your words, half-formed is fine"),
@@ -606,7 +607,7 @@ class Orientation:
                                                         (focus or None)),
                "welcome": {"name": "Education Harness",
                            "summary": "Learn something with a path that remembers your place and your own words.",
-                           "starters": ["Teach me <topic>", "Show me the data-science path",
+                           "starters": ["Let's learn", "Teach me <topic>", "Show me the data-science path",
                                         "Let's go", "Where am I?"]},
                "arc": {k: v for k, v in fv.items() if not k.startswith("_")} if fv else None,
                "arcs": [{"name": v["name"], "goal": v["goal"], "now": now_of(v),
@@ -746,13 +747,13 @@ def _suggest(setup: dict, path: list[dict], current: dict | None) -> dict:
         return {"move": "plan", "say": "Let's go",
                 "why": f"start the next part of your goal: {unplanned['title']}"}
     if not setup["arc"] and not current:
-        return {"move": "begin", "say": "Let's go",
+        return {"move": "begin", "say": "Let's learn",
                 "why": "say what you want to be able to do (or start with the first idea of the data-science "
                        "path); we start right away"}
     if current and not current["now"]:
         return {"move": "zoom-out", "say": "Let's zoom out",
                 "why": "this project is done; look back on it and choose what's next"}
-    return {"move": "begin", "say": "Let's go", "why": "say what you want to learn next"}
+    return {"move": "begin", "say": "Let's learn", "why": "say what you want to learn next"}
 
 
 def _unread_notes(ws: "Workspace", project: str, role: str) -> int:

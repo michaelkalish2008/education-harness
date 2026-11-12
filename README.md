@@ -1,6 +1,6 @@
 # Education Harness
 
-**A learning companion you can invoke in ordinary language.** Open it and say **“Teach me…”**, **“Show me the data-science path”**, **“Let’s go”**, or **“Where am I?”** You do not need to know any commands, tools, skills or plugin terminology.
+**A learning companion with one clear doorway: say “Let’s learn.”** You can also say **“Teach me…”**, **“Show me the data-science path”**, **“Let’s go”** to continue, or **“Where am I?”** You do not need to know any commands, tools, skills or plugin terminology.
 
 A free, open-source, Dewey-style learning harness for the Claude app (Claude Code works too). It adds what Claude doesn't keep on its own: **your place** across breaks and chats, **your own words** brought back when they matter, and **a goal** your work points toward. Everything else (explaining, adapting, drawing a picture) is Claude doing what it already does well.
 
@@ -12,7 +12,7 @@ You never write code or open a terminal to learn with it. Your record lives as p
 
 1. Install [`uv`](https://docs.astral.sh/uv/) once (it fetches Python by itself; the first start takes about a minute).
 2. Install the plugin (`education-harness.plugin`) in the Claude app and restart the app.
-3. Select **Education Harness** in the composer or plugin list. Choose one of its visible starter prompts, or simply say **"teach me the chain rule"**, **"show me the data-science path"**, **"let's go"**, or **"where am I?"**
+3. Select **Education Harness** in the composer or plugin list and say **"let's learn"**. You can also choose a visible starter prompt or say **"teach me the chain rule"**, **"show me the data-science path"**, **"let's go"** to continue, or **"where am I?"**
 
 It introduces itself when you open it without a specific request. For a new path, it asks a small set of conversational questions so the depth, structure, context and way of demonstrating mastery fit you before content begins.
 
@@ -28,6 +28,7 @@ It introduces itself when you open it without a specific request. For a new path
 ## What you can say
 
 - **"Let's go"**: pick up where you left off, or start.
+- **"Let's learn"**: open Education Harness and start a new learning path.
 - **"Where am I?"**: what's done, what's now, what's next.
 - **"Note this"**: keep a thought in your words; half-formed is fine. "I don't get this" stays open until a later note answers it.
 - **"Bookmark this"**: save where your thinking is.
@@ -67,7 +68,7 @@ Standards data, if you load it: Knowledge Graph is provided by CZI-E under the C
 
 ## Status
 
-v0.7.0: visible plugin metadata and starter prompts; 13 tools; 4 skills (start, tutor, plan, reflect); 2 optional agents (validator, lesson planner). **Not yet tested with a real learner**; see [`docs/TEST-PLAN.md`](docs/TEST-PLAN.md).
+v0.7.1: visible plugin metadata, starter prompts and the explicit **"Let's learn"** invocation; 13 tools; 4 skills; 2 optional agents. **Not yet tested with a real learner**; see [`docs/TEST-PLAN.md`](docs/TEST-PLAN.md).
 
 ## License
 

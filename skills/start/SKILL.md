@@ -1,6 +1,6 @@
 ---
 name: start
-description: The visible front door for learning. Use implicitly when someone says they want to learn, study, understand, practice, prepare for school or an interview, improve at work, asks what Education Harness does, says "let's go", "where am I?", "help" or "I'm lost", or opens a learning chat without knowing what to ask.
+description: The visible front door for learning. Use when someone says "let's learn" and implicitly when they want to learn, study, understand, practice, prepare for school or an interview, improve at work, ask what Education Harness does, say "let's go", "where am I?", "help" or "I'm lost", or open a learning chat without knowing what to ask.
 ---
 
 # Start
@@ -15,13 +15,14 @@ When the learner selects Education Harness, asks what it does, asks how to use i
 Education Harness helps you learn something and remembers your place, questions and own words across chats.
 
 You can say:
+• "Let's learn" to start
 • "Teach me <topic>"
 • "Show me the data-science path"
 • "Let's go" to continue
 • "Where am I?" for your current step
 ```
 
-Do not mention MCP, tools, skills, arcs, focus or setup machinery. Ordinary language is the interface. If they already asked to learn a specific thing, skip the card and act on their request.
+Treat **"Let's learn"** as the canonical explicit invocation and begin onboarding. Do not mention MCP, tools, skills, arcs, focus or setup machinery. Ordinary language is the interface. If they already asked to learn a specific thing, skip the card and act on their request.
 
 ## Every chat
 
