@@ -131,6 +131,22 @@ def test_profile_validates_lesson_mode_and_sociability(ws):
         ws.propose_profile_change("propose", {"lesson_mode": "surprise me"})
     with pytest.raises(HarnessError):
         ws.propose_profile_change("propose", {"sociability": "crowd"})
+    with pytest.raises(HarnessError):
+        ws.propose_profile_change("propose", {"mastery_mode": "quiz"})
+    with pytest.raises(HarnessError):
+        ws.propose_profile_change("propose", {"depth_mode": "expert-only"})
+
+
+def test_profile_validates_learning_context_and_details(ws):
+    pid = ws.propose_profile_change("propose", {"learning_context": "school",
+                                                 "school_level": "undergraduate"})["proposed"]
+    ws.propose_profile_change("accept", proposal_id=pid)
+    profile = yaml.safe_load((ws.private / "learner.yaml").read_text())
+    assert profile["learning_context"] == "school" and profile["school_level"] == "undergraduate"
+    with pytest.raises(HarnessError):
+        ws.propose_profile_change("propose", {"learning_context": "certification"})
+    with pytest.raises(HarnessError):
+        ws.propose_profile_change("propose", {"professional_context": "  "})
 
 
 def test_learnings_validate_source_and_tags(ws):

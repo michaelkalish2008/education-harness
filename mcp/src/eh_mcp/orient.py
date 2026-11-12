@@ -62,11 +62,22 @@ class Orientation:
             names = sorted(p.parent.name for p in PROGRAMS.glob("*/track.yaml"))
             raise HarnessError(f"No program {track!r}. Available: {', '.join(names)}.")
         t = _read(f, {})
-        return {"track": t.get("track"), "title": t.get("title"), "example_rules": t.get("example_rules"),
+        return {"track": t.get("track"), "title": t.get("title"),
+                "guiding_question": t.get("guiding_question"),
+                "sequence_rule": t.get("sequence_rule"),
+                "learning_stages": t.get("learning_stages", []),
+                "depth_modes": t.get("depth_modes", {}),
+                "modules": t.get("modules", []), "anchor_project": t.get("anchor_project", {}),
+                "civic_lens": t.get("civic_lens", {}),
+                "example_rules": t.get("example_rules"),
                 "ideas": [{"id": i["id"], "order": i.get("order"), "idea": i.get("idea"),
+                           "module": i.get("module"),
+                           "foundation": i.get("foundation"),
                            "concepts": [c["name"] for c in i.get("concepts", [])],
                            "requires": i.get("requires", []), "example_hint": i.get("example_hint"),
-                           "standards": i.get("standards", []), "build": i.get("build")}
+                           "standards": i.get("standards", []), "build": i.get("build"),
+                           "practice": i.get("practice", {}),
+                           "converges_on_transformers": i.get("converges_on_transformers")}
                           for i in t.get("ideas", [])]}
 
     # --------------------------------------------------------------------- arcs
@@ -550,12 +561,25 @@ class Orientation:
                        if x.get("status") == "pending"])
         setup = {"interests": bool(learner.get("interests")),
                  "lesson_mode": bool(learner.get("lesson_mode")),
-                 "sociability": bool(learner.get("sociability")), "arc": bool(arcs),
+                 "sociability": bool(learner.get("sociability")),
+                 "mastery_mode": bool(learner.get("mastery_mode")),
+                 "depth_mode": bool(learner.get("depth_mode")),
+                 "learning_context": bool(learner.get("learning_context")), "arc": bool(arcs),
                  "cadence": bool((focus_arc and arcs.get(focus_arc, {}).get("cadence")) or
                                  (current and _cadence(self.ws.project_dir(current["project"]))))}
         ask_later = [k for k, v in (("lesson_mode", setup["lesson_mode"]),
                                      ("sociability", setup["sociability"]),
+                                     ("mastery_mode", setup["mastery_mode"]),
+                                     ("depth_mode", setup["depth_mode"]),
+                                     ("learning_context", setup["learning_context"]),
                                      ("interests", setup["interests"])) if not v]
+        context = learner.get("learning_context")
+        if context == "school" and not learner.get("school_level"):
+            ask_later.append("school_level")
+        elif context == "job-interview" and not learner.get("target_role"):
+            ask_later.append("target_role")
+        elif context == "professional-growth" and not learner.get("professional_context"):
+            ask_later.append("professional_context")
         if current and not (self.ws.share._dir(current["project"]) / "audience.yaml").exists():
             ask_later.append("audience")
         if (current or projects) and not arcs:
@@ -598,6 +622,23 @@ class Orientation:
                        "group": "work with a group of learners",
                        "guided": "work with a tutor, teacher or parent",
                        "solo": "work individually",
+                   },
+                   "mastery_mode": {
+                       "written-practical": "show understanding through writing and doing",
+                       "spoken": "show understanding through speaking and oral explanation",
+                       "both": "use written/practical work and spoken explanation",
+                   },
+                   "depth_mode": {
+                       "civic-overview": "plain-language technological literacy with no calculus or code required",
+                       "foundational": "core mathematics with small examples and optional code",
+                       "practitioner": "math, from-scratch code, package code and parity checks",
+                       "advanced": "full implementation plus derivations, failure modes and extensions",
+                   },
+                   "learning_context": {
+                       "job-interview": "prepare for a particular role's interview",
+                       "school": "support school study at a named level",
+                       "curiosity-personal-growth": "learn from curiosity or for personal growth",
+                       "professional-growth": "build capability for current work responsibilities",
                    },
                },
                "standards": self.ws.knowledge.relevant_standards(standards_query),

@@ -28,6 +28,7 @@ These principles are the harness's own reference point. They replace pointing at
    - Standards may be cited as reference points; they never set the scope, sequence or success of a project.
    - The answer, and even the method, are not the goal. The goal is that learning happens, in the setting where it can happen most positively, and that the learner grows into someone informed and able to think for themselves, which is good for them and for society.
    - Learning is social. The harness lets learners know that talking a problem over with others, or explaining it to another learner, is encouraged. It says so lightly and respects a learner who works alone.
+   - Data science is the default path because understanding technologies that organize information and decisions matters for democratic participation, not because everyone should become a data scientist. Plain-language civic understanding is a complete destination; the learner chooses the depth.
 
 ## Learning
 
@@ -97,4 +98,5 @@ These principles are the harness's own reference point. They replace pointing at
 
 ## Changelog
 
+- 2026-11-12: Made democratic technological literacy and learner-chosen depth explicit in the default path.
 - 2026-11-12: Mechanism table made accurate for the Claude app plugin (no hooks there; reveals logged rather than gated; no follow-on toll); roles reduced to one voice plus two optional agents.

@@ -7,6 +7,8 @@ description: Education harness reflection and sharing, in the mentor's voice thr
 
 Dewey's test: does the experience lead to further growth, and does it join the learner to others? No grades, scores or comparisons, ever. Every claim rests on their own words or work; nothing is flattered. Principles: 0, 4, 5, 7, 9, 11, 13, 14, 18.
 
+Use the accepted `mastery_mode` when helping the learner show what they understand: written/practical, spoken, or both. A spoken route can use an oral walkthrough captured in the learner's words; do not require a written defense merely because the harness stores a record. The optional defense remains optional and ungraded.
+
 ## Share-out
 
 1. **The learner explains first**, rough is fine, spoken or typed. Never write their understanding for them.

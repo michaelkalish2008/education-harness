@@ -1,102 +1,552 @@
-# The default program: How to be a data scientist.
-# A path of six ideas. It carries no examples: the lesson planner builds every
-# step around a tiny example (5 to 20 numbers, or a handful of words or vectors)
-# drawn from the learner's own interests. Standards are reference points only;
-# they never set the order. "(written by the program)" marks outcomes Common Core
-# has no code for. Every code is to be checked against Learning Commons before release.
-schema: 1
+# The default program: modular data science foundations converging on transformers.
+# Every idea is learned four ways: mathematics without code, an implementation from
+# scratch, an implementation with an appropriate package, and an executable parity check.
+# Standards are reference points, never the source of scope or sequence.
+schema: 2
 track: data-scientist
-title: How to be a data scientist
+title: Data science foundations through transformers
+guiding_question: How do core data-science methods work, and where do they meet transformers?
+sequence_rule: Establish the independent foundation, complete the four learning stages, then locate the transformer connection honestly.
+learning_stages:
+  - {id: math, does: Understand the underlying mathematics with no code required.}
+  - {id: scratch, does: Implement the method from first principles in plain Python or NumPy.}
+  - {id: package, does: Implement the same method with an appropriate package such as scikit-learn or PyTorch.}
+  - {id: parity, does: Use a coding harness to run both implementations on fixed cases and check numerical, shape and behavioral parity.}
+depth_modes:
+  civic-overview: {does: "Build plain-language technological literacy for democratic participation; no calculus or code is required.", stages: [math]}
+  foundational: {does: "Understand core mathematics with small examples; code is optional.", stages: [math, scratch]}
+  practitioner: {does: "Complete mathematics, from-scratch code, package code and parity checks.", stages: [math, scratch, package, parity]}
+  advanced: {does: "Add derivations, failure modes, assumptions and research-level extensions.", stages: [math, scratch, package, parity]}
 example_rules:
-  size: 5 to 20 numbers, or a handful of words or vectors
+  size: 5 to 20 numbers, a tiny table, or a handful of words or vectors
   workable_by_hand: true
   from_interests: true
-  numbers_computed_by_code: true      # principle 7: run it before calling it correct
+  numbers_computed_by_code: true
+
+anchor_project:
+  title: Build and understand a recommendation system
+  question: How can we recommend a useful next item while understanding and checking every method we use?
+  project_rule: Begin with the recommendation decision, learn the underlying idea independently, then return to build or evaluate the named recommender component.
+  data_shape: A tiny table of users, items, interactions and item text that remains workable by hand before it scales.
+  milestones:
+    calculus-foundations: Explain how changing a recommender parameter changes its loss and how an update can improve it.
+    vectors-dot-products: Score user-item affinity with transparent vector dot products.
+    matrix-multiplication: Produce many user-item scores at once and track every matrix shape.
+    activations: Add nonlinear preference features and compare what different activations preserve or discard.
+    exponentials-softmax: Turn item scores into a normalized recommendation distribution.
+    unit-circle-signals: Represent order and periodic behavior in a sequence of interactions.
+    linear-regression: Predict a numeric rating as an interpretable baseline.
+    logistic-regression: Predict the probability that a user will engage with an item.
+    tree-models: Build a tabular ranking or engagement baseline and compare its decisions with linear models.
+    tf-idf: Represent item descriptions and user histories with interpretable sparse text features.
+    cosine-similarity: Retrieve items whose content vectors point in similar directions.
+    pca: Inspect and compress user or item representations while measuring information retained.
+    sqlite: Store users, items, interactions and recommendation outputs and query them reproducibly.
+    mapreduce: Aggregate large interaction histories into counts and features across partitions.
+    feed-forward-network: Learn nonlinear user-item scores from small feature vectors.
+    backpropagation: Train the neural recommender and inspect how one error changes its weights.
+    positional-encoding: Represent the order of items in a user's interaction sequence.
+    attention: Let a sequential recommender weight which earlier interactions matter for the next recommendation.
+    transformer: Build one small transformer-based sequential recommender end to end.
+    hyperparameter-optimization: Tune recommender settings on fixed train-validation splits without leakage.
+    supervised-fine-tuning: Fine-tune a pretrained transformer to generate or rank recommendations from demonstrations.
+    reinforcement-learning: Model repeated recommendation as actions whose rewards arrive through user responses.
+    ppo: Constrain policy updates while optimizing a simulated long-term recommendation reward.
+    dpo: Learn from pairs in which one recommendation or explanation is preferred over another.
+
+civic_lens:
+  rationale: Understanding data science and AI helps people participate in democratic decisions about technologies that organize public and private life; becoming a data scientist is not required.
+  rule: Treat civic overview as a complete learning destination and adapt vocabulary, notation, module count and required stages to depth_mode.
+  recurring_questions:
+    - What decision is this technology making or shaping?
+    - What data and assumptions does it depend on?
+    - Who benefits, who bears risk and who can contest the result?
+    - What can this method establish, and what remains a human or political judgment?
+  consciousness_personhood:
+    source_policy: Prefer Michael Kalish's Ready Set Go essays; present the account as philosophical argument rather than settled empirical fact and cite the essay used.
+    accessibility_rule: Begin with an ordinary example, define philosophical terms plainly, preserve the distinction between computational analogy and embodied situated being, then offer original terminology as an optional deeper layer.
+    sources:
+      - {title: "AI Interpretability archive", url: "https://readysetgo.substack.com/archive"}
+      - {title: "What Makes Us Uniquely Human?", url: "https://readysetgo.substack.com/p/what-makes-us-uniquely-human"}
+      - {title: "I Can Therefore I Am", url: "https://readysetgo.substack.com/p/i-can-therefore-i-am"}
+      - {title: "How LLMs Interpret the World", url: "https://readysetgo.substack.com/p/how-llms-interpret-the-world"}
+      - {title: "Transformer Architecture and the Limits of Propositional Assumptions", url: "https://readysetgo.substack.com/p/against-atomism"}
+      - {title: "Read this before learning Data Science", url: "https://readysetgo.substack.com/p/read-this-before-learning-data-science"}
+
+modules:
+  - id: math-foundations
+    title: Mathematical foundations
+    question: What mathematical operations will later reappear inside models?
+  - id: statistical-learning
+    title: Statistical learning
+    question: How do classical models fit, classify and partition data?
+  - id: representations
+    title: Text and vector representations
+    question: How can data become vectors, similarities and lower-dimensional structure?
+  - id: data-systems
+    title: Data systems and scale
+    question: How are data stored, queried and processed beyond one machine-sized task?
+  - id: neural-transformers
+    title: Neural networks and transformers
+    question: How do the foundations combine into a trainable transformer?
+  - id: training-post-training
+    title: Model training and post-training
+    question: How are models tuned, fine-tuned and aligned with supervised and preference feedback?
+
 ideas:
-  - id: fit
+  - id: calculus-foundations
+    module: math-foundations
     order: 1
-    idea: A model is a function fitted to data
+    idea: Change, derivatives and gradient descent before backpropagation
+    foundation: Rates of change are learned from ordinary functions before neural-network notation.
+    concepts:
+      - {id: slope-as-rate, name: slope as a rate of change}
+      - {id: derivative, name: derivatives as local rates of change}
+      - {id: partial-derivative, name: partial derivatives with other inputs held fixed}
+      - {id: function-composition, name: composing functions}
+      - {id: chain-rule, name: the chain rule through composed functions}
+      - {id: gradient, name: a gradient as a vector of partial derivatives}
+      - {id: gradient-descent, name: gradient descent as an update that lowers a loss}
+    concept_requires:
+      derivative: [slope-as-rate]
+      partial-derivative: [slope-as-rate, derivative]
+      chain-rule: [derivative, function-composition]
+      gradient: [slope-as-rate, derivative, partial-derivative]
+      gradient-descent: [gradient]
+    standards: [8.F.B.4, HSF-IF.B.6, HSF-BF.A.1c, HSF-LE.A.1b]
+    written_by_program: [derivative, partial-derivative, chain-rule, gradient, gradient-descent]
+    example_hint: A one-variable function and a two-variable surface small enough to change by hand
+    practice: {scratch: "finite differences and gradient descent in NumPy", package: "PyTorch autograd and an optimizer", parity: "compare analytic, finite-difference and autograd derivatives within tolerance"}
+    converges_on_transformers: Inside training, transformer parameters are updated by gradients propagated from the loss.
+    requires: []
+
+  - id: vectors-dot-products
+    module: math-foundations
+    order: 2
+    idea: Vectors and dot products
+    foundation: Vectors and dot products are learned geometrically and numerically before attention.
+    concepts:
+      - {id: vector, name: vectors as ordered quantities}
+      - {id: vector-components, name: vector components}
+      - {id: dot-product, name: the dot product as multiply-and-sum}
+      - {id: angle, name: angle between vectors}
+    standards: [HSN-VM.A.1, HSN-VM.A.3, HSN-VM.B.4, HSN-VM.B.5]
+    written_by_program: [dot-product]
+    example_hint: Three short vectors whose dot products can be calculated and interpreted by hand
+    practice: {scratch: "vector operations with lists and NumPy", package: "PyTorch tensor dot products", parity: "compare scalar results, shapes and batched cases"}
+    converges_on_transformers: Inside attention, transformer query and key vectors are compared with scaled dot products.
+    requires: []
+
+  - id: matrix-multiplication
+    module: math-foundations
+    order: 3
+    idea: Matrix multiplication as coordinated dot products
+    foundation: Matrices are transformations and row-by-column dot products before they become learned weights.
+    concepts:
+      - {id: matrix, name: matrices as arrays and transformations}
+      - {id: matrix-shape, name: matrix dimensions and compatible shapes}
+      - {id: matrix-vector-product, name: matrix-vector multiplication}
+      - {id: matrix-multiplication, name: matrix multiplication by row-column dot products}
+      - {id: linear-transformation, name: linear transformations}
+    standards: [HSN-VM.C.6, HSN-VM.C.8, HSN-VM.C.11, HSN-VM.C.12]
+    example_hint: A two-by-three matrix with every row-column product visible
+    practice: {scratch: "nested-loop matrix multiplication then NumPy", package: "PyTorch matmul and Linear", parity: "compare values, output shapes and incompatible-shape failures"}
+    converges_on_transformers: Inside every transformer block, projection and feed-forward matrices transform hidden states.
+    requires: [vectors-dot-products]
+
+  - id: activations
+    module: math-foundations
+    order: 4
+    idea: ReLU, sine and cosine as nonlinear functions
+    foundation: Piecewise and periodic functions are compared by graph, rule and range before model use.
+    concepts:
+      - {id: nonlinear-function, name: nonlinear functions}
+      - {id: piecewise-function, name: piecewise-defined functions}
+      - {id: relu, name: ReLU as max of zero and the input}
+      - {id: sine, name: sine as a periodic function}
+      - {id: cosine, name: cosine as a periodic function}
+      - {id: activation-function, name: activation functions and nonlinearity}
+    standards: [HSF-IF.B.4, HSF-IF.C.7b, HSF-TF.B.5]
+    written_by_program: [relu, activation-function]
+    example_hint: Evaluate and sketch ReLU, sine and cosine at a few chosen inputs
+    practice: {scratch: "scalar and vectorized activation functions", package: "PyTorch functional activations and trigonometric operations", parity: "compare values and boundary behavior"}
+    converges_on_transformers: Inside transformer feed-forward blocks, nonlinear activations separate learned linear maps; sine and cosine also support positional signals.
+    requires: []
+
+  - id: exponentials-softmax
+    module: math-foundations
+    order: 5
+    idea: Exponentiation, Euler's number, logarithms and softmax
+    foundation: Exponential growth, e, logarithms and normalized exponentials are learned before softmax notation.
+    concepts:
+      - {id: exponential-function, name: exponential functions}
+      - {id: euler-e, name: Euler's number e}
+      - {id: logarithm, name: logarithms as inverse exponentials}
+      - {id: softmax, name: softmax as normalized exponentials}
+      - {id: softmax-stability, name: numerically stable softmax}
+    standards: [HSF-LE.A.2, HSF-LE.A.4, HSF-IF.C.8b, HSF-BF.B.5]
+    written_by_program: [softmax, softmax-stability]
+    example_hint: Three scores whose exponentials and normalized shares can be traced by hand
+    practice: {scratch: "stable softmax and log loss in NumPy", package: "PyTorch softmax and cross entropy", parity: "compare probabilities, losses and large-logit stability"}
+    converges_on_transformers: Inside transformer attention, softmax normalizes scores; at the output, it defines token probabilities.
+    requires: []
+
+  - id: unit-circle-signals
+    module: math-foundations
+    order: 6
+    idea: The unit circle, frequency and phase
+    foundation: Angles, radians, sine, cosine, frequency and phase are learned before positional encoding.
+    concepts:
+      - {id: radian, name: radians}
+      - {id: unit-circle, name: the unit circle}
+      - {id: periodic-function, name: periodic functions}
+      - {id: frequency, name: frequency and wavelength}
+      - {id: phase, name: phase}
+    standards: [HSF-TF.A.1, HSF-TF.A.2, HSF-TF.B.5]
+    example_hint: Place angles on the unit circle and compare waves at two frequencies
+    practice: {scratch: "generate sine and cosine waves in NumPy", package: "PyTorch trigonometric tensors", parity: "compare periodicity, phase and values at canonical angles"}
+    converges_on_transformers: Inside transformer sinusoidal positional encoding, multiple frequencies represent token order and relative displacement.
+    requires: [activations]
+
+  - id: linear-regression
+    module: statistical-learning
+    order: 7
+    idea: Linear regression and least squares
+    foundation: A fitted line is understood through residuals, squared error, slope and uncertainty before APIs.
     concepts:
       - {id: variables, name: variables and what they measure}
       - {id: scatter-plot, name: scatter plots}
       - {id: linear-function, name: linear functions}
-      - {id: slope-as-rate, name: slope as a rate of change}
-      - {id: correlation, name: correlation}
-      - {id: correlation-vs-cause, name: correlation is not cause}
+      - {id: residual, name: residuals}
+      - {id: squared-error, name: squared error}
+      - {id: least-squares, name: least-squares fitting}
+      - {id: correlation-vs-cause, name: correlation is not causation}
     standards: [HSF-LE.A.1b, HSS-ID.B.6, HSS-ID.C.7, HSS-ID.C.8, HSS-ID.C.9]
-    example_hint: Two quantities from the learner's life that might move together, eight or so pairs
-    requires: []
-  - id: descent
-    order: 2
-    idea: Training is walking downhill on a loss
+    written_by_program: [least-squares]
+    example_hint: Eight pairs of quantities from the learner's life
+    practice: {scratch: "fit coefficients with gradient descent or normal equations", package: "scikit-learn LinearRegression", parity: "compare coefficients, predictions, residuals and R-squared"}
+    converges_on_transformers: Outside the transformer, linear regression is a baseline and probe; inside, transformer output heads are learned linear maps though not ordinary least-squares models.
+    requires: [calculus-foundations, matrix-multiplication]
+
+  - id: logistic-regression
+    module: statistical-learning
+    order: 8
+    idea: Logistic regression for probabilistic classification
+    foundation: Logits, the logistic curve, likelihood and decision boundaries are understood before fitting code.
     concepts:
-      - {id: exponential-function, name: exponential growth and decay}
-      - {id: logarithm, name: logarithms as the inverse of exponentials}
-      - {id: squared-error, name: error as squared distance}
-      - {id: minimize-two-variables, name: minimizing a function of two variables}
-      - {id: partial-derivative, name: partial derivatives}
-      - {id: gradient, name: the gradient and a step downhill}
-    standards: [HSF-LE.A.2, HSF-LE.A.4, HSF-IF.C.8b, HSF-BF.B.5]
-    written_by_program: [partial-derivative, gradient]
-    example_hint: Something that shrinks or grows by a steady fraction over time
-    requires: [fit]
-  - id: classify
-    order: 3
-    idea: Classification as a probability
-    concepts:
+      - {id: binary-outcome, name: binary outcomes}
+      - {id: logit, name: logits}
       - {id: logistic-function, name: the logistic function}
-      - {id: probability, name: probability}
       - {id: conditional-probability, name: conditional probability}
-      - {id: log-loss, name: log-loss}
-      - {id: train-test, name: judging a model on unseen cases}
+      - {id: log-loss, name: log loss}
+      - {id: decision-boundary, name: a decision boundary}
     standards: [HSF-IF.C.7e, HSS-CP.A.2, HSS-CP.A.3, HSS-CP.B.6, HSS-IC.B.5]
-    example_hint: A yes-or-no outcome the learner has seen a dozen times
-    requires: [descent]
-  - id: embed
-    order: 4
-    idea: Meaning as direction (embeddings)
+    written_by_program: [logit, logistic-function, log-loss, decision-boundary]
+    example_hint: A dozen labeled cases with one or two measurable features
+    practice: {scratch: "sigmoid, log loss and gradient descent in NumPy", package: "scikit-learn LogisticRegression", parity: "compare probabilities, labels and loss while accounting for regularization defaults"}
+    converges_on_transformers: Outside or atop a transformer, logistic regression can classify embeddings; transformer token prediction generalizes logits and normalized probabilities to many classes.
+    requires: [linear-regression, exponentials-softmax]
+
+  - id: tree-models
+    module: statistical-learning
+    order: 9
+    idea: Decision trees and tree-based ensembles
+    foundation: Recursive splits, impurity, depth, variance and aggregation are understood before library models.
     concepts:
-      - {id: vector, name: vectors}
-      - {id: distance, name: distance between points}
-      - {id: dot-product, name: the dot product}
-      - {id: angle, name: the angle between vectors}
+      - {id: recursive-partition, name: recursive partitioning}
+      - {id: impurity, name: impurity and information gain}
+      - {id: decision-tree, name: decision trees}
+      - {id: overfitting, name: depth and overfitting}
+      - {id: random-forest, name: random forests}
+      - {id: gradient-boosted-tree, name: gradient-boosted trees}
+    standards: [HSS-ID.B.6, HSS-IC.B.4, HSS-IC.B.5, HSS-MD.B.6]
+    written_by_program: [recursive-partition, impurity, decision-tree, random-forest, gradient-boosted-tree]
+    example_hint: A tiny labeled table where each possible split can be inspected
+    practice: {scratch: "a shallow classification tree with explicit split scoring", package: "scikit-learn DecisionTreeClassifier and RandomForestClassifier", parity: "compare shallow-tree splits and predictions then explain where ensembles intentionally diverge"}
+    converges_on_transformers: Tree models are not inside a standard transformer; they provide strong tabular baselines and can consume transformer-derived features.
+    requires: []
+
+  - id: tf-idf
+    module: representations
+    order: 10
+    idea: TF-IDF as weighted word-count representation
+    foundation: Counts, document frequency, inverse frequency and sparse vectors are computed before NLP packages.
+    concepts:
+      - {id: token-count, name: token counts}
+      - {id: term-frequency, name: term frequency}
+      - {id: document-frequency, name: document frequency}
+      - {id: inverse-document-frequency, name: inverse document frequency}
+      - {id: sparse-vector, name: sparse vectors}
+      - {id: tf-idf, name: TF-IDF}
+    standards: [6.RP.A.3, HSF-LE.A.4, HSS-ID.A.1]
+    written_by_program: [token-count, term-frequency, document-frequency, inverse-document-frequency, sparse-vector, tf-idf]
+    example_hint: Four short documents with a vocabulary small enough to count by hand
+    practice: {scratch: "tokenize and construct a sparse TF-IDF matrix", package: "scikit-learn TfidfVectorizer", parity: "align tokenization and smoothing settings then compare vocabulary, shape and weights"}
+    converges_on_transformers: TF-IDF is not inside a transformer; it is an interpretable NLP baseline and retrieval feature against which transformer embeddings can be compared.
+    requires: [exponentials-softmax]
+
+  - id: cosine-similarity
+    module: representations
+    order: 11
+    idea: Cosine similarity for comparing vector direction
+    foundation: Norms, angles and normalized dot products are understood before similarity APIs.
+    concepts:
+      - {id: vector-norm, name: vector norms}
+      - {id: normalized-vector, name: normalized vectors}
       - {id: cosine-similarity, name: cosine similarity}
-      - {id: nearest-neighbors, name: nearest neighbors}
-    standards: [8.G.B.8, HSG-SRT.C.8, HSN-VM.A.1, HSN-VM.A.3, HSN-VM.B.4, HSN-VM.B.5]
-    written_by_program: [dot-product, cosine-similarity]
-    example_hint: Four or five things the learner knows well, each described by three or four numbers
-    requires: [fit]
-  - id: backprop
-    order: 5
-    idea: A feed-forward network and backpropagation
+      - {id: nearest-neighbors, name: nearest neighbors by similarity}
+    standards: [8.G.B.8, HSG-SRT.C.8, HSN-VM.A.1, HSN-VM.B.4]
+    written_by_program: [cosine-similarity, nearest-neighbors]
+    example_hint: Four two- or three-dimensional vectors with different lengths and directions
+    practice: {scratch: "norms and cosine similarity in NumPy", package: "scikit-learn cosine_similarity and PyTorch cosine_similarity", parity: "compare pairwise matrices including zero-vector handling"}
+    converges_on_transformers: Outside the transformer core, cosine similarity compares token, sentence or document embeddings for retrieval and analysis.
+    requires: [vectors-dot-products]
+
+  - id: pca
+    module: representations
+    order: 12
+    idea: Principal component analysis
+    foundation: Centering, variance, covariance, eigenvectors and projection are understood before decomposition APIs.
     concepts:
-      - {id: matrix, name: matrices}
-      - {id: matrix-vector-product, name: matrix-vector products}
-      - {id: function-composition, name: composing functions (layers)}
-      - {id: softmax, name: softmax and its exponentials}
-      - {id: chain-rule, name: the chain rule through nested functions}
-      - {id: backpropagation, name: backpropagation}
-    standards: [HSN-VM.C.6, HSN-VM.C.8, HSN-VM.C.11, HSN-VM.C.12, HSF-BF.A.1c]
-    written_by_program: [chain-rule, backpropagation]
-    build: numpy before any library
-    example_hint: A dozen points the learner picked, in two or three groups
-    requires: [descent, classify, embed]
+      - {id: centering, name: centering data}
+      - {id: variance, name: variance}
+      - {id: covariance, name: covariance matrices}
+      - {id: eigenvector, name: eigenvectors and eigenvalues}
+      - {id: principal-component, name: principal components}
+      - {id: explained-variance, name: explained variance}
+    standards: [HSS-ID.A.1, HSS-ID.A.2, HSS-ID.A.3, HSN-VM.C.11]
+    written_by_program: [covariance, eigenvector, principal-component, explained-variance]
+    example_hint: Six centered two-dimensional points whose main direction can be drawn
+    practice: {scratch: "covariance and eigendecomposition in NumPy", package: "scikit-learn PCA", parity: "compare explained variance and projections up to component sign"}
+    converges_on_transformers: Outside the transformer, PCA inspects and compresses embeddings or hidden states; it is not a standard transformer layer.
+    requires: [matrix-multiplication]
+
+  - id: sqlite
+    module: data-systems
+    order: 13
+    idea: Relational data and SQLite
+    foundation: Tables, keys, filtering, joins and aggregation are reasoned about before database wrappers.
+    concepts:
+      - {id: relational-table, name: relational tables}
+      - {id: primary-key, name: primary keys}
+      - {id: filter-project, name: filtering and selecting columns}
+      - {id: join, name: joins}
+      - {id: group-aggregate, name: grouping and aggregation}
+      - {id: sql-query, name: SQL queries}
+    standards: [HSS-ID.A.1, HSS-ID.A.2, HSS-ID.B.5]
+    written_by_program: [relational-table, primary-key, filter-project, join, group-aggregate, sql-query]
+    example_hint: Two tiny related tables with a question requiring one join and one aggregation
+    practice: {scratch: "predict query results from table operations", package: "Python sqlite3 and optional SQLAlchemy", parity: "compare hand-derived and executed rows including null and duplicate behavior"}
+    converges_on_transformers: Outside the transformer, SQLite can store examples, labels, experiment metadata and evaluation outputs; it is data infrastructure, not model mathematics.
+    requires: []
+
+  - id: mapreduce
+    module: data-systems
+    order: 14
+    idea: MapReduce for partitioned data processing
+    foundation: Mapping, key-value grouping, shuffling, reduction and associativity are traced before distributed frameworks.
+    concepts:
+      - {id: map-operation, name: map operations}
+      - {id: key-value-pair, name: key-value pairs}
+      - {id: shuffle-group, name: shuffling and grouping by key}
+      - {id: reduce-operation, name: reduce operations}
+      - {id: associative-reduction, name: associative reductions}
+      - {id: mapreduce, name: the MapReduce algorithm}
+    standards: [HSF-BF.A.1c, HSS-ID.A.1, HSS-ID.B.5]
+    written_by_program: [map-operation, key-value-pair, shuffle-group, reduce-operation, associative-reduction, mapreduce]
+    example_hint: A dozen records split across three partitions for a word-count or grouped-sum task
+    practice: {scratch: "simulate map, shuffle and reduce with Python collections", package: "PySpark when available", parity: "compare partition-independent results and test a deliberately non-associative reducer"}
+    converges_on_transformers: Outside the transformer, map-reduce patterns support corpus preprocessing, distributed evaluation and aggregation around large training runs.
+    requires: []
+
+  - id: feed-forward-network
+    module: neural-transformers
+    order: 15
+    idea: A feed-forward neural network as matrix transforms plus nonlinearities
+    foundation: A network is assembled from understood functions, shapes and activations before training.
+    concepts:
+      - {id: neuron, name: a neuron as weighted sum, bias and activation}
+      - {id: layer, name: a layer as matrix transform plus activation}
+      - {id: hidden-representation, name: hidden representations}
+      - {id: feed-forward-network, name: feed-forward neural networks}
+      - {id: forward-pass, name: a forward pass}
+    standards: [HSN-VM.C.8, HSN-VM.C.11, HSF-BF.A.1c, HSF-IF.C.7b]
+    written_by_program: [neuron, layer, hidden-representation, feed-forward-network, forward-pass]
+    example_hint: A two-input, two-hidden-unit network whose forward pass fits on one page
+    practice: {scratch: "forward pass with NumPy matrices", package: "PyTorch Linear modules and activations", parity: "copy weights and compare every intermediate tensor"}
+    converges_on_transformers: Inside every transformer block, a position-wise feed-forward network transforms each token representation.
+    requires: [matrix-multiplication, activations]
+
+  - id: backpropagation
+    module: neural-transformers
+    order: 16
+    idea: Backpropagation as repeated chain rule and gradient descent
+    foundation: Backpropagation is derived from derivatives, partial derivatives, the chain rule and gradients.
+    concepts:
+      - {id: loss-function, name: a loss function}
+      - {id: local-derivative, name: local derivatives at computation steps}
+      - {id: computational-graph, name: a computational graph}
+      - {id: backpropagation, name: reverse accumulation of derivatives}
+      - {id: parameter-update, name: parameter updates with a learning rate}
+    standards: [HSF-IF.B.6, HSF-BF.A.1c, HSN-VM.C.8]
+    written_by_program: [local-derivative, computational-graph, backpropagation, parameter-update]
+    example_hint: Reuse the tiny network and differentiate one loss all the way to its weights
+    practice: {scratch: "manual backward pass in NumPy", package: "PyTorch autograd and SGD", parity: "compare forward values, parameter gradients and one update step"}
+    converges_on_transformers: Inside training, the same reverse-mode chain rule trains transformer embeddings, attention and feed-forward weights end to end.
+    requires: [calculus-foundations, feed-forward-network]
+
+  - id: positional-encoding
+    module: neural-transformers
+    order: 17
+    idea: Sinusoidal positional encodings
+    foundation: Position vectors are derived from the already-understood unit circle, frequency and phase.
+    concepts:
+      - {id: sinusoidal-position, name: sinusoidal positional encodings}
+      - {id: position-frequency, name: position at multiple frequencies}
+      - {id: relative-position, name: relative-position structure}
+    standards: [HSF-TF.A.1, HSF-TF.A.2, HSF-TF.B.5]
+    written_by_program: [sinusoidal-position, position-frequency, relative-position]
+    example_hint: Four token positions encoded with two sine-cosine frequency pairs
+    practice: {scratch: "build the encoding matrix in NumPy", package: "PyTorch tensor implementation", parity: "compare matrices, shapes and repeated-distance relationships"}
+    converges_on_transformers: At the transformer input, positional vectors give otherwise order-agnostic token representations information about sequence position.
+    requires: [unit-circle-signals, matrix-multiplication]
+
+  - id: attention
+    module: neural-transformers
+    order: 18
+    idea: Attention from projections, dot products and softmax
+    foundation: Attention is constructed only after its vector, matrix and exponential operations can be traced independently.
+    concepts:
+      - {id: query-key-value, name: learned query, key and value projections}
+      - {id: scaled-dot-product, name: scaled dot-product scores}
+      - {id: attention-weights, name: attention weights}
+      - {id: weighted-value-sum, name: weighted sums of value vectors}
+      - {id: self-attention, name: self-attention}
+    standards: [HSN-VM.B.4, HSN-VM.C.8, HSN-VM.C.11, HSF-LE.A.4]
+    written_by_program: [query-key-value, scaled-dot-product, attention-weights, weighted-value-sum, self-attention]
+    example_hint: A three-token sequence with tiny query, key and value vectors
+    practice: {scratch: "scaled dot-product attention in NumPy", package: "PyTorch functional attention or MultiheadAttention", parity: "align projections and masks then compare scores, weights and outputs"}
+    converges_on_transformers: Inside each transformer block, self-attention mixes information across token positions.
+    requires: [vectors-dot-products, matrix-multiplication, exponentials-softmax]
+
   - id: transformer
-    order: 6
-    idea: A transformer small enough to trace by hand
+    module: neural-transformers
+    order: 19
+    idea: A complete transformer block small enough to trace
+    foundation: Integration happens only after every mathematical and computational component has been understood independently.
     concepts:
-      - {id: embedding-table, name: token embeddings}
-      - {id: positional-encoding, name: positional encodings from sine and cosine}
-      - {id: periodic-function, name: periodic functions and the unit circle}
-      - {id: attention, name: attention as scaled dot products}
-      - {id: cross-entropy, name: softmax and cross-entropy}
-      - {id: sampling, name: probability distributions and sampling}
-    standards: [HSF-TF.A.2, HSF-TF.B.5, HSN-VM.C.8, HSN-VM.C.11, HSS-MD.A.1, HSS-MD.A.2]
-    written_by_program: [attention]
-    build: numpy before any library
-    example_hint: A four-word sentence from the learner's own writing
-    requires: [backprop]
-starting_suggestions:     # offered only when the learner has no idea where to start; never assigned
-  - Are shadier streets cooler?
-  - How fast does a used car lose value?
-  - Does practice time predict progress?
+      - {id: token-embedding, name: token embeddings}
+      - {id: residual-connection, name: residual connections}
+      - {id: normalization, name: normalization}
+      - {id: transformer-block, name: a transformer block}
+      - {id: output-logits, name: output logits and token probabilities}
+      - {id: transformer-training, name: training the complete transformer}
+    standards: [HSN-VM.C.8, HSN-VM.C.11, HSF-TF.A.2, HSS-MD.A.1, HSS-MD.A.2]
+    written_by_program: [token-embedding, residual-connection, normalization, transformer-block, output-logits, transformer-training]
+    example_hint: A four-token sequence whose shapes remain visible through one small block
+    practice: {scratch: "one NumPy transformer block", package: "equivalent PyTorch modules with copied parameters", parity: "compare named intermediate tensors, logits and one training update within explicit tolerances"}
+    converges_on_transformers: This module is the convergence point where the full transformer operates as one trainable system.
+    requires: [backpropagation, positional-encoding, attention]
+
+  - id: hyperparameter-optimization
+    module: training-post-training
+    order: 20
+    idea: Model training and hyperparameter optimization
+    foundation: Parameters learned from data are distinguished from hyperparameters chosen around training; search spaces, validation, leakage and budgets are understood before optimization frameworks.
+    concepts:
+      - {id: model-parameter, name: learned model parameters}
+      - {id: hyperparameter, name: hyperparameters}
+      - {id: validation-set, name: validation data}
+      - {id: search-space, name: hyperparameter search spaces}
+      - {id: random-search, name: randomized search}
+      - {id: bayesian-optimization, name: sequential model-based optimization}
+      - {id: early-stopping, name: early stopping and pruning}
+    standards: [HSS-IC.B.4, HSS-IC.B.5, HSS-ID.C.7]
+    written_by_program: [model-parameter, hyperparameter, validation-set, search-space, random-search, bayesian-optimization, early-stopping]
+    example_hint: Tune two hyperparameters over a tiny fixed train-validation split with a strict trial budget
+    practice: {scratch: "deterministic grid and random search with explicit trial records", package: "scikit-learn RandomizedSearchCV and Optuna around scikit-learn or PyTorch", parity: "verify identical folds and scoring then compare selected configurations rather than expecting identical search trajectories"}
+    converges_on_transformers: Around transformer training, hyperparameter optimization selects learning rates, batch sizes, schedules, regularization and architecture settings; it is an outer training process, not a transformer layer.
+    requires: [linear-regression, logistic-regression, tree-models, feed-forward-network]
+
+  - id: supervised-fine-tuning
+    module: training-post-training
+    order: 21
+    idea: Supervised fine-tuning of a pretrained model
+    foundation: Teacher-forced next-token loss, labeled examples, masking, batching and distribution shift are understood before trainer APIs.
+    concepts:
+      - {id: pretrained-model, name: pretrained models}
+      - {id: supervised-example, name: supervised input-target examples}
+      - {id: teacher-forcing, name: teacher forcing}
+      - {id: label-mask, name: label masking}
+      - {id: supervised-fine-tuning, name: supervised fine-tuning}
+      - {id: catastrophic-forgetting, name: catastrophic forgetting}
+    standards: [HSS-IC.B.5, HSF-BF.A.1c, HSN-VM.C.8]
+    written_by_program: [pretrained-model, supervised-example, teacher-forcing, label-mask, supervised-fine-tuning, catastrophic-forgetting]
+    example_hint: A tiny sequence model and four prompt-response pairs with every target token visible
+    practice: {scratch: "construct shifted labels, masks, cross-entropy and a small PyTorch training loop", package: "PyTorch plus a Hugging Face Trainer or TRL SFTTrainer when available", parity: "copy model state and batches then compare masks, token losses, gradients and one update step"}
+    converges_on_transformers: Supervised fine-tuning updates a pretrained transformer's weights so its conditional behavior follows task demonstrations.
+    requires: [transformer, backpropagation]
+
+  - id: reinforcement-learning
+    module: training-post-training
+    order: 22
+    idea: Reinforcement learning from states, actions and rewards
+    foundation: Returns, policies, value functions, exploration and credit assignment are learned in a tiny environment before language-model post-training.
+    concepts:
+      - {id: state-action-reward, name: states, actions and rewards}
+      - {id: policy, name: a policy}
+      - {id: return, name: discounted return}
+      - {id: value-function, name: value functions}
+      - {id: exploration, name: exploration and exploitation}
+      - {id: policy-gradient, name: policy gradients}
+      - {id: credit-assignment, name: credit assignment}
+    standards: [HSS-MD.A.1, HSS-MD.A.2, HSS-MD.B.5, HSS-MD.B.6]
+    written_by_program: [state-action-reward, policy, return, value-function, exploration, policy-gradient, credit-assignment]
+    example_hint: A two-state, two-action environment whose trajectories and returns fit in a table
+    practice: {scratch: "tabular returns and a small policy-gradient update", package: "PyTorch distributions and optional Stable-Baselines3 on a tiny environment", parity: "fix trajectories and compare returns, log-probabilities and a single gradient while treating sampled training curves as stochastic"}
+    converges_on_transformers: In transformer post-training, the model is a token policy and reward or preference signals guide updates; reinforcement learning is a training framework around the transformer.
+    requires: [calculus-foundations, exponentials-softmax]
+
+  - id: ppo
+    module: training-post-training
+    order: 23
+    idea: Proximal Policy Optimization for constrained policy updates
+    foundation: Probability ratios, advantages, clipping and policy drift are derived on fixed trajectories before PPO libraries.
+    concepts:
+      - {id: importance-ratio, name: old-to-new policy probability ratios}
+      - {id: advantage, name: advantage estimates}
+      - {id: clipped-objective, name: the clipped PPO objective}
+      - {id: policy-drift, name: policy drift and KL control}
+      - {id: ppo, name: Proximal Policy Optimization}
+    standards: [HSS-MD.A.1, HSS-MD.A.2, HSS-MD.B.5, HSF-IF.B.6]
+    written_by_program: [importance-ratio, advantage, clipped-objective, policy-drift, ppo]
+    example_hint: Four fixed actions with old probabilities, new probabilities and advantages
+    practice: {scratch: "compute unclipped and clipped surrogate objectives in NumPy then one PyTorch update", package: "a small PPO implementation in Stable-Baselines3 or TRL when available", parity: "freeze trajectories and compare ratios, clipping decisions, loss and one gradient rather than full stochastic runs"}
+    converges_on_transformers: In RL-based transformer post-training, PPO constrains policy updates while optimizing reward and often a KL penalty relative to a reference model.
+    requires: [reinforcement-learning, supervised-fine-tuning]
+
+  - id: dpo
+    module: training-post-training
+    order: 24
+    idea: Direct Preference Optimization from chosen and rejected responses
+    foundation: Pairwise preferences, log-probability ratios, a reference policy and the logistic objective are derived before DPO trainers.
+    concepts:
+      - {id: preference-pair, name: chosen and rejected response pairs}
+      - {id: reference-policy, name: a reference policy}
+      - {id: log-probability-ratio, name: log-probability ratios}
+      - {id: preference-margin, name: preference margins}
+      - {id: dpo-objective, name: the Direct Preference Optimization objective}
+      - {id: dpo, name: Direct Preference Optimization}
+    standards: [HSF-LE.A.4, HSS-CP.A.2, HSS-CP.B.6, HSS-MD.A.1]
+    written_by_program: [preference-pair, reference-policy, log-probability-ratio, preference-margin, dpo-objective, dpo]
+    example_hint: Two preference pairs with small policy and reference log-probabilities
+    practice: {scratch: "compute the DPO margin and logistic loss in NumPy or PyTorch", package: "TRL DPOTrainer when available", parity: "use fixed sequence log-probabilities and compare margins, losses and one gradient step"}
+    converges_on_transformers: DPO post-trains a transformer directly from preference pairs without an explicit online reinforcement-learning loop.
+    requires: [supervised-fine-tuning, logistic-regression]
+
+starting_suggestions:
+  - How does a transformer learn from an error?
+  - How does logistic regression differ from a transformer classifier?
+  - How do TF-IDF and transformer embeddings represent text differently?
+  - How can we prove a from-scratch implementation matches scikit-learn or PyTorch?
+  - How do SFT, PPO and DPO change a pretrained transformer's behavior differently?

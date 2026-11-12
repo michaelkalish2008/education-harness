@@ -28,9 +28,13 @@ def accept_interests(w):
 def test_a_fresh_learner_starts_learning_at_once(ws):
     s = ws.orient.where_am_i()
     assert s["suggested"]["move"] == "begin" and s["suggested"]["say"] == "Let's go"
-    assert s["program"][0]["id"] == "fit" and s["ask_later"][:2] == ["lesson_mode", "sociability"]
+    assert s["program"][0]["id"] == "calculus-foundations" and s["ask_later"][:4] == ["lesson_mode", "sociability", "mastery_mode", "depth_mode"]
+    assert "learning_context" in s["ask_later"]
     assert s["onboarding_choices"]["lesson_mode"]["semi-structured"].startswith("short segments")
     assert s["onboarding_choices"]["sociability"]["guided"].startswith("work with a tutor")
+    assert s["onboarding_choices"]["mastery_mode"]["both"].startswith("use written")
+    assert "no calculus or code" in s["onboarding_choices"]["depth_mode"]["civic-overview"]
+    assert s["onboarding_choices"]["learning_context"]["professional-growth"].startswith("build capability")
     assert (ws.root / "MAP.md").exists() and "What you can say" in (ws.root / "MAP.md").read_text()
     ws.orient.write_plan("rule", "How does the chain rule work?", STEPS)       # a plan without a goal is fine
     s = ws.orient.where_am_i()
@@ -78,11 +82,12 @@ def test_reveal_without_a_prewritten_solution(ws):
 def test_arc_then_plan_then_continue(ws):
     accept_interests(ws)
     ws.orient.set_arc("Understand the math inside a transformer",
-                      [{"title": "Fit a line to my coffee", "idea": "data-scientist:fit", "project": "coffee"},
-                       {"title": "Walk downhill", "idea": "data-scientist:descent"}], why="to read papers at work")
+                      [{"title": "Trace rates of change", "idea": "data-scientist:calculus-foundations", "project": "coffee"},
+                       {"title": "Compare vectors", "idea": "data-scientist:vectors-dot-products"}], why="to read papers at work")
     s = ws.orient.where_am_i()
-    assert s["suggested"]["move"] == "plan" and "coffee" in s["suggested"]["why"].lower()
-    ws.orient.write_plan("coffee", "Does a longer brew taste more bitter?", STEPS, idea="data-scientist:fit")
+    assert s["suggested"]["move"] == "plan" and "rates of change" in s["suggested"]["why"].lower()
+    ws.orient.write_plan("coffee", "Does a longer brew taste more bitter?", STEPS,
+                         idea="data-scientist:calculus-foundations")
     s = ws.orient.where_am_i()
     assert s["suggested"] == {"move": "continue", "say": "Let's go",
                               "why": "pick up where you left off: plot eight pairs of brew time and bitterness"}
@@ -92,7 +97,7 @@ def test_arc_then_plan_then_continue(ws):
     assert [d["step"] for d in c["done"]] == ["s1"] and c["now"]["step"] == "s2" and c["next"]["step"] == "s3"
     assert ws.orient.where_am_i()["arc"]["path"][0]["state"] == "in progress"
     m = (ws.root / "MAP.md").read_text()
-    assert "Understand the math inside a transformer" in m and "[~] Fit a line" in m
+    assert "Understand the math inside a transformer" in m and "[~] Trace rates of change" in m
 
 
 def test_arc_checks_ideas_and_keeps_history(ws):
@@ -140,7 +145,13 @@ def test_checkpoints_save_list_reopen_and_search(ws):
 
 def test_program_lists_ideas_without_solutions(ws):
     p = ws.orient.get_program()
-    assert [i["id"] for i in p["ideas"]][:2] == ["fit", "descent"]
+    assert [i["id"] for i in p["ideas"]][:2] == ["calculus-foundations", "vectors-dot-products"]
+    assert p["title"] == "Data science foundations through transformers"
+    assert all(i["foundation"] and i["converges_on_transformers"] for i in p["ideas"])
+    assert len(p["modules"]) == 6 and [s["id"] for s in p["learning_stages"]] == ["math", "scratch", "package", "parity"]
+    assert all(set(i["practice"]) == {"scratch", "package", "parity"} for i in p["ideas"])
+    assert set(p["anchor_project"]["milestones"]) == {i["id"] for i in p["ideas"]}
+    assert p["depth_modes"]["civic-overview"]["stages"] == ["math"] and p["civic_lens"]["recurring_questions"]
     assert "solution" not in str(p).lower()
 
 

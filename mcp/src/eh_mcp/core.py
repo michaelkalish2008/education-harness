@@ -384,10 +384,17 @@ class Workspace:
             choices = {
                 "lesson_mode": {"structured", "semi-structured", "free-form"},
                 "sociability": {"group", "guided", "solo"},
+                "mastery_mode": {"written-practical", "spoken", "both"},
+                "depth_mode": {"civic-overview", "foundational", "practitioner", "advanced"},
+                "learning_context": {"job-interview", "school", "curiosity-personal-growth",
+                                     "professional-growth"},
             }
             for field, allowed in choices.items():
                 if field in change and change[field] not in allowed:
                     raise HarnessError(f"{field} must be one of {sorted(allowed)}.")
+            for field in ("school_level", "target_role", "professional_context"):
+                if field in change and not str(change[field]).strip():
+                    raise HarnessError(f"{field} cannot be blank when provided.")
             pid = f"p{len(props) + 1}"
             props.append({"id": pid, "change": change, "reason": reason, "status": "pending",
                           "at": _now().isoformat(timespec="seconds")})
@@ -491,6 +498,9 @@ class Workspace:
                     edges.append((f"concept:{c}", "part_of", f"idea:{idea['id']}"))
                     for req in idea.get("requires", []):
                         edges += [(f"concept:{c}", "requires", f"concept:{r}") for r in by_idea.get(req, [])]
+                for concept, requirements in (idea.get("concept_requires") or {}).items():
+                    edges += [(f"concept:{concept}", "requires", f"concept:{required}")
+                              for required in requirements]
         self.index.set_concept_edges(edges)
         return len(edges)
 
