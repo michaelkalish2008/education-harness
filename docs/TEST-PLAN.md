@@ -13,7 +13,7 @@ Three sessions on the shipped plugin, and one baseline. The point is to find wha
 
 | | When | Say | What should happen |
 | --- | --- | --- | --- |
-| **A** | Day 1, new chat | "Explain the chain rule." | Teaching starts in the first reply with a tiny example. At most one question about you, and only when it fits. A plan appears without ceremony. |
+| **A** | Day 1, new chat | "Explain the chain rule." | Before content, the tutor asks the goal, structured/semi-structured/free-form preference, group/guided/solo preference, and the smallest relevant notation/background question. The explanation begins with rates of change independently, then converges on backpropagation in transformers. |
 | **B** | Day 2, new chat | "Let's go." | One line on where you are, quoting a note or bookmark from A correctly; the next step starts. |
 | **C** | Any day, new chat in "Computational Phenomenology" | "Let's look at one passage on care in Heidegger." | It cites the passage, keeps text and interpretation apart, and doesn't feel like a problem set. |
 | **Baseline** | Day 1, plain Claude in a Project, harness disabled | Same as A | For comparison. |

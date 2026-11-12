@@ -88,7 +88,7 @@ def test_retrospective_is_due_when_a_project_is_done(ws):
 
 
 def test_spaces_keep_each_claude_project_to_its_own_arcs(ws):
-    ws.orient.set_arc("Backprop math", [{"title": "chain rule", "idea": "data-scientist:backprop"}],
+    ws.orient.set_arc("Backprop math", [{"title": "chain rule", "idea": "data-scientist:backpropagation"}],
                       name="backprop-math", space="Intro to Transformers and NN")
     ws.orient.set_arc("Heidegger and attention", [{"title": "care and attention", "project": "care"}],
                       name="phenomenology-llms", space="Computational Phenomenology", lens="philosophy")

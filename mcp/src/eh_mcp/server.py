@@ -16,7 +16,10 @@ INSTRUCTIONS = (
     "Education harness: keeps the learner's place, their own words and their goals in local files. "
     "Be fast: call where_am_i once at the start of a chat, then use about one tool call per learner turn, "
     "made alongside your reply. For a new learner, ask their goal, lesson mode (structured, semi-structured "
-    "or free-form), sociability (group, guided or solo), and relevant notation/background before presenting "
+    "or free-form), sociability (group, guided or solo), mastery mode (written/practical, spoken or both), "
+    "depth mode (civic overview, foundational, practitioner or advanced), "
+    "learning context (interview, school and level, "
+    "curiosity/personal growth, or professional role growth), and relevant notation/background before presenting "
     "content; inspect relevant loaded standards as prerequisite evidence. "
     "One voice; end each reply with the next step. A refusal comes back as {'refused': reason}: "
     "say it plainly and offer the closest thing you can do."
@@ -69,7 +72,7 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
     def set_arc(goal: str = "", path: list[dict] | None = None, name: str = "", why: str = "", lens: str = "",
                 space: str = "", cadence: str = "", change: str = "") -> dict:
         """Save a goal (an arc) only after the learner says yes. goal in their words; path: ordered items
-        {title, idea? ('data-scientist:fit'), project?} (defaults to the goal itself); name: a short handle
+        {title, idea? ('data-scientist:calculus-foundations'), project?} (defaults to the goal itself); name: a short handle
         ('causal-inference'), a new one adds a goal beside the others; lens: math, philosophy or general;
         space: the Claude project; cadence: how often they want to check in, in their words. With only
         name plus space, lens or cadence, updates those on an existing goal."""
@@ -217,7 +220,11 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
     @tool
     def profile(action: str = "show", change: dict | None = None, proposal_id: str = "", reason: str = "") -> dict:
         """The learner's profile (interests, access needs, formats that fit, lesson_mode: structured,
-        semi-structured or free-form; sociability: group, guided or solo; whether to keep slips). show;
+        semi-structured or free-form; sociability: group, guided or solo; mastery_mode: written-practical,
+        spoken or both; depth_mode: civic-overview, foundational, practitioner or advanced;
+        learning_context: job-interview,
+        school, curiosity-personal-growth or professional-growth, with school_level, target_role or
+        professional_context when relevant; whether to keep slips). show;
         propose a change; list proposals; accept or reject one. Nothing changes without the learner's yes."""
         if action == "show":
             ws.ensure_workspace()

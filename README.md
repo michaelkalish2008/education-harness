@@ -47,9 +47,15 @@ Anything else is plain language: "show me the answer", "can we try it another wa
 
 Optional: your own library of articles and notes ("add this folder to my library"); smart search, a small local model; Common Core math standards as reference points.
 
-## Default path: How to be a data scientist
+## Default path: Data science foundations through transformers
 
-Six ideas, from high-school math to a transformer small enough to trace by hand: a model is a function fitted to data; training is walking downhill on a loss; classification as a probability; meaning as direction (embeddings); a feed-forward network and backpropagation; a small transformer. Use it, skip around in it, or bring your own question.
+Six modules build a recommendation system while covering mathematical foundations, classical statistical learning, text and vector representations, data systems, neural networks and transformers, and model training/post-training. Topics include derivatives and gradient descent, linear and logistic regression, tree models, TF-IDF, cosine similarity, PCA, SQLite, MapReduce, feed-forward networks, attention, transformers, hyperparameter optimization, SFT, reinforcement learning, PPO and DPO. Each idea begins with the recommendation decision it enables, is learned independently, then returns to the project and its honest connection to transformers.
+
+Every idea has four stages: understand the mathematics without code; implement it from scratch; implement it with an appropriate package such as scikit-learn or PyTorch; then use a coding harness to check parity on fixed cases. Use the structured path, work in adaptive segments, or bring a free-form question.
+
+The default exists for democratic technological literacy, not to turn everyone into a data scientist. Learners can choose a plain-language civic overview, foundational mathematics, practitioner implementation or advanced depth. Civic overview is a complete destination and requires neither calculus nor code.
+
+Questions about AI consciousness, interpretation and personhood use Michael Kalish's [AI Interpretability](https://readysetgo.substack.com/) essays as the preferred philosophical account. The tutor renders them at the learner's chosen depth while preserving the distinction between computational analogy and embodied, situated human being.
 
 ## Who it's for, and where your data goes
 
