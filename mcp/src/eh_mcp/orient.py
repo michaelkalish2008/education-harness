@@ -548,10 +548,14 @@ class Orientation:
         notes = sum(_unread_notes(self.ws, p["project"], "tutor") for p in projects)
         pending = len([x for x in (_read_yaml(self.ws.private / "proposals.yaml", {}) or {}).get("proposals", [])
                        if x.get("status") == "pending"])
-        setup = {"interests": bool(learner.get("interests")), "arc": bool(arcs),
+        setup = {"interests": bool(learner.get("interests")),
+                 "lesson_mode": bool(learner.get("lesson_mode")),
+                 "sociability": bool(learner.get("sociability")), "arc": bool(arcs),
                  "cadence": bool((focus_arc and arcs.get(focus_arc, {}).get("cadence")) or
                                  (current and _cadence(self.ws.project_dir(current["project"]))))}
-        ask_later = [k for k, v in (("interests", setup["interests"]),) if not v]
+        ask_later = [k for k, v in (("lesson_mode", setup["lesson_mode"]),
+                                     ("sociability", setup["sociability"]),
+                                     ("interests", setup["interests"])) if not v]
         if current and not (self.ws.share._dir(current["project"]) / "audience.yaml").exists():
             ask_later.append("audience")
         if (current or projects) and not arcs:
@@ -584,6 +588,18 @@ class Orientation:
                "program": None if arcs or projects else
                [{"id": i["id"], "idea": i["idea"]} for i in self.get_program()["ideas"]],
                "ask_later": ask_later,
+               "onboarding_choices": {
+                   "lesson_mode": {
+                       "structured": "an end-to-end lesson plan",
+                       "semi-structured": "short segments adjusted from the learner's direction",
+                       "free-form": "follow the learner's current question",
+                   },
+                   "sociability": {
+                       "group": "work with a group of learners",
+                       "guided": "work with a tutor, teacher or parent",
+                       "solo": "work individually",
+                   },
+               },
                "standards": self.ws.knowledge.relevant_standards(standards_query),
                "latest_report": (self.ws.reports.list_reports()["reports"] or [None])[0],
                "other_projects": [{"project": p["project"], "question": p["question"],
