@@ -381,6 +381,13 @@ class Workspace:
         if action == "propose":
             if not change:
                 raise HarnessError("A proposal needs a change, e.g. {'formats_that_fit': ['diagrams']}.")
+            choices = {
+                "lesson_mode": {"structured", "semi-structured", "free-form"},
+                "sociability": {"group", "guided", "solo"},
+            }
+            for field, allowed in choices.items():
+                if field in change and change[field] not in allowed:
+                    raise HarnessError(f"{field} must be one of {sorted(allowed)}.")
             pid = f"p{len(props) + 1}"
             props.append({"id": pid, "change": change, "reason": reason, "status": "pending",
                           "at": _now().isoformat(timespec="seconds")})

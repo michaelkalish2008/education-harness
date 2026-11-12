@@ -28,7 +28,9 @@ def accept_interests(w):
 def test_a_fresh_learner_starts_learning_at_once(ws):
     s = ws.orient.where_am_i()
     assert s["suggested"]["move"] == "begin" and s["suggested"]["say"] == "Let's go"
-    assert s["program"][0]["id"] == "fit" and "interests" in s["ask_later"]   # setup is asked along the way
+    assert s["program"][0]["id"] == "fit" and s["ask_later"][:2] == ["lesson_mode", "sociability"]
+    assert s["onboarding_choices"]["lesson_mode"]["semi-structured"].startswith("short segments")
+    assert s["onboarding_choices"]["sociability"]["guided"].startswith("work with a tutor")
     assert (ws.root / "MAP.md").exists() and "What you can say" in (ws.root / "MAP.md").read_text()
     ws.orient.write_plan("rule", "How does the chain rule work?", STEPS)       # a plan without a goal is fine
     s = ws.orient.where_am_i()

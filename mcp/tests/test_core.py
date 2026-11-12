@@ -121,6 +121,18 @@ def test_profile_proposals(ws):
         ws.propose_profile_change("accept", proposal_id=pid)
 
 
+def test_profile_validates_lesson_mode_and_sociability(ws):
+    pid = ws.propose_profile_change("propose", {"lesson_mode": "semi-structured",
+                                                 "sociability": "guided"})["proposed"]
+    ws.propose_profile_change("accept", proposal_id=pid)
+    profile = yaml.safe_load((ws.private / "learner.yaml").read_text())
+    assert profile["lesson_mode"] == "semi-structured" and profile["sociability"] == "guided"
+    with pytest.raises(HarnessError):
+        ws.propose_profile_change("propose", {"lesson_mode": "surprise me"})
+    with pytest.raises(HarnessError):
+        ws.propose_profile_change("propose", {"sociability": "crowd"})
+
+
 def test_learnings_validate_source_and_tags(ws):
     src = ws.add_diary_entry("The slope finally made sense as degrees per percent canopy.", project="trees")["saved"]
     with pytest.raises(HarnessError):
