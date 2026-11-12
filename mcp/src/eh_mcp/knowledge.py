@@ -100,6 +100,57 @@ class Knowledge:
     def tier_of(self, doc_id: str) -> str:
         return self._state()["items"].get(doc_id, {}).get("tier", "active")
 
+    def relevant_standards(self, query: str, limit: int = 6) -> dict:
+        """Return standards that may describe prerequisites for a learner's topic.
+
+        This is orientation evidence, not a curriculum: the project still determines
+        what is learned.  Full statements and attribution are returned so a planner can
+        judge relevance rather than treating a code or search rank as sufficient.
+        """
+        source = self._state().get("standards_source")
+        if not source:
+            return {"loaded": False, "query": query.strip(), "matches": [],
+                    "note": "No standards are loaded; do not claim they were checked."}
+        search_query = query.strip()
+        stop = {"a", "an", "and", "as", "by", "for", "in", "of", "on", "the", "to", "with", "intro"}
+        def topic_words(text: str) -> set[str]:
+            return {w[:-1] if len(w) > 4 and w.endswith("s") else w
+                    for w in _slug(text).split("-") if w and w not in stop}
+        query_words = topic_words(search_query)
+        # The default program already records which standards describe each idea.
+        # Use those authored concept/code links to bridge a topic name such as
+        # "transformers" to standards language such as vectors or periodic functions.
+        from .core import PROGRAMS
+        for track_file in PROGRAMS.glob("*/track.yaml"):
+            track = yaml.safe_load(track_file.read_text(encoding="utf-8")) or {}
+            for idea in track.get("ideas", []):
+                label = " ".join([str(idea.get("id", "")), str(idea.get("idea", ""))])
+                label_words = topic_words(label)
+                if query_words & label_words:
+                    search_query += " " + " ".join(
+                        [label, *[str(c.get("name", "")) for c in idea.get("concepts", [])],
+                         *[str(code) for code in idea.get("standards", [])]])
+        hits = self.ws.search_memory(search_query, kinds=["standard"], limit=limit,
+                                     scope="reference")["results"] if query.strip() else []
+        matches = []
+        for hit in hits:
+            doc = self.ws.index.doc(hit["id"])
+            meta = (doc or {}).get("meta", {})
+            matches.append({
+                "id": hit["id"],
+                "code": meta.get("code", ""),
+                "statement": meta.get("statement", ""),
+                "grade": meta.get("grade", ""),
+                "domain": meta.get("domain", []),
+                "jurisdiction": meta.get("jurisdiction", ""),
+                "attribution": meta.get("attribution", ""),
+                "license": meta.get("license", ""),
+                "signals": hit.get("signals", []),
+            })
+        return {"loaded": True, "query": query.strip(), "expanded_query": search_query, "matches": matches,
+                "source": source,
+                "note": "Matches are reference points to inspect for prerequisites; they do not set the project."}
+
     # ------------------------------------------------------------------ use
     def record_use(self, doc_ids: list[str], how: str = "opened") -> dict:
         """A use: the original was opened (hop 2), cited in a lesson, or linked to a learning.

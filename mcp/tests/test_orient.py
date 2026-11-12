@@ -36,6 +36,34 @@ def test_a_fresh_learner_starts_learning_at_once(ws):
     assert s["plan"]["steps"][0]["does"] == STEPS[0]["does"]
 
 
+def test_fresh_topic_focus_calibrates_and_surfaces_relevant_standards(ws):
+    ws.index.upsert("std:vectors", "standard", "HSN-VM.C.8 vectors matrices transformations",
+                    {"scope": "reference", "tier": "pinned", "code": "HSN-VM.C.8",
+                     "statement": "Represent transformations using vectors and matrices.",
+                     "grade": "9-12", "domain": ["Geometry", "Transformations"],
+                     "jurisdiction": "Multi-State", "license": "https://creativecommons.org/licenses/by/4.0/",
+                     "attribution": "Example standards source"}, "standards:test")
+    state = ws.knowledge._state()
+    state["standards_source"] = {"folder": "/tmp/test-standards", "subject": "Mathematics", "pinned": 1}
+    ws.knowledge._save(state)
+
+    s = ws.orient.where_am_i(focus="Intro to Transformers and neural networks",
+                             space="Intro to Transformers and NN")
+
+    assert s["suggested"]["move"] == "begin"
+    assert s["focus"] == "Intro to Transformers and neural networks"
+    assert s["standards"]["loaded"]
+    assert s["standards"]["matches"][0]["code"] == "HSN-VM.C.8"
+    assert "vectors and matrices" in s["standards"]["matches"][0]["statement"]
+
+
+def test_fresh_orientation_is_explicit_when_standards_are_not_loaded(ws):
+    s = ws.orient.where_am_i(focus="transformers")
+    assert s["suggested"]["move"] == "begin"
+    assert s["standards"] == {"loaded": False, "query": "transformers", "matches": [],
+                              "note": "No standards are loaded; do not claim they were checked."}
+
+
 def test_reveal_without_a_prewritten_solution(ws):
     ws.orient.write_plan("rule", "q", STEPS)
     r = ws.reveal_solution("rule", "s1", "answer")
