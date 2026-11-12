@@ -1,0 +1,10 @@
+{
+  "name": "education-harness",
+  "version": "0.7.0",
+  "description": "A visible, adaptive learning companion that remembers the learner's place, words, goals and chosen way of learning.",
+  "author": {
+    "name": "Michael Kalish"
+  },
+  "homepage": "https://github.com/michaelkalish2008/education-harness",
+  "repository": "https://github.com/michaelkalish2008/education-harness"
+}

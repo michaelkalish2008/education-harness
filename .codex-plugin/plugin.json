@@ -1,0 +1,30 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "education-harness",
+  "version": "0.7.0",
+  "description": "A visible, adaptive learning companion that remembers the learner's place, words, goals and chosen way of learning.",
+  "homepage": "https://github.com/michaelkalish2008/education-harness",
+  "repository": "https://github.com/michaelkalish2008/education-harness",
+  "license": "MIT",
+  "author": {
+    "name": "Michael Kalish"
+  },
+  "keywords": ["education", "learning", "tutor", "data-science", "transformers"],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Education Harness",
+        "shortDescription": "Learn with a guided path",
+        "longDescription": "An adaptive learning companion that helps you start, continue and understand a learning path. It remembers your place and your own words, supports civic overview through advanced depth, and offers a project-led data-science path when you do not yet know where to begin.",
+        "developerName": "Michael Kalish",
+        "category": "Education & Research",
+        "capabilities": ["Interactive"],
+        "defaultPrompt": [
+          "Help me start learning. Show me what Education Harness can do, then ask the first setup question.",
+          "Let's go—continue from where I left off.",
+          "Show me the default data-science learning path and help me choose a depth."
+        ]
+      }
+    }
+  }
+}

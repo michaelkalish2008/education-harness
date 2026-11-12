@@ -28,6 +28,7 @@ def accept_interests(w):
 def test_a_fresh_learner_starts_learning_at_once(ws):
     s = ws.orient.where_am_i()
     assert s["suggested"]["move"] == "begin" and s["suggested"]["say"] == "Let's go"
+    assert s["welcome"]["name"] == "Education Harness" and "Teach me <topic>" in s["welcome"]["starters"]
     assert s["program"][0]["id"] == "calculus-foundations" and s["ask_later"][:4] == ["lesson_mode", "sociability", "mastery_mode", "depth_mode"]
     assert "learning_context" in s["ask_later"]
     assert s["onboarding_choices"]["lesson_mode"]["semi-structured"].startswith("short segments")

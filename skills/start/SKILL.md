@@ -1,11 +1,27 @@
 ---
 name: start
-description: Front door to the education harness. Use when the learner says "let's go", "let's go on …", "where am I?", "what's next?", "help", "I'm lost", "how should I set this up?", or opens a chat in a learning project without saying what they want.
+description: The visible front door for learning. Use implicitly when someone says they want to learn, study, understand, practice, prepare for school or an interview, improve at work, asks what Education Harness does, says "let's go", "where am I?", "help" or "I'm lost", or opens a learning chat without knowing what to ask.
 ---
 
 # Start
 
 Get the learner oriented quickly enough that the first explanation fits them. Principles: 1, 2, 3, 5, 18.
+
+## Welcome and discoverability
+
+When the learner selects Education Harness, asks what it does, asks how to use it, or arrives without a learning request, identify it by name and show this compact entry card before asking one question:
+
+```text
+Education Harness helps you learn something and remembers your place, questions and own words across chats.
+
+You can say:
+• "Teach me <topic>"
+• "Show me the data-science path"
+• "Let's go" to continue
+• "Where am I?" for your current step
+```
+
+Do not mention MCP, tools, skills, arcs, focus or setup machinery. Ordinary language is the interface. If they already asked to learn a specific thing, skip the card and act on their request.
 
 ## Every chat
 
@@ -20,7 +36,7 @@ Get the learner oriented quickly enough that the first explanation fits them. Pr
 | `choose` | They have several goals: ask which one this chat is for, naming each by its goal. |
 | `retro`, `zoom-out` | Load **reflect**. |
 
-## The help card (only when asked: "where am I?", "help", "I'm lost")
+## The help card (when asked: "where am I?", "help", "I'm lost", "what can this do?", "how do I use this?")
 
 One screen, plain words:
 

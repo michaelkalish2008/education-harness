@@ -604,6 +604,10 @@ class Orientation:
         standards_query = " ".join(dict.fromkeys(x.strip() for x in (focus, space) if x.strip()))
         out = {"setup": setup, "focus": focus_arc or ((current or {}).get("project") if current else
                                                         (focus or None)),
+               "welcome": {"name": "Education Harness",
+                           "summary": "Learn something with a path that remembers your place and your own words.",
+                           "starters": ["Teach me <topic>", "Show me the data-science path",
+                                        "Let's go", "Where am I?"]},
                "arc": {k: v for k, v in fv.items() if not k.startswith("_")} if fv else None,
                "arcs": [{"name": v["name"], "goal": v["goal"], "now": now_of(v),
                          "project": (v["_current"] or {}).get("project")} for v in views.values()],

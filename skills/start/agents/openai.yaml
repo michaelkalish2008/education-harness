@@ -1,0 +1,8 @@
+interface:
+  display_name: Start learning
+  short_description: Begin or resume a learning path
+  default_prompt: Help me start learning. Explain what Education Harness can do, then ask me the first question.
+  brand_color: "#315C4C"
+policy:
+  allow_implicit_invocation: true
+  products: [CHAT, CODEX]

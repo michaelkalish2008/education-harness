@@ -13,7 +13,11 @@ from mcp.server.mcpserver import MCPServer
 from .core import HarnessError, Workspace
 
 INSTRUCTIONS = (
-    "Education harness: keeps the learner's place, their own words and their goals in local files. "
+    "Education Harness is a visible learning companion: keeps the learner's place, their own words and goals. "
+    "Invoke it implicitly for ordinary requests to learn, study, understand, practice, prepare for school or an "
+    "interview, or improve professional capability. If selected without a specific request or asked what it does, "
+    "name Education Harness and show these starters: 'Teach me <topic>', 'Show me the data-science path', "
+    "'Let's go', and 'Where am I?'. Never require the learner to know MCP, tool or skill names. "
     "Be fast: call where_am_i once at the start of a chat, then use about one tool call per learner turn, "
     "made alongside your reply. For a new learner, ask their goal, lesson mode (structured, semi-structured "
     "or free-form), sociability (group, guided or solo), mastery mode (written/practical, spoken or both), "
@@ -42,7 +46,7 @@ CHATGPT_TOOLS = {
 
 def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServer:
     ws = Workspace(root or workspace_root())
-    server = MCPServer(name="education-harness", version="0.6.0", instructions=INSTRUCTIONS)
+    server = MCPServer(name="education-harness", version="0.7.0", instructions=INSTRUCTIONS)
 
     def tool(fn):
         if chatgpt and fn.__name__ not in CHATGPT_TOOLS:
