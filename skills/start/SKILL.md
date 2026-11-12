@@ -5,7 +5,7 @@ description: Front door to the education harness. Use when the learner says "let
 
 # Start
 
-Get the learner learning fast. Principles: 1, 5, 18.
+Get the learner oriented quickly enough that the first explanation fits them. Principles: 1, 2, 3, 5, 18.
 
 ## Every chat
 
@@ -15,7 +15,7 @@ Get the learner learning fast. Principles: 1, 5, 18.
 | move | Do |
 | --- | --- |
 | `continue` | One line on where they are, in plain words, quoting their newest open question or bookmark if there is one. Then load **tutor** and start the step. |
-| `begin` | Ask one question: "What do you want to be able to do?" Offer the first idea of the data-science path (`program`) as a fallback. As soon as they answer, start teaching (load **tutor**); plan in the background with **plan**. |
+| `begin` | Do not present a lesson yet. Ask what they want to be able to do. On their next turn, ask one compact calibration question covering the background or notation that the topic actually needs, then load **plan** and **tutor**. Use `standards.matches` as evidence about possible prerequisites, never as a syllabus; if standards are not loaded, say internally that they were not checked. |
 | `plan` | Load **plan** for the next part of their goal, then **tutor**. |
 | `choose` | They have several goals: ask which one this chat is for, naming each by its goal. |
 | `retro`, `zoom-out` | Load **reflect**. |
@@ -40,7 +40,14 @@ Add once, the first time: "MAP.md in your learning folder shows this too, even w
 
 - Words to use with the learner: **goal**, **step**, **notes**, **bookmark**. Internally a goal is an arc; don't say arc, space, lens or focus to them.
 - Several goals can share one Claude project. If a chat drifts to another goal, suggest a new chat: "In a new chat, say 'let's go on <goal>'." Never insist.
-- `ask_later` lists what isn't known yet (interests, a goal, an audience). Never ask these up front: the **tutor** folds one in when it fits.
+- `ask_later` lists what isn't known yet (interests, a goal, an audience). For a fresh learner, goal and one topic-specific background/notation question come before content. Interests can be included in that second question when they would materially change the example; audience and cadence still wait until they fit.
+
+## Fresh-start calibration
+
+- Treat a project title or `focus` as a topic, not proof of a learning goal or prior knowledge.
+- Use at most two learner turns before beginning: first the desired capability; second the smallest useful calibration of prerequisites, notation comfort, depth and example preference. Do not infer calculus or matrix notation comfort from one technically correct remark.
+- Read `standards.matches` before planning quantitative material. Inspect statements, not codes alone. Use relevant standards to identify prerequisites worth checking; ignore irrelevant matches and never let standards determine scope.
+- Start below the first unconfirmed prerequisite, with plain language and a tiny example. Introduce symbols only after naming what each symbol means, then check that the representation works for the learner.
 
 ## "How should I set this up?"
 

@@ -535,10 +535,10 @@ class Orientation:
                 focus_arc = next((k for k, v in arcs.items()
                                   if any(i.get("project") == focus for i in v.get("path", []))), None)
             else:
-                focus_arc = self._resolve_arc(focus, space)
-                if focus_arc is None:
-                    raise HarnessError("No arcs yet, so there is nothing to focus on.")
-                current = views[focus_arc]["_current"]
+                # On a first visit, hosts often pass the learning project's title as focus.
+                # It is useful context for calibration and standards lookup, not an arc name.
+                focus_arc = self._resolve_arc(focus, space) if arcs else None
+                current = views[focus_arc]["_current"] if focus_arc else None
         elif len(views) == 1:
             focus_arc = next(iter(views))
             current = views[focus_arc]["_current"]
@@ -573,7 +573,9 @@ class Orientation:
         def now_of(v: dict) -> str | None:
             c = v["_current"]
             return c["now"]["does"] if c and c["now"] else None
-        out = {"setup": setup, "focus": focus_arc or ((current or {}).get("project") if focus else None),
+        standards_query = " ".join(dict.fromkeys(x.strip() for x in (focus, space) if x.strip()))
+        out = {"setup": setup, "focus": focus_arc or ((current or {}).get("project") if current else
+                                                        (focus or None)),
                "arc": {k: v for k, v in fv.items() if not k.startswith("_")} if fv else None,
                "arcs": [{"name": v["name"], "goal": v["goal"], "now": now_of(v),
                          "project": (v["_current"] or {}).get("project")} for v in views.values()],
@@ -582,6 +584,7 @@ class Orientation:
                "program": None if arcs or projects else
                [{"id": i["id"], "idea": i["idea"]} for i in self.get_program()["ideas"]],
                "ask_later": ask_later,
+               "standards": self.ws.knowledge.relevant_standards(standards_query),
                "latest_report": (self.ws.reports.list_reports()["reports"] or [None])[0],
                "other_projects": [{"project": p["project"], "question": p["question"],
                                    "done": len(p["done"]), "steps": p["steps"]}
