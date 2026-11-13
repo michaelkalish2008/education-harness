@@ -69,7 +69,7 @@ Standards data, if you load it: Knowledge Graph is provided by CZI-E under the C
 
 ## Status
 
-v0.8.0: voice sessions (walks, driving) and taking a voice session into notes; one word, one meaning (plans carry `terms`); explorers built as scenes from a bundled template; the tutor now sees the learner's accepted preferences in `where_am_i`. Earlier, v0.7.1: visible plugin metadata, starter prompts and the explicit **"Let's learn"** invocation; 13 tools; 4 skills; 2 optional agents. **Not yet tested with a real learner**; see [`docs/TEST-PLAN.md`](docs/TEST-PLAN.md).
+v0.9.0: a review run-through of past learnings ("run through what I've learned"), least-reviewed first, no scores; a journey map page (JOURNEY.html) of goals, steps and notes. Earlier, v0.8.0: voice sessions (walks, driving) and taking a voice session into notes; one word, one meaning (plans carry `terms`); explorers built as scenes from a bundled template; the tutor now sees the learner's accepted preferences in `where_am_i`. Earlier, v0.7.1: visible plugin metadata, starter prompts and the explicit **"Let's learn"** invocation; 13 tools; 5 skills; 2 optional agents. **Not yet tested with a real learner**; see [`docs/TEST-PLAN.md`](docs/TEST-PLAN.md).
 
 ## License
 
