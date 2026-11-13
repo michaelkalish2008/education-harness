@@ -602,7 +602,12 @@ class Orientation:
         def now_of(v: dict) -> str | None:
             c = v["_current"]
             return c["now"]["does"] if c and c["now"] else None
-        standards_query = " ".join(dict.fromkeys(x.strip() for x in (focus, space) if x.strip()))
+        standards_query = " ".join(dict.fromkeys(x.strip() for x in (
+            (current or {}).get("question", ""),
+            (current or {}).get("idea", ""),
+            ((current or {}).get("now") or {}).get("does", ""),
+            focus if not current else "",
+        ) if x.strip()))
         out = {"setup": setup, "focus": focus_arc or ((current or {}).get("project") if current else
                                                         (focus or None)),
                "arc": {k: v for k, v in fv.items() if not k.startswith("_")} if fv else None,

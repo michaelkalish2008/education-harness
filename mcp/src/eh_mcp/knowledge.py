@@ -100,6 +100,27 @@ class Knowledge:
     def tier_of(self, doc_id: str) -> str:
         return self._state()["items"].get(doc_id, {}).get("tier", "active")
 
+    def ensure_default_standards(self) -> dict:
+        """Load the shared standards cache, fetching it once when necessary.
+
+        Only the local reference index is populated here. Individual lessons still retrieve
+        a small, relevant result set through ``relevant_standards``.
+        """
+        source = self._state().get("standards_source")
+        if source:
+            return {"ready": True, "loaded": False, "source": source}
+        from .standards import FILES, default_folder, fetch
+        folder = default_folder()
+        if not all((folder / name).exists() for name in FILES) and fetch(quiet=True):
+            return {"ready": False, "loaded": False,
+                    "note": "Standards could not be downloaded; lessons continue without claiming alignment."}
+        try:
+            result = self.load_standards(str(folder))
+        except Exception as exc:
+            return {"ready": False, "loaded": False,
+                    "note": f"Standards could not be indexed ({type(exc).__name__}); lessons continue without claiming alignment."}
+        return {"ready": True, "loaded": True, **result}
+
     def relevant_standards(self, query: str, limit: int = 6) -> dict:
         """Return standards that may describe prerequisites for a learner's topic.
 
@@ -133,15 +154,25 @@ class Knowledge:
         hits = self.ws.search_memory(search_query, kinds=["standard"], limit=limit,
                                      scope="reference")["results"] if query.strip() else []
         matches = []
+        def level_label(grades: Any) -> str:
+            values = [str(g) for g in grades] if isinstance(grades, list) else [str(grades)] if grades else []
+            if values == ["9", "10", "11", "12"]:
+                return "High school (grades 9–12)"
+            return "Grades " + ", ".join(values) if values else "Level not specified"
         for hit in hits:
             doc = self.ws.index.doc(hit["id"])
             meta = (doc or {}).get("meta", {})
+            domain = meta.get("domain", [])
+            area = " · ".join(domain[-2:]) if domain else meta.get("subject", "Mathematics")
             matches.append({
                 "id": hit["id"],
                 "code": meta.get("code", ""),
                 "statement": meta.get("statement", ""),
                 "grade": meta.get("grade", ""),
-                "domain": meta.get("domain", []),
+                "level": level_label(meta.get("grade", "")),
+                "course_area": area,
+                "learner_context": f"{level_label(meta.get('grade', ''))}; {area}",
+                "domain": domain,
                 "jurisdiction": meta.get("jurisdiction", ""),
                 "attribution": meta.get("attribution", ""),
                 "license": meta.get("license", ""),

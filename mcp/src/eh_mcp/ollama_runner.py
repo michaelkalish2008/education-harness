@@ -163,7 +163,8 @@ def main() -> None:
         os.environ["EH_WORKSPACE"] = os.path.abspath(os.path.expanduser(args.workspace))
     from .server import build_server
 
-    tutor = LocalTutor(build_server(chatgpt=True), args.model, args.base_url, args.timeout, args.max_messages)
+    tutor = LocalTutor(build_server(chatgpt=True, autoload_standards=True), args.model, args.base_url,
+                       args.timeout, args.max_messages)
     print(f"Education Harness · {args.model} · local Ollama")
     print("Commands: /resume reloads saved progress; /where shows saved state; /quit exits.\n")
     while True:

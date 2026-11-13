@@ -40,8 +40,12 @@ CHATGPT_TOOLS = {
 }
 
 
-def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServer:
+def build_server(root: Path | None = None, *, chatgpt: bool = False,
+                 autoload_standards: bool = False) -> MCPServer:
     ws = Workspace(root or workspace_root())
+    if autoload_standards:
+        ws.ensure_workspace()
+        ws.knowledge.ensure_default_standards()
     server = MCPServer(name="education-harness", version="0.6.0", instructions=INSTRUCTIONS)
 
     def tool(fn):
@@ -304,4 +308,4 @@ def main() -> None:
     if "--rebuild-index" in sys.argv:
         print(Workspace(workspace_root()).rebuild_index())
         return
-    build_server(chatgpt="--chatgpt" in sys.argv).run("stdio")
+    build_server(chatgpt="--chatgpt" in sys.argv, autoload_standards=True).run("stdio")

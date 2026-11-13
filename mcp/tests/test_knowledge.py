@@ -134,6 +134,30 @@ def test_standards_are_pinned_attributed_and_license_checked(ws, tmp_path):
         x["kind"] != "standard" for x in w.search_memory("slope intercept")["results"])  # not mixed into domain
 
 
+def test_standards_matches_include_learner_facing_context(ws, tmp_path):
+    w, _ = ws
+    write_standards(tmp_path / "kg", [
+        std("HSS-CP.A.2", "Understand independence through products of probabilities."),
+    ])
+    w.knowledge.load_standards(str(tmp_path / "kg"))
+    match = w.knowledge.relevant_standards("independence products probability")["matches"][0]
+    assert match["level"] == "High school (grades 9–12)"
+    assert "Standards for HS Math Content" not in match["learner_context"] or match["course_area"]
+
+
+def test_default_standards_load_once_from_cache(ws, tmp_path, monkeypatch):
+    w, _ = ws
+    folder = tmp_path / "standards"
+    write_standards(folder, [std("HSS-CP.A.2", "Understand independence through products.")])
+    (folder / "StandardsFrameworkItem.json").write_text((folder / "StandardsFrameworkItem.jsonl").read_text())
+    (folder / "Relationships.json").write_text("")
+    monkeypatch.setenv("EH_STANDARDS", str(folder))
+    first = w.knowledge.ensure_default_standards()
+    second = w.knowledge.ensure_default_standards()
+    assert first["ready"] and first["loaded"]
+    assert second["ready"] and not second["loaded"]
+
+
 def test_standards_reload_on_rebuild(ws, tmp_path):
     w, ids = ws
     write_standards(tmp_path / "kg", [std("HSS-ID.C.7", "Interpret the slope and the intercept of a linear model.")])

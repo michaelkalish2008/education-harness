@@ -20,21 +20,25 @@ def default_folder() -> Path:
     return Path(os.environ.get("EH_STANDARDS", Path.home() / ".cache" / "education-harness" / "standards"))
 
 
-def fetch() -> int:
+def fetch(*, quiet: bool = False) -> int:
     dest = default_folder()
     dest.mkdir(parents=True, exist_ok=True)
     for name in FILES:
         target = dest / name
-        print(f"Downloading {name} ...", flush=True)
+        if not quiet:
+            print(f"Downloading {name} ...", flush=True)
         try:
             with urllib.request.urlopen(BASE + name, timeout=120) as r, target.open("wb") as f:
                 total = 0
                 while chunk := r.read(1 << 20):
                     f.write(chunk)
                     total += len(chunk)
-            print(f"  {total / 1e6:.1f} MB -> {target}")
+            if not quiet:
+                print(f"  {total / 1e6:.1f} MB -> {target}")
         except Exception as e:  # report plainly; nothing half-loaded is pinned
-            print(f"  failed: {type(e).__name__}: {e}", file=sys.stderr)
+            if not quiet:
+                print(f"  failed: {type(e).__name__}: {e}", file=sys.stderr)
             return 1
-    print("Done. Ask the harness to load the standards (load_standards).")
+    if not quiet:
+        print("Done. Standards are ready for the harness knowledge base.")
     return 0
