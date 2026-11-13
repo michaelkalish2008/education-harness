@@ -38,7 +38,7 @@ def workspace_root() -> Path:
 CHANGES_THE_MAP = {"set_arc", "write_plan", "note", "reveal", "set_status", "bookmark", "save_doc", "profile"}
 
 NOTE_KINDS = ("attempt", "question", "confusion", "insight", "thought", "keep", "slip", "shared", "heard_back",
-              "diary", "session")
+              "diary", "session", "review")
 
 CHATGPT_TOOLS = {
     "where_am_i", "set_arc", "write_plan", "note", "look_back", "reveal", "bookmark", "profile",
@@ -65,13 +65,22 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
 
     # ---------------------------------------------------------------- where
     @tool
-    def where_am_i(focus: str = "", space: str = "") -> dict:
+    def where_am_i(focus: str = "", space: str = "", journey: bool = False, journey_url: str = "") -> dict:
         """Call once at the start of a chat and when the learner asks where they are or what's next.
         Returns the current step and its plan, open questions, bookmarks, the learner's goals (arcs),
         what is still unknown about them (ask_later), defined onboarding choices, relevant loaded math
         standards for prerequisite calibration, and one suggested move. For a new learner, focus may be the
-        topic/project title even when no saved goal exists. space: the Claude project's name. Rewrites MAP.md."""
-        return ws.orient.where_am_i(focus, space)
+        topic/project title even when no saved goal exists. space: the Claude project's name. Rewrites MAP.md
+        and JOURNEY.html. journey=true (the learner asks to see their journey or map) also returns the journey
+        map's data and its page template path: fill the template's __JOURNEY_DATA__ with the data and publish
+        it. journey_url: after publishing, pass the page's URL once so later updates republish the same page."""
+        if journey_url:
+            ws.journey.set_link(journey_url)
+        out = ws.orient.where_am_i(focus, space)
+        if journey or journey_url:
+            j = ws.journey.write(out.get("suggested"))
+            out["journey"] = {"data": j["data"], "template": j["template"], "file": j.get("file", "")}
+        return out
 
     @tool
     def set_arc(goal: str = "", path: list[dict] | None = None, name: str = "", why: str = "", lens: str = "",
@@ -114,7 +123,9 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
         until a later note answers it via responds_to), insight or thought, keep (what they understand about a
         concept, for later recall; needs concept), slip (where work went sideways and what helped, only if the
         learner agreed to keep slips), shared (they explained, showed or posted it: who as a relationship, how,
-        where), heard_back (how it landed), diary, session (one line at the end of a session)."""
+        where), heard_back (how it landed), diary, session (one line at the end of a session), review (a run-through
+        of one review card: responds_to is the card id from look_back(kind='review'), text is what they said
+        this time, kept on the concept)."""
         if kind not in NOTE_KINDS:
             raise HarnessError(f"kind must be one of {NOTE_KINDS}.")
         if kind == "attempt":
@@ -142,6 +153,8 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
             return ws.add_diary_entry(text, project=project or None)
         if kind == "session":
             return ws.log_session(text, project or None)
+        if kind == "review":
+            return ws.review.mark(responds_to, text, project, step)
         k = {"thought": "gist"}.get(kind, kind)
         anchor = "concept" if concept else ("step" if (project and step) else "day")
         return ws.journal.annotate(text, k, anchor, concept, project, step, responds_to)
@@ -152,12 +165,16 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
         """Bring the learner's own record back. concept: everything on one concept (their notes, where it came
         up, what it builds on). query: search notes, journal, library and more (grep: an exact phrase to find
         inside library originals). kind='open': unanswered questions; kind='report': the evidence for a progress
-        or retrospective report. Otherwise: the journal, day by day, for since/until/project (default 14 days);
+        or retrospective report; kind='review': a run-through of past learnings, one card per concept (their
+        kept words, insights, answered questions), least-recently-reviewed first. Otherwise: the journal,
+        day by day, for since/until/project (default 14 days);
         write=true saves it as a file."""
         if kind == "open":
             return ws.journal.open_questions(project, limit)
         if kind == "report":
             return ws.reports.report_evidence(since, until, project)
+        if kind == "review":
+            return ws.review.deck(project, concept, limit)
         if concept:
             return ws.board.recall(concept)
         if query or grep:

@@ -33,6 +33,7 @@ It introduces itself when you open it without a specific request. For a new path
 - **"Note this"**: keep a thought in your words; half-formed is fine. "I don't get this" stays open until a later note answers it.
 - **"Bookmark this"**: save where your thinking is.
 - **"Look back"**: your notes and work, day by day; or "what do I know about the chain rule?"
+- **"Run through what I've learned"**: a review of past ideas, one at a time. You say each one again, then see your earlier words beside it. Least-reviewed ideas come first; no scores.
 
 Anything else is plain language: "show me the answer", "can we try it another way?", "how am I doing?", "I'm stopping here".
 

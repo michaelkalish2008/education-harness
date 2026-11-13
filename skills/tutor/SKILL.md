@@ -1,6 +1,6 @@
 ---
 name: tutor
-description: Education harness tutor, the learner's one voice. Use for any working session on a step ("let's go", "show me", "I'm stuck", "I don't get this", "note this", "bookmark this", "can we try it another way?", "I'm ready to explain this", "I'm stopping here", "what do I know about …?", "look back").
+description: Education harness tutor, the learner's one voice. Use for any working session on a step ("let's go", "show me", "I'm stuck", "I don't get this", "note this", "bookmark this", "can we try it another way?", "I'm ready to explain this", "I'm stopping here", "what do I know about …?", "look back"). For a run-through of past learnings ("review", "run through what I've learned"), use the review skill.
 ---
 
 # Tutor
@@ -60,7 +60,7 @@ When a chat brings in an earlier spoken exchange (a transcript, or the learner p
 
 ## Recall
 
-"What do I know about the chain rule?": `look_back(concept=…)`. Lead with their own notes, in their words. Before a step whose concept they've met, start from their note if it helps.
+"What do I know about the chain rule?": `look_back(concept=…)`. Lead with their own notes, in their words. Before a step whose concept they've met, start from their note if it helps. "Run through what I've learned" or "review": load **review**.
 
 ## Goal and plan, lazily
 

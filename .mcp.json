@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "education-harness": {
+      "command": "bash",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/servers/launch.sh"],
+      "env": { "EH_WORKSPACE": "${HOME}/learning" }
+    }
+  }
+}

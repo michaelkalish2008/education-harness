@@ -65,3 +65,13 @@ def test_calls_are_fast(s):
         call(s, "note", kind="attempt", text="work", project="p", step="s1")
     per_call = (time.perf_counter() - t) / 20
     assert per_call < 0.15, per_call
+
+
+def test_review_run_through_through_the_tools(s):
+    call(s, "note", kind="keep", concept="shrinkage", text="few views get pulled toward the prior")
+    deck = call(s, "look_back", kind="review")
+    card = deck["cards"][0]["card"]
+    assert card == "concept:shrinkage" and deck["never_reviewed"] == 1
+    out = call(s, "note", kind="review", responds_to=card, text="sparse items lean on the prior")
+    assert out["times_reviewed"] == 1
+    assert call(s, "look_back", kind="review")["never_reviewed"] == 0

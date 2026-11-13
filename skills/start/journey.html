@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Learning Journey</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: a trail map on the left, a field-notes panel on the right; one screen, the panel scrolls inside itself. */
+:root {
+  --bg: #e9f1ee;
+  --paper: #fbfdfc;
+  --ink: #142a2e;
+  --muted: #587073;
+  --line: #c9d8d4;
+  --trail: #2f7a6a;
+  --now: #d98b00;
+  --soft: rgba(47,122,106,.12);
+  --k-question: #b4532a; --k-confusion: #b4532a; --k-insight: #6a4fb0; --k-gist: #2f6f9f;
+  --k-keep: #2f7a6a; --k-attempt: #4b5d63; --k-diary: #8a6b1f; --k-slip: #9a3b55;
+  --k-opinion: #2f6f9f; --k-connection: #6a4fb0;
+  --display: "Bricolage Grotesque", "IBM Plex Sans", system-ui, sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1a1c; --paper: #15262a; --ink: #e3efec; --muted: #93aaa8; --line: #2a4044;
+    --trail: #5fc0a8; --now: #f2b33d; --soft: rgba(95,192,168,.15);
+    --k-question: #ec8a5f; --k-confusion: #ec8a5f; --k-insight: #a993e6; --k-gist: #79b3dd;
+    --k-keep: #5fc0a8; --k-attempt: #a4b6ba; --k-diary: #d8b25a; --k-slip: #e083a0;
+    --k-opinion: #79b3dd; --k-connection: #a993e6;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1a1c; --paper: #15262a; --ink: #e3efec; --muted: #93aaa8; --line: #2a4044;
+  --trail: #5fc0a8; --now: #f2b33d; --soft: rgba(95,192,168,.15);
+  --k-question: #ec8a5f; --k-confusion: #ec8a5f; --k-insight: #a993e6; --k-gist: #79b3dd;
+  --k-keep: #5fc0a8; --k-attempt: #a4b6ba; --k-diary: #d8b25a; --k-slip: #e083a0;
+  --k-opinion: #79b3dd; --k-connection: #a993e6;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--body); }
+.app { height: 100%; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 10px; padding: 14px 16px; max-width: 1500px; margin: 0 auto; }
+header { display: flex; flex-wrap: wrap; align-items: end; gap: 10px 20px; }
+header .goal { flex: 1 1 420px; min-width: 0; }
+.eyebrow { font: 600 12px var(--body); letter-spacing: .08em; text-transform: uppercase; color: var(--trail); }
+h1 { font: 700 clamp(19px, 2.3vw, 28px)/1.2 var(--display); margin: 2px 0 0; text-wrap: balance; }
+.stats { display: flex; gap: 8px; flex-wrap: wrap; }
+.stat { background: var(--paper); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; font-size: 13px; cursor: pointer; color: var(--ink); font-family: var(--body); }
+.stat b { font-family: var(--mono); }
+.stat:hover { border-color: var(--trail); }
+select { font: 500 14px var(--body); padding: 5px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); }
+.main { min-height: 0; display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(320px, 1fr); gap: 12px; }
+@media (max-width: 860px) { .main { grid-template-columns: 1fr; grid-template-rows: minmax(320px, 1fr) minmax(0, 1fr); } }
+.map, .panel { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; min-height: 0; }
+.map { position: relative; overflow: hidden; }
+.map svg { width: 100%; height: 100%; display: block; }
+.stop { cursor: pointer; }
+.stop:focus { outline: none; }
+.stop:focus-visible .ring, .stop:hover .ring { stroke: var(--now); stroke-width: 4; }
+.stop text { font: 500 13px var(--body); fill: var(--ink); }
+.stop .num { font: 600 13px var(--mono); }
+.sel .ring { stroke: var(--now) !important; stroke-width: 4 !important; }
+@keyframes pulse { 0% { r: 20; opacity: .6; } 100% { r: 38; opacity: 0; } }
+.pulse { fill: var(--now); animation: pulse 1.8s ease-out infinite; }
+@media (prefers-reduced-motion: reduce) { .pulse { animation: none; opacity: .25; } }
+.panel { display: grid; grid-template-rows: auto minmax(0, 1fr); overflow: hidden; }
+.tabs { display: flex; gap: 2px; padding: 8px 8px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.tabs button { font: 600 13px var(--body); border: 0; background: none; color: var(--muted); padding: 8px 10px; border-radius: 8px 8px 0 0; cursor: pointer; border-bottom: 3px solid transparent; }
+.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--trail); }
+.tabs button .n { font: 500 11px var(--mono); color: var(--muted); margin-left: 3px; }
+.body { overflow-y: auto; padding: 14px 16px 20px; display: grid; gap: 12px; align-content: start; }
+.body h2 { font: 700 20px/1.25 var(--display); margin: 0; text-wrap: balance; }
+.body h3 { font: 600 13px var(--body); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 6px 0 0; }
+.crumb { font-size: 13px; color: var(--muted); }
+.crumb button, .linkish { font: inherit; color: var(--trail); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.pill { display: inline-block; font: 600 11px var(--body); letter-spacing: .04em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; border: 1px solid currentColor; }
+.state-done { color: var(--trail); } .state-in-progress { color: var(--now); } .state-planned { color: var(--muted); } .state-not-started { color: var(--muted); opacity: .8; }
+.steps { display: grid; gap: 6px; }
+.stepbtn { display: grid; grid-template-columns: 26px 1fr auto; gap: 8px; align-items: center; text-align: left; font: 14px/1.35 var(--body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; cursor: pointer; }
+.stepbtn:hover { border-color: var(--trail); }
+.stepbtn .dot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--muted); display: grid; place-items: center; font: 600 11px var(--mono); }
+.stepbtn.done .dot { background: var(--trail); border-color: var(--trail); color: var(--paper); }
+.stepbtn.now .dot { background: var(--now); border-color: var(--now); color: var(--paper); }
+.stepbtn .c { font: 500 11px var(--mono); color: var(--muted); }
+.note { border-left: 4px solid var(--k, var(--muted)); background: var(--bg); border-radius: 0 10px 10px 0; padding: 8px 12px; display: grid; gap: 4px; }
+.note .meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; font-size: 12px; color: var(--muted); }
+.note .kind { font: 600 11px var(--body); text-transform: uppercase; letter-spacing: .05em; color: var(--k, var(--muted)); }
+.note .text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.note .text a { color: var(--trail); }
+.note.open .kind::after { content: " · still open"; }
+.filters { display: flex; gap: 6px; flex-wrap: wrap; }
+.filters button { font: 500 12px var(--body); color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; cursor: pointer; }
+.filters button[aria-pressed="true"] { background: var(--trail); color: var(--paper); border-color: var(--trail); }
+input[type=search] { font: 14px var(--body); width: 100%; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
+.empty { color: var(--muted); font-style: italic; }
+.card { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: grid; gap: 4px; }
+.card.auto { border-style: dashed; }
+footer { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; font-size: 14px; color: var(--muted); }
+footer .say { color: var(--ink); }
+footer .say b { color: var(--trail); }
+:focus-visible { outline: 3px solid var(--now); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="goal">
+      <div class="eyebrow" id="eyebrow">Your journey</div>
+      <h1 id="goal">Your learning journey</h1>
+    </div>
+    <select id="arcPick" aria-label="Which goal" hidden></select>
+    <div class="stats" id="stats"></div>
+  </header>
+  <div class="main">
+    <div class="map" id="map"><svg id="svg" role="img" aria-label="Trail map of your goal: each stop is one part of it"></svg></div>
+    <section class="panel" aria-label="Field notes">
+      <div class="tabs" role="tablist" id="tabs"></div>
+      <div class="body" id="body" role="tabpanel"></div>
+    </section>
+  </div>
+  <footer id="footer"></footer>
+</div>
+<script id="journey-data" type="application/json">__JOURNEY_DATA__</script>
+<script>
+(function () {
+  "use strict";
+  const $ = id => document.getElementById(id);
+  const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  let D;
+  try { D = JSON.parse($("journey-data").textContent); } catch (e) { D = null; }
+  if (!D || typeof D !== "object") D = { arcs: [], projects: [], notes: [], bookmarks: [], links: [] };
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const linkify = s => esc(s).replace(/https?:\/\/[^\s<)\]"']+/g, u => { const clean = u.replace(/[.,;]+$/, ""); return `<a href="${clean}" target="_blank" rel="noopener">${clean}</a>` + u.slice(clean.length); });
+  const words = s => String(s || "").replace(/[-_]/g, " ");
+  const when = at => { if (!at) return ""; const d = new Date(at.length <= 10 ? at + "T12:00" : at); return isNaN(d) ? at : d.toLocaleDateString(undefined, { month: "short", day: "numeric" }) + (at.length > 10 ? " · " + d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }) : ""); };
+  const KIND = { question: "Question", confusion: "Confusion", insight: "Insight", gist: "Thought", opinion: "Opinion", connection: "Connection", keep: "Kept", attempt: "Your work", diary: "Diary", slip: "Slip" };
+
+  const S = { arc: 0, tab: "here", sel: null, filter: "all", q: "" };
+  const projects = Object.fromEntries((D.projects || []).map(p => [p.project, p]));
+  const arc = () => (D.arcs || [])[S.arc] || null;
+  const notesFor = (project, step) => (D.notes || []).filter(n => n.project === project && (!step || n.step === step));
+  const openNotes = () => (D.notes || []).filter(n => n.open);
+  const sideTrails = () => (D.projects || []).filter(p => !p.placed);
+
+  // ---------- default selection: where you are
+  function hereSel() {
+    const c = D.current;
+    if (c && projects[c.project]) return { type: "step", project: c.project, step: c.step };
+    const a = arc();
+    if (a) { const i = a.path.findIndex(x => x.state !== "done"); return { type: "stop", index: Math.max(0, i) }; }
+    return null;
+  }
+
+  // ---------- header, stats, footer
+  function drawHeader() {
+    const a = arc();
+    $("goal").textContent = a ? a.goal : "Your learning journey";
+    $("eyebrow").textContent = a ? `Goal · ${words(a.name)}` : "Your journey";
+    const pick = $("arcPick");
+    if ((D.arcs || []).length > 1) {
+      pick.hidden = false;
+      pick.innerHTML = D.arcs.map((x, i) => `<option value="${i}" ${i === S.arc ? "selected" : ""}>${esc(words(x.name))}</option>`).join("");
+    }
+    const done = a ? a.path.filter(x => x.state === "done").length : 0;
+    const total = a ? a.path.length : 0;
+    const open = openNotes().length;
+    $("stats").innerHTML =
+      (total ? `<button class="stat" data-tab="here"><b>${done}</b> of <b>${total}</b> stops done</button>` : "") +
+      `<button class="stat" data-tab="notes"><b>${(D.notes || []).length}</b> notes</button>` +
+      `<button class="stat" data-tab="open"><b>${open}</b> still open</button>` +
+      `<button class="stat" data-tab="links"><b>${(D.links || []).length}</b> explorers &amp; links</button>`;
+    $("stats").querySelectorAll("button").forEach(b => b.addEventListener("click", () => { S.tab = b.dataset.tab; if (S.tab === "here") S.sel = hereSel(); render(); }));
+    const n = D.next;
+    $("footer").innerHTML = (n ? `<span class="say">Next: say <b>“${esc(n.say)}”</b>, ${esc(n.why || "")}</span>` : "") +
+      `<span>Updated ${esc(when(D.generated))}</span><span>Click any stop or stepping stone.</span>`;
+  }
+
+  // ---------- the trail map
+  function drawMap() {
+    const svg = $("svg"), a = arc();
+    const W = 1000, stops = a ? a.path : [], trails = sideTrails();
+    const perRow = 4, rowH = 150, top = 90;
+    const rows = Math.max(1, Math.ceil(stops.length / perRow));
+    const trailsH = trails.length ? 70 + trails.length * 120 : 0;
+    const H = top + rows * rowH + trailsH + 10;
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    svg.setAttribute("preserveAspectRatio", "xMidYMin meet");
+    const pos = stops.map((s, i) => {
+      const r = Math.floor(i / perRow), c = i % perRow, cc = r % 2 ? perRow - 1 - c : c;
+      return { x: 130 + cc * ((W - 260) / (perRow - 1)), y: top + r * rowH };
+    });
+    // the winding path, solid through finished stops, dashed after
+    let d = "";
+    pos.forEach((p, i) => {
+      if (!i) { d += `M ${p.x} ${p.y}`; return; }
+      const q = pos[i - 1];
+      if (q.y === p.y) d += ` L ${p.x} ${p.y}`;
+      else { const side = p.x > W / 2 ? 1 : -1, bx = p.x + side * 90; d += ` C ${bx} ${q.y}, ${bx} ${p.y}, ${p.x} ${p.y}`; }
+    });
+    const lastDone = stops.reduce((m, s, i) => (s.state === "done" ? i : m), -1);
+    let g = `<path d="${d}" fill="none" stroke="${css("--line")}" stroke-width="10" stroke-linecap="round" stroke-dasharray="2 16"/>`;
+    if (lastDone > 0) {
+      let dd = ""; pos.slice(0, lastDone + 1).forEach((p, i, arr) => { if (!i) { dd += `M ${p.x} ${p.y}`; return; } const q = arr[i - 1]; if (q.y === p.y) dd += ` L ${p.x} ${p.y}`; else { const side = p.x > W / 2 ? 1 : -1, bx = p.x + side * 90; dd += ` C ${bx} ${q.y}, ${bx} ${p.y}, ${p.x} ${p.y}`; } });
+      g += `<path d="${dd}" fill="none" stroke="${css("--trail")}" stroke-width="8" stroke-linecap="round"/>`;
+    }
+    const sel = S.sel;
+    stops.forEach((s, i) => {
+      const p = pos[i], st = s.state;
+      const fill = st === "done" ? css("--trail") : st === "in progress" ? css("--now") : css("--paper");
+      const stroke = st === "not started" ? css("--line") : st === "planned" ? css("--muted") : fill;
+      const isSel = sel && sel.type === "stop" && sel.index === i;
+      const lines = wrap(s.title, 20).slice(0, 3);
+      const n = s.project ? notesFor(s.project).length : 0;
+      g += `<g class="stop ${isSel ? "sel" : ""}" tabindex="0" role="button" aria-label="Stop ${i + 1}: ${esc(s.title)}, ${st}" data-stop="${i}">`;
+      if (st === "in progress") g += `<circle class="pulse" cx="${p.x}" cy="${p.y}" r="20"/>`;
+      g += `<circle class="ring" cx="${p.x}" cy="${p.y}" r="22" fill="${fill}" stroke="${stroke}" stroke-width="3"/>`;
+      g += st === "done" ? `<path d="M ${p.x - 9} ${p.y} l 6 7 l 12 -14" fill="none" stroke="${css("--paper")}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`
+                         : `<text class="num" x="${p.x}" y="${p.y + 5}" text-anchor="middle" style="fill:${st === "in progress" ? css("--paper") : css("--muted")}">${i + 1}</text>`;
+      lines.forEach((ln, j) => g += `<text x="${p.x}" y="${p.y + 44 + j * 16}" text-anchor="middle">${esc(ln)}</text>`);
+      if (n) g += `<text x="${p.x + 26}" y="${p.y - 18}" style="font:600 11px var(--mono);fill:${css("--trail")}">${n} note${n > 1 ? "s" : ""}</text>`;
+      g += `</g>`;
+    });
+    if (stops.length) {
+      const p0 = pos[0];
+      g += `<text x="${p0.x - 60}" y="${p0.y - 40}" style="font:600 12px var(--body);letter-spacing:.08em;fill:${css("--muted")}">START</text>`;
+      const pl = pos[pos.length - 1];
+      g += `<g transform="translate(${pl.x + 30},${pl.y - 50})"><line x1="0" y1="0" x2="0" y2="40" stroke="${css("--ink")}" stroke-width="3"/><path d="M 0 0 L 26 8 L 0 16 Z" fill="${css("--trail")}"/></g>`;
+    } else {
+      g += `<text x="${W / 2}" y="${top}" text-anchor="middle" style="font:500 16px var(--body);fill:${css("--muted")}">No goal saved yet. Say “Let's learn” to set one.</text>`;
+    }
+    // side trails: projects not yet placed on a stop
+    if (trails.length) {
+      let y = top + rows * rowH + 20;
+      g += `<text x="40" y="${y}" style="font:600 12px var(--body);letter-spacing:.08em;fill:${css("--muted")}">SIDE TRAILS · projects not yet pinned to a stop</text>`;
+      trails.forEach(t => {
+        y += 40;
+        g += `<text x="40" y="${y}" style="font:600 14px var(--body);fill:${css("--ink")}">${esc(trunc(t.question || words(t.project), 90))}</text>`;
+        const n = t.steps.length, x0 = 60, span = Math.min(820, Math.max(n - 1, 1) * 110), yy = y + 46;
+        g += `<line x1="${x0}" y1="${yy}" x2="${x0 + span}" y2="${yy}" stroke="${css("--line")}" stroke-width="6" stroke-linecap="round" stroke-dasharray="2 12"/>`;
+        t.steps.forEach((s, i) => {
+          const x = x0 + (n > 1 ? i * span / (n - 1) : 0), done = s.status === "drafted" || s.status === "defended", now = t.now === s.id;
+          const isSel = sel && sel.type === "step" && sel.project === t.project && sel.step === s.id;
+          g += `<g class="stop ${isSel ? "sel" : ""}" tabindex="0" role="button" aria-label="${esc(s.does)}${now ? ", you are here" : ""}" data-project="${esc(t.project)}" data-step="${esc(s.id)}">`;
+          if (now) g += `<circle class="pulse" cx="${x}" cy="${yy}" r="16"/>`;
+          g += `<circle class="ring" cx="${x}" cy="${yy}" r="15" fill="${done ? css("--trail") : now ? css("--now") : css("--paper")}" stroke="${done ? css("--trail") : now ? css("--now") : css("--muted")}" stroke-width="3"/>`;
+          g += `<text class="num" x="${x}" y="${yy + 5}" text-anchor="middle" style="fill:${done || now ? css("--paper") : css("--muted")}">${i + 1}</text>`;
+          const k = notesFor(t.project, s.id).length;
+          if (k) g += `<text x="${x}" y="${yy + 34}" text-anchor="middle" style="font:600 11px var(--mono);fill:${css("--trail")}">${k}</text>`;
+          g += `</g>`;
+          if (now) g += flag(x, yy - 18);
+        });
+        y += 90;
+      });
+    }
+    // "you are here" on a placed project's stop
+    if (D.current && stops.length) {
+      const i = stops.findIndex(s => s.project === D.current.project);
+      if (i >= 0) g += flag(pos[i].x, pos[i].y - 24);
+    }
+    svg.innerHTML = g;
+    svg.querySelectorAll(".stop").forEach(el => {
+      const go = () => {
+        if (el.dataset.stop !== undefined) S.sel = { type: "stop", index: +el.dataset.stop };
+        else S.sel = { type: "step", project: el.dataset.project, step: el.dataset.step };
+        S.tab = "here"; render();
+      };
+      el.addEventListener("click", go);
+      el.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+    });
+  }
+  function flag(x, y) {
+    return `<g transform="translate(${x},${y})" aria-hidden="true"><line x1="0" y1="0" x2="0" y2="-34" stroke="${css("--ink")}" stroke-width="2.5"/><path d="M 0 -34 L 22 -28 L 0 -21 Z" fill="${css("--now")}"/><text x="26" y="-24" style="font:700 12px var(--body);fill:${css("--now")}">you are here</text></g>`;
+  }
+  function wrap(s, n) { const out = []; let line = ""; String(s).split(/\s+/).forEach(w => { if ((line + " " + w).trim().length > n && line) { out.push(line); line = w; } else line = (line + " " + w).trim(); }); if (line) out.push(line); return out; }
+  function trunc(s, n) { s = String(s); return s.length > n ? s.slice(0, n - 1) + "…" : s; }
+
+  // ---------- panel
+  const TABS = [["here", "This stop"], ["notes", "Notes"], ["open", "Still open"], ["bookmarks", "Bookmarks"], ["links", "Explorers"]];
+  function drawTabs() {
+    const counts = { notes: (D.notes || []).length, open: openNotes().length, bookmarks: (D.bookmarks || []).length, links: (D.links || []).length };
+    $("tabs").innerHTML = TABS.map(([k, t]) => `<button role="tab" aria-selected="${S.tab === k}" data-tab="${k}">${t}${counts[k] != null ? `<span class="n">${counts[k]}</span>` : ""}</button>`).join("");
+    $("tabs").querySelectorAll("button").forEach(b => b.addEventListener("click", () => { S.tab = b.dataset.tab; if (S.tab === "here" && !S.sel) S.sel = hereSel(); render(); }));
+  }
+  function noteHTML(n) {
+    const where = [n.project && `<button class="linkish" data-jump="${esc(n.project)}|${esc(n.step || "")}">${esc(words(n.step || n.project))}</button>`, n.concept && esc(words(n.concept))].filter(Boolean).join(" · ");
+    return `<div class="note ${n.open ? "open" : ""}" style="--k:var(--k-${esc(n.kind)})"><div class="meta"><span class="kind">${esc(KIND[n.kind] || n.kind)}</span><span>${esc(when(n.at))}</span>${where ? `<span>${where}</span>` : ""}</div><div class="text">${linkify(n.text)}</div></div>`;
+  }
+  function notesList(list) { return list.length ? list.map(noteHTML).join("") : `<p class="empty">Nothing here yet.</p>`; }
+  function stepsHTML(p) {
+    return `<div class="steps">${p.steps.map((s, i) => {
+      const done = s.status === "drafted" || s.status === "defended", now = p.now === s.id, k = notesFor(p.project, s.id).length;
+      return `<button class="stepbtn ${done ? "done" : ""} ${now ? "now" : ""}" data-project="${esc(p.project)}" data-step="${esc(s.id)}"><span class="dot">${done ? "✓" : i + 1}</span><span>${esc(s.does)}${now ? " <b style='color:var(--now)'>· you are here</b>" : ""}</span><span class="c">${k ? k + " notes" : ""}</span></button>`;
+    }).join("")}</div>`;
+  }
+  function drawBody() {
+    const b = $("body"); let h = "";
+    if (S.tab === "here") {
+      const sel = S.sel || hereSel();
+      if (!sel) h = `<p class="empty">No goal or project yet. Say “Let's learn” in a chat to start one.</p>`;
+      else if (sel.type === "stop") {
+        const s = arc().path[sel.index], p = s.project && projects[s.project];
+        h += `<div class="crumb">Stop ${sel.index + 1} of ${arc().path.length}</div><h2>${esc(s.title)}</h2><div><span class="pill state-${s.state.replace(" ", "-")}">${esc(s.state)}</span></div>`;
+        if (s.idea) h += `<div class="crumb">From the path: ${esc(words(s.idea.split(":").pop()))}</div>`;
+        if (p) h += `<h3>Project</h3><p>${esc(p.question)}</p>${stepsHTML(p)}<h3>Notes on this stop</h3>${notesList(notesFor(p.project))}`;
+        else h += `<p class="empty">Not started. When you get here, a small project is planned around something from your own life.</p>`;
+      } else {
+        const p = projects[sel.project], s = p && p.steps.find(x => x.id === sel.step);
+        if (!p || !s) h = `<p class="empty">That step isn't in your plans any more.</p>`;
+        else {
+          const i = p.steps.indexOf(s);
+          h += `<div class="crumb"><button data-proj="${esc(p.project)}">${esc(trunc(p.question || words(p.project), 70))}</button> · step ${i + 1} of ${p.steps.length}</div>`;
+          h += `<h2>${esc(s.does)}</h2><div><span class="pill state-${s.status.replace(" ", "-")}">${esc(p.now === s.id ? "you are here" : s.status)}</span></div>`;
+          if (s.concepts.length) h += `<div class="crumb">Ideas: ${s.concepts.map(c => esc(words(c))).join(", ")}</div>`;
+          const bms = (D.bookmarks || []).filter(k => (k.where || "").startsWith(`${p.project} / ${s.id}`));
+          if (bms.length) h += `<h3>Bookmarks</h3>` + bms.map(k => `<div class="card ${k.auto ? "auto" : ""}"><b>${esc(k.label)}</b><span class="crumb">${esc(k.when)}</span><span>${esc(k.where.split(": ").slice(1).join(": "))}</span></div>`).join("");
+          h += `<h3>Your notes on this step</h3>${notesList(notesFor(p.project, s.id))}`;
+          h += `<h3>The whole project</h3>${stepsHTML(p)}`;
+        }
+      }
+    } else if (S.tab === "notes") {
+      const kinds = ["all", ...new Set((D.notes || []).map(n => n.kind))];
+      h += `<input type="search" id="q" placeholder="Search your notes" value="${esc(S.q)}" aria-label="Search your notes">`;
+      h += `<div class="filters">${kinds.map(k => `<button aria-pressed="${S.filter === k}" data-filter="${esc(k)}">${esc(k === "all" ? "All" : KIND[k] || k)}</button>`).join("")}</div>`;
+      const q = S.q.toLowerCase();
+      h += notesList((D.notes || []).filter(n => (S.filter === "all" || n.kind === S.filter) && (!q || (n.text + " " + n.concept + " " + n.step).toLowerCase().includes(q))));
+    } else if (S.tab === "open") {
+      h += `<h2>Still open</h2><p class="crumb">Questions and confusions no later note has answered yet.</p>${notesList(openNotes())}`;
+    } else if (S.tab === "bookmarks") {
+      const bm = D.bookmarks || [];
+      h += `<h2>Bookmarks</h2>` + (bm.length ? bm.map(k => `<div class="card ${k.auto ? "auto" : ""}"><b>${esc(k.label)}${k.auto ? " · where you stopped" : ""}${k.resolved ? " · done" : ""}</b><span class="crumb">${esc(k.when)}</span><span>${esc(k.where)}</span></div>`).join("") : `<p class="empty">No bookmarks yet. Say “Bookmark this” in a chat.</p>`);
+    } else if (S.tab === "links") {
+      const ls = D.links || [];
+      h += `<h2>Explorers &amp; links</h2><p class="crumb">Every link you've kept in a note.</p>` + (ls.length ? ls.map(l => `<div class="card"><a href="${esc(l.url)}" target="_blank" rel="noopener" style="color:var(--trail);overflow-wrap:anywhere">${esc(l.url)}</a><span class="crumb">${esc(when(l.at))}${l.concept ? " · " + esc(words(l.concept)) : ""}${l.step ? " · " + esc(words(l.step)) : ""}</span></div>`).join("") : `<p class="empty">No links yet.</p>`);
+    }
+    b.innerHTML = h; b.scrollTop = 0;
+    b.querySelectorAll("[data-project][data-step]").forEach(el => el.addEventListener("click", () => { S.sel = { type: "step", project: el.dataset.project, step: el.dataset.step }; S.tab = "here"; render(); }));
+    b.querySelectorAll("[data-jump]").forEach(el => el.addEventListener("click", () => { const [p, s] = el.dataset.jump.split("|"); const pr = projects[p]; S.sel = { type: "step", project: p, step: s || (pr && (pr.now || (pr.steps[0] || {}).id)) }; S.tab = "here"; render(); }));
+    b.querySelectorAll("[data-proj]").forEach(el => el.addEventListener("click", () => { const a = arc(), i = a ? a.path.findIndex(x => x.project === el.dataset.proj) : -1; if (i >= 0) { S.sel = { type: "stop", index: i }; render(); } }));
+    b.querySelectorAll("[data-filter]").forEach(el => el.addEventListener("click", () => { S.filter = el.dataset.filter; drawBody(); }));
+    const q = $("q"); if (q) q.addEventListener("input", () => { S.q = q.value; const pos = q.selectionStart; drawBody(); const q2 = $("q"); q2.focus(); q2.setSelectionRange(pos, pos); });
+  }
+  function render() { drawHeader(); drawMap(); drawTabs(); drawBody(); }
+  $("arcPick").addEventListener("change", e => { S.arc = +e.target.value; S.sel = hereSel(); render(); });
+  try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render); } catch (e) {}
+  S.sel = hereSel();
+  render();
+})();
+</script>
+</body>
+</html>

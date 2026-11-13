@@ -40,3 +40,12 @@ def test_local_mcp_and_start_skill_are_discoverable():
     assert "ordinary language is the interface" in skill.lower()
     assert "teach me <topic>" in skill.lower()
     assert "let's learn" in skill.lower()
+
+
+def test_claude_app_server_config_and_lockfile():
+    # The Claude app starts a plugin's server from .mcp.json; without it the harness tools never appear.
+    cfg = json.loads((ROOT / ".mcp.json").read_text())
+    server = cfg["mcpServers"]["education-harness"]
+    assert server["args"] == ["${CLAUDE_PLUGIN_ROOT}/servers/launch.sh"]
+    assert "--frozen" in (ROOT / "servers/launch.sh").read_text()
+    assert (ROOT / "mcp/uv.lock").exists()   # --frozen refuses to run without it

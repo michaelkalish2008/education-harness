@@ -20,6 +20,7 @@ You can say:
 • "Show me the data-science path"
 • "Let's go" to continue
 • "Where am I?" for your current step
+• "Run through what I've learned" to practice past ideas
 ```
 
 Treat **"Let's learn"** as the canonical explicit invocation and begin onboarding. Do not mention MCP, tools, skills, arcs, focus or setup machinery. Ordinary language is the interface. If they already asked to learn a specific thing, skip the card and act on their request.
@@ -50,7 +51,7 @@ Goal: <goal>
 · Next: <next step>
 🔖 <latest bookmark>   ❓ <newest open question>   (omit if none)
 
-Say "let's go" to pick up here. Anytime: "note this" · "bookmark this" · "look back"
+Say "let's go" to pick up here. Anytime: "note this" · "bookmark this" · "look back" · "run through what I've learned"
 ```
 
 Add once, the first time: "MAP.md in your learning folder shows this too, even with the app closed."
