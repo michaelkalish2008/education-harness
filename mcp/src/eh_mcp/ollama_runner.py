@@ -25,6 +25,8 @@ data science, teach notation rather than assuming it: for every new symbol give 
 read the expression aloud, explain its role here, and distinguish lookalike symbols.
 Show inspectable mathematics in LaTeX first, then give a separate, concise line labeled
 "Read aloud:"; never replace the equation with prose or mix that line into the derivation.
+When a question has a natural small answer set, offer two to four compact numbered choices
+while keeping spoken or free-text answers available; never force open reasoning into a quiz.
 Preserve this order: intuition and assumptions; derivation; a hand-worked
 example; from-scratch implementation; PyTorch or package implementation; executable
 parity checks; recommender application; interview explanation and failure modes.

@@ -22,6 +22,7 @@ Plans are built backward from the learner's question, never from a syllabus. Kee
 9. **A tiny example** is workable by hand and comes from their interests when known.
 10. **Plan size:** structured uses three to five steps; semi-structured uses one or two. Each step is `{id, does, concepts, strong_version_shows, requires, standards_cited?}`.
 11. **Share-out:** the final structured step is a share-out. Semi-structured adds one only when useful.
+   - Each check-for-understanding that has a natural finite answer set includes two to four button-ready choices plus free-text and spoken-answer support. Open derivations and reflections stay open-ended.
 12. `write_plan(project, question, steps, example, audience)` when the chosen mode calls for a plan.
 13. **Solutions:** skip by default; work them out and check them on request.
 14. **Default recommendation path:** when the learner chooses the default data-science design, use `program.default_arc.path` and its `evidence_cycle`. Preserve the order math derivation -> hand example -> from-scratch implementation -> package/PyTorch implementation -> executable parity -> recommender application -> interview explanation. Expand or compress it for the learner's chosen depth without losing that order.

@@ -49,6 +49,8 @@ Optional: your own library of articles and notes ("add this folder to my library
 
 Openly licensed mathematics standards are fetched once and indexed locally when the harness first starts. Lessons retrieve only the one or two records relevant to the current step; the full standards set is never placed in the model context. Standards appear as learner-facing cards with level, course area, plain-language meaning and relevance, with the formal code secondary.
 
+Checks for understanding offer two to four clickable choices when the host provides an interactive button surface, while always preserving spoken and free-text answers. Text-only hosts show the same options as a compact numbered choice card; open reasoning is never reduced to multiple choice just to create buttons.
+
 ### Continue locally with Ollama
 
 The same saved goal, lesson plan, notes and bookmarks can be used with a local model when a hosted-model allowance is unavailable. With Ollama and `uv` installed:

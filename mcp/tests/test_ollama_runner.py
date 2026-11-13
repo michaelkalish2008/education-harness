@@ -1,6 +1,6 @@
 import json
 
-from eh_mcp.ollama_runner import _arguments, _schema, _tool_result
+from eh_mcp.ollama_runner import SYSTEM_PROMPT, _arguments, _schema, _tool_result
 
 
 class Tool:
@@ -31,3 +31,8 @@ def test_tool_arguments_accept_json_or_objects():
 
 def test_tool_result_preserves_structured_json():
     assert json.loads(_tool_result(Result())) == {"current": "probability"}
+
+
+def test_local_tutor_keeps_choices_optional():
+    assert "numbered choices" in SYSTEM_PROMPT
+    assert "free-text answers available" in SYSTEM_PROMPT
