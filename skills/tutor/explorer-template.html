@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Click Rate Standard Error, in Scenes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: a fixed 16:9 stage that never scrolls; one scene at a time; caption, the scene's one control and Back/Next sit under the picture. */
+:root {
+  --bg: #f3f5f7;
+  --panel: #ffffff;
+  --ink: #17212b;
+  --muted: #5b6874;
+  --line: #d3dae1;
+  --accent: #1f5f8b;
+  --click: #c06a1d;
+  --noclick: #5c7a8f;
+  --soft: rgba(31,95,139,.12);
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #10161c; --panel: #172029; --ink: #e8eef3; --muted: #9eabb7; --line: #2b3843;
+    --accent: #72b3e0; --click: #eb9a52; --noclick: #94b3c7; --soft: rgba(114,179,224,.16);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #10161c; --panel: #172029; --ink: #e8eef3; --muted: #9eabb7; --line: #2b3843;
+  --accent: #72b3e0; --click: #eb9a52; --noclick: #94b3c7; --soft: rgba(114,179,224,.16);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 16px/1.45 var(--body); overflow: hidden; }
+.app { height: 100%; display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto auto; gap: 8px; padding: 10px 16px 12px; max-width: 1600px; margin: 0 auto; }
+header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+header h1 { font: 600 17px var(--body); margin: 0; flex: 1; color: var(--muted); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; }
+button { font: 500 15px var(--body); color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 7px 14px; cursor: pointer; }
+button:hover { border-color: var(--accent); }
+button[aria-pressed="true"] { background: var(--accent); color: var(--panel); border-color: var(--accent); }
+button.primary { background: var(--accent); color: var(--panel); border-color: var(--accent); }
+button:disabled { opacity: .4; cursor: default; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.stage { min-height: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; position: relative; overflow: hidden; }
+.stage svg { width: 100%; height: 100%; display: block; }
+svg text { font-family: var(--body); }
+svg .num { font-family: var(--mono); }
+.caption { font-size: clamp(18px, 2.1vw, 30px); line-height: 1.3; min-height: 2.6em; text-wrap: balance; }
+.caption .ask { color: var(--accent); font-weight: 600; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; min-height: 40px; }
+.controls label { font-weight: 600; margin-right: 4px; }
+.controls input[type=range] { width: min(420px, 60vw); accent-color: var(--accent); }
+.controls .readout { font: 600 20px var(--mono); color: var(--accent); }
+.predict { display: none; gap: 8px; align-items: center; }
+body.study .predict.on { display: inline-flex; }
+.predict input { font: 600 18px var(--mono); width: 7em; padding: 5px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); }
+.predict .fb { font-weight: 600; }
+footer { display: flex; align-items: center; gap: 10px; }
+.dots { flex: 1; display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; }
+.dots button { width: 30px; height: 30px; padding: 0; border-radius: 50%; font: 600 13px var(--mono); }
+.dots button[aria-current="step"] { background: var(--accent); color: var(--panel); border-color: var(--accent); }
+.hint { color: var(--muted); font-size: 13px; }
+.drawer { position: fixed; top: 0; right: 0; height: 100%; width: min(460px, 92vw); background: var(--panel); border-left: 1px solid var(--line); padding: 18px; overflow-y: auto; transform: translateX(100%); transition: transform .25s ease; z-index: 5; box-shadow: -8px 0 24px rgba(0,0,0,.12); }
+.drawer.open { transform: none; }
+.drawer h2 { font: 600 18px var(--body); margin: 0 0 10px; }
+.drawer dl { margin: 0; display: grid; gap: 10px; }
+.drawer dt { font-weight: 600; }
+.drawer dd { margin: 0; color: var(--muted); }
+.drawer .line { font-family: var(--mono); padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; margin: 6px 0; }
+.drawer .why { font-size: 14px; color: var(--muted); margin-bottom: 10px; }
+.study-only { display: none; }
+body.study .study-only { display: revert; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Why a click rate's standard error is √( rate × (1 − rate) ÷ n )</h1>
+    <div class="seg" role="group" aria-label="Mode">
+      <button id="modePresent" aria-pressed="true">Present</button>
+      <button id="modeStudy" aria-pressed="false">Study</button>
+    </div>
+    <button id="details" class="study-only">Details</button>
+  </header>
+  <div class="stage"><svg id="pic" viewBox="0 0 1600 860" preserveAspectRatio="xMidYMid meet" role="img" aria-live="polite"></svg></div>
+  <div class="caption" id="caption"></div>
+  <div class="controls" id="controls"></div>
+  <footer>
+    <button id="back">← Back</button>
+    <div class="dots" id="dots" aria-label="Scenes"></div>
+    <span class="hint">← → or space</span>
+    <button id="next" class="primary">Next →</button>
+  </footer>
+</div>
+<aside class="drawer" id="drawer" aria-label="Details"><button id="closeDrawer" style="float:right">Close</button><div id="drawerBody"></div></aside>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const f = (x, d = 3) => (+x.toFixed(d)).toString();
+  const reduce = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const P0 = 0.3;
+  const S = { scene: 0, st: 0, n: 4, p5: 0.5, mult: 9, sims: {}, last: null, study: false };
+  const VIEWS = [1, 4, 9, 25, 100];
+
+  // ---------- svg helpers
+  const C = () => ({ ink: css("--ink"), mu: css("--muted"), acc: css("--accent"), ck: css("--click"), nc: css("--noclick"), pan: css("--panel"), line: css("--line"), soft: css("--soft") });
+  const T = (x, y, s, o = {}) => `<text x="${x}" y="${y}" ${o.a ? `text-anchor="${o.a}"` : ""} class="${o.num ? "num" : ""}" style="font-size:${o.size || 34}px;fill:${o.c || C().ink};${o.w ? "font-weight:600" : ""}" ${o.id ? `id="${o.id}"` : ""}>${s}</text>`;
+  const Rr = (x, y, w, h, o = {}) => `<rect ${o.id ? `id="${o.id}"` : ""} x="${x}" y="${y}" width="${Math.max(w, 0)}" height="${Math.max(h, 2)}" fill="${o.fill || "none"}" ${o.stroke ? `stroke="${o.stroke}" stroke-width="${o.sw || 2}"` : ""} ${o.dash ? `stroke-dasharray="${o.dash}"` : ""} opacity="${o.op ?? 1}"/>`;
+  const L = (x1, y1, x2, y2, c, w = 2, dash) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="${w}" ${dash ? `stroke-dasharray="${dash}"` : ""}/>`;
+  const Q = "?";
+  function tween(els, from, to, dur = 1000) {
+    if (reduce()) return;
+    const t0 = performance.now();
+    const set = (e, r) => { e.setAttribute("x", r.x); e.setAttribute("y", r.y); e.setAttribute("width", Math.max(r.w, 0)); e.setAttribute("height", Math.max(r.h, 2)); };
+    els.forEach((e, i) => set(e, from[i]));
+    const tick = now => {
+      const u = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - u, 3);
+      els.forEach((el, i) => { const a = from[i], b = to[i]; set(el, { x: a.x + (b.x - a.x) * e, y: a.y + (b.y - a.y) * e, w: a.w + (b.w - a.w) * e, h: a.h + (b.h - a.h) * e }); });
+      if (u < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+
+  // ---------- shared geometry for the rectangles (scenes 3–5): same scale, so areas compare honestly
+  const RX = 900, RY = 600, rx0 = 330, ry0 = 760;
+  function rectLayout(p, kind) {
+    const q = 1 - p;
+    if (kind === "A") return [{ x: rx0, y: ry0 - q * q * RY, w: p * RX, h: q * q * RY }, { x: rx0 + p * RX, y: ry0 - p * p * RY, w: q * RX, h: p * p * RY }];
+    const w = p * q * RX;
+    if (kind === "B") return [{ x: rx0, y: ry0 - q * RY, w, h: q * RY }, { x: rx0 + w + 140, y: ry0 - p * RY, w, h: p * RY }];
+    return [{ x: rx0, y: ry0 - q * RY, w, h: q * RY }, { x: rx0, y: ry0 - RY, w, h: p * RY }];
+  }
+  // squares (scenes 6–9)
+  const v1 = P0 * (1 - P0), s1 = Math.sqrt(v1);
+  const kOf = n => Math.round(Math.sqrt(n));
+
+  // ---------- scenes
+  const SCENES = [
+    { // 1
+      name: "Scores", states: 2,
+      caption: st => st === 0
+        ? `Score each view: a click is <b>1</b>, a non-click is <b>0</b>. 3 clicks in 10 views. <span class="ask">What's the average score?</span>`
+        : `The average score over all views is the click rate, <b>0.3</b>. Scoring 1 and 0 is a convention chosen so that this works.`,
+      predict: { st: 0, value: 0.3 },
+      draw(st) {
+        const c = C(); let h = "";
+        for (let i = 0; i < 10; i++) {
+          const x = 260 + i * 120, y = 330, isC = i < 3;
+          h += `<circle cx="${x}" cy="${y}" r="46" fill="${isC ? c.ck : c.nc}" opacity="${isC ? 1 : .55}"/>`;
+          h += T(x, y + 15, isC ? "1" : "0", { a: "middle", size: 44, w: 1, c: c.pan, num: 1 });
+        }
+        h += T(800, 160, "10 views: 3 clicks, 7 non-clicks", { a: "middle", size: 38, c: c.mu });
+        h += T(800, 520, "average score = (1 + 1 + 1 + 0 + 0 + 0 + 0 + 0 + 0 + 0) ÷ 10", { a: "middle", size: 36, num: 1 });
+        h += T(800, 640, st === 0 ? `= ${Q}` : "= 3 ÷ 10 = 0.3", { a: "middle", size: 60, w: 1, c: c.acc, num: 1 });
+        if (st === 1) h += T(800, 720, "= the click rate", { a: "middle", size: 38, w: 1, c: c.acc });
+        return h;
+      },
+      details: () => terms(["score", "average"]),
+    },
+    { // 2
+      name: "Distance", states: 2,
+      caption: st => st === 0
+        ? `<b>Distance from the average</b>: how far each score sits from 0.3. <span class="ask">Square each distance. What do you get?</span>`
+        : `Squared distances: <b>0.49</b> for a click, <b>0.09</b> for a non-click.`,
+      predict: { st: 0, value: 0.49, label: "click's squared distance" },
+      draw(st) {
+        const c = C(), x0 = 260, X = 1080, y = 380, at = v => x0 + v * X; let h = "";
+        h += L(x0, y, x0 + X, y, c.mu, 3);
+        [0, 1].forEach(v => h += L(at(v), y - 14, at(v), y + 14, c.mu, 3) + T(at(v), y + 60, v, { a: "middle", size: 34, num: 1, c: c.mu }));
+        h += `<polygon points="${at(.3) - 16},${y + 30} ${at(.3) + 16},${y + 30} ${at(.3)},${y + 4}" fill="${c.acc}"/>`;
+        h += T(at(.3), y + 74, "average 0.3", { a: "middle", size: 34, w: 1, c: c.acc });
+        h += `<circle cx="${at(1)}" cy="${y}" r="26" fill="${c.ck}"/>` + T(at(1), y - 44, "click = 1", { a: "middle", size: 32, w: 1, c: c.ck });
+        h += `<circle cx="${at(0)}" cy="${y}" r="26" fill="${c.nc}"/>` + T(at(0), y - 44, "non-click = 0", { a: "middle", size: 32, w: 1, c: c.nc });
+        h += L(at(.3), y - 110, at(1), y - 110, c.ck, 4) + T(at(.65), y - 124, "0.7", { a: "middle", size: 40, w: 1, c: c.ck, num: 1 });
+        h += L(at(0), y - 150, at(.3), y - 150, c.nc, 4) + T(at(.15), y - 164, "0.3", { a: "middle", size: 40, w: 1, c: c.nc, num: 1 });
+        h += T(800, 610, `click: 0.7² = ${st ? "0.49" : Q}`, { a: "middle", size: 48, w: 1, c: c.ck, num: 1 });
+        h += T(800, 690, `non-click: 0.3² = ${st ? "0.09" : Q}`, { a: "middle", size: 48, w: 1, c: c.nc, num: 1 });
+        return h;
+      },
+      details: () => terms(["distance"]),
+    },
+    { // 3
+      name: "Weigh", states: 2,
+      caption: st => st === 0
+        ? `Weigh each squared distance by <b>how often</b> it happens: width × height. <span class="ask">What's the total area?</span>`
+        : `The total area, <b>0.21</b>, is the <b>variance of one view</b>: the average squared distance, weighted by how often.`,
+      predict: { st: 0, value: 0.21 },
+      draw(st) { return drawRects(P0, "A", st, null); },
+      details: () => terms(["variance"]) + algebra(1),
+    },
+    { // 4
+      name: "Rearrange", states: 3,
+      caption: st => [
+        `Both areas contain 0.3 × 0.7. <span class="ask">If both rectangles take that as their width, what's the width?</span>`,
+        `Same areas, reshaped to width <b>0.21</b>. What's left is the height: <b>0.7</b> for a click, <b>0.3</b> for a non-click.`,
+        `Stack them: heights 0.7 + 0.3 = <b>1</b>. So the area is 0.21 × 1 = <b>rate × (1 − rate)</b>.`][st],
+      predict: { st: 0, value: 0.21 },
+      draw(st, anim) {
+        const kind = ["A", "B", "C"][st];
+        const h = drawRects(P0, kind, 1, st);
+        if (anim && st > 0) setTimeout(() => tween([$("rc"), $("rn")], rectLayout(P0, ["A", "B"][st - 1]), rectLayout(P0, kind)));
+        return h;
+      },
+      details: () => algebra(6),
+    },
+    { // 5
+      name: "Any rate", states: 1, control: "rate",
+      caption: () => `Move the click rate. One view's spread, <b>rate × (1 − rate)</b>, is largest at 0.5 and shrinks toward 0 and 1.`,
+      draw() {
+        const c = C(), p = S.p5, q = 1 - p, w = p * q * RX; let h = "";
+        h += Rr(rx0 - 60, ry0 - q * RY, w, q * RY, { fill: c.ck, op: .9 }) + Rr(rx0 - 60, ry0 - RY, w, p * RY, { fill: c.nc, op: .9 });
+        h += T(rx0 - 60 + w / 2, ry0 + 46, `width ${f(p * q)}`, { a: "middle", size: 34, w: 1, c: c.acc, num: 1 });
+        h += T(rx0 - 60 + Math.max(w, 60) + 20, ry0 - q * RY / 2, `${f(q, 2)}`, { size: 32, c: c.ck, num: 1 });
+        h += T(rx0 - 60 + Math.max(w, 60) + 20, ry0 - q * RY - p * RY / 2 + 10, `${f(p, 2)}`, { size: 32, c: c.nc, num: 1 });
+        // curve of p(1-p)
+        const gx = 720, gy = 700, GW = 760, GH = 520, at = (u, v) => [gx + u * GW, gy - v / 0.25 * GH * .9];
+        h += L(gx, gy, gx + GW, gy, c.mu, 2) + L(gx, gy, gx, gy - GH, c.mu, 2);
+        let d = ""; for (let i = 0; i <= 100; i++) { const u = i / 100, [x, y] = at(u, u * (1 - u)); d += (i ? "L" : "M") + x + " " + y; }
+        h += `<path d="${d}" fill="none" stroke="${c.acc}" stroke-width="4"/>`;
+        const [px, py] = at(p, p * q);
+        h += L(px, gy, px, py, c.mu, 2, "6 6") + `<circle cx="${px}" cy="${py}" r="14" fill="${c.acc}"/>`;
+        h += T(px, py - 28, `${f(p, 2)} × ${f(q, 2)} = ${f(p * q)}`, { a: px > gx + GW - 200 ? "end" : "middle", size: 34, w: 1, c: c.acc, num: 1 });
+        h += T(gx, gy + 44, "0", { a: "middle", size: 30, c: c.mu }) + T(gx + GW / 2, gy + 44, "0.5", { a: "middle", size: 30, c: c.mu }) + T(gx + GW, gy + 44, "1", { a: "middle", size: 30, c: c.mu });
+        h += T(gx + GW / 2, gy + 92, "click rate →", { a: "middle", size: 32, w: 1 });
+        h += T(gx + 10, gy - GH - 10, "variance of one view", { size: 32, w: 1 });
+        return h;
+      },
+      details: () => terms(["variance"]),
+    },
+    { // 6
+      name: "Square", states: 2,
+      caption: st => st === 0
+        ? `Draw the variance, 0.21, as the <b>area</b> of a square. <span class="ask">Its side is the square root. What is it?</span>`
+        : `Side = √0.21 = <b>0.458</b>. With one view (n = 1) that's the standard error: 0.458 ÷ √1.`,
+      predict: { st: 0, value: 0.458 },
+      draw(st) {
+        const c = C(), U = 440, x0 = 480, y0 = 760; let h = "";
+        h += Rr(x0, y0 - U, U, U, { fill: c.nc, op: .45, stroke: c.mu });
+        h += T(x0 + U / 2, y0 - U / 2, "area = 0.21", { a: "middle", size: 44, w: 1, num: 1 });
+        h += T(x0 + U / 2, y0 - U / 2 + 50, "variance of one view", { a: "middle", size: 32, c: c.mu });
+        h += L(x0, y0 - U - 22, x0 + U, y0 - U - 22, c.acc, 4);
+        h += T(x0 + U / 2, y0 - U - 40, `side = √0.21 = ${st ? "0.458" : Q}`, { a: "middle", size: 44, w: 1, c: c.acc, num: 1 });
+        if (st) {
+          h += T(x0 + U + 50, y0 - 200, "n = 1 view:", { size: 36, w: 1 });
+          h += T(x0 + U + 50, y0 - 140, "standard error = 0.458 ÷ √1", { size: 36, c: c.acc, num: 1 });
+          h += T(x0 + U + 50, y0 - 80, "= 0.458", { size: 36, w: 1, c: c.acc, num: 1 });
+        }
+        return h;
+      },
+      details: () => terms(["se"]) + chain(1),
+    },
+    { // 7
+      name: "Count", states: 2, control: "views",
+      caption: st => { const n = S.n, k = kOf(n); return st === 0
+        ? `Each view adds its own square: <b>variances add</b>. <span class="ask">With ${n} view${n > 1 ? "s" : ""}, what's the count's area?</span>`
+        : `Count's area = ${n} × 0.21 = <b>${f(n * v1)}</b>. Its side grew only <b>${k}</b> times, because ${k} × ${k} = ${n}.`; },
+      predict: { st: 0, value: () => S.n * v1 },
+      draw(st) { return drawCount(st); },
+      details: () => terms(["count"]) + chain(S.n),
+    },
+    { // 8
+      name: "Rate", states: 2, control: "views",
+      caption: st => { const n = S.n; return st === 0
+        ? `The <b>rate</b> is the count ÷ ${n}, so every length shrinks ${n} times. <span class="ask">Predict the rate's side.</span>`
+        : `Side ÷ ${n}: ${f(Math.sqrt(n * v1))} ÷ ${n} = <b>${f(Math.sqrt(v1 / n))}</b>. Area ÷ ${n}² = ${f(v1 / n, 4)}.`; },
+      predict: { st: 0, value: () => Math.sqrt(v1 / S.n) },
+      draw(st, anim) { return drawRate(st, anim); },
+      details: () => terms(["count"]) + chain(S.n),
+    },
+    { // 9
+      name: "Compare", states: 2, control: "views",
+      caption: st => { const n = S.n, k = kOf(n); return st === 0
+        ? `${n} rate squares fill one view's square. <span class="ask">How many pieces is each side cut into?</span>`
+        : `Each side is cut into <b>${k}</b> = √${n}. The standard error is one view's side ÷ √n: 0.458 ÷ ${k} = <b>${f(s1 / k)}</b>.`; },
+      predict: { st: 0, value: () => kOf(S.n) },
+      draw(st) { return drawCompare(st); },
+      details: () => terms(["se"]) + chain(S.n),
+    },
+    { // 10
+      name: "Rerun", states: 1, control: "run",
+      caption: () => { const se = Math.sqrt(v1 / S.n); return `Rerun the experiment with ${S.n} views. Most runs land within about <b>one standard error</b>, ${f(se)}, of the true rate.`; },
+      draw() { return drawHist(); },
+      details: () => terms(["se"]),
+    },
+    { // 11
+      name: "Say it", states: 2, control: "mult",
+      caption: st => { const m = S.mult, r = Math.sqrt(m); return st === 0
+        ? `Views go up <b>${m}</b> times. <span class="ask">How many times does the standard error shrink?</span>`
+        : `Views × ${m}, standard error ÷ <b>${f(r)}</b>. The variance (the area) shrinks ${m} times, so the error (the side) shrinks √${m} = ${f(r)} times.`; },
+      predict: { st: 0, value: () => Math.sqrt(S.mult) },
+      draw(st) {
+        const c = C(), m = S.mult, r = Math.sqrt(m); let h = "";
+        h += T(800, 300, `views × ${m}`, { a: "middle", size: 84, w: 1, num: 1 });
+        h += T(800, 470, `standard error ÷ ${st ? f(r) : Q}`, { a: "middle", size: 84, w: 1, c: c.acc, num: 1 });
+        if (st) {
+          h += T(800, 600, `area (variance) ÷ ${m}`, { a: "middle", size: 44, c: c.mu, num: 1 });
+          h += T(800, 660, `side (standard error) ÷ √${m} = ÷ ${f(r)}`, { a: "middle", size: 44, c: c.mu, num: 1 });
+        }
+        return h;
+      },
+      details: () => `<h2>Say it in your own words</h2><textarea style="width:100%;min-height:8em;font:16px var(--body);padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)" aria-label="Your explanation"></textarea><p class="why">Try: "The variance of a click rate is rate × (1 − rate) ÷ n, so its standard error, the square root, shrinks with √n."</p>`,
+    },
+  ];
+
+  // ---------- drawings shared by several scenes
+  function drawRects(p, kind, revealTotal, st4) {
+    const c = C(), q = 1 - p, [rc, rn] = rectLayout(p, kind); let h = "";
+    if (kind === "A") {
+      h += L(rx0, ry0, rx0 + RX, ry0, c.mu, 3) + L(rx0, ry0, rx0, ry0 - RY, c.mu, 3);
+      h += T(rx0, ry0 + 44, "0", { a: "middle", size: 30, c: c.mu }) + T(rx0 + p * RX, ry0 + 44, f(p, 2), { a: "middle", size: 30, c: c.mu, num: 1 }) + T(rx0 + RX, ry0 + 44, "1", { a: "middle", size: 30, c: c.mu });
+      h += T(rx0 + RX / 2, ry0 + 90, "how often the score happens →", { a: "middle", size: 34, w: 1 });
+      h += T(rx0 + 14, ry0 - RY + 20, "↑ squared distance from the average", { size: 34, w: 1 });
+      h += T(rx0 - 12, ry0 - q * q * RY + 12, f(q * q, 2), { a: "end", size: 30, c: c.ck, num: 1 }) + T(rx0 - 12, ry0 - p * p * RY + 12, f(p * p, 2), { a: "end", size: 30, c: c.nc, num: 1 });
+    }
+    h += Rr(rc.x, rc.y, rc.w, rc.h, { fill: c.ck, op: .9, id: "rc" }) + Rr(rn.x, rn.y, rn.w, rn.h, { fill: c.nc, op: .9, id: "rn" });
+    const lx = 1300;
+    if (kind === "A") {
+      h += T(rc.x + rc.w + 24, rc.y + 44, `click: ${f(p, 2)} × ${f(q * q, 2)} = ${f(p * q * q)}`, { size: 36, w: 1, c: c.ck, num: 1 });
+      h += T(rn.x + 24, rn.y - 20, `non-click: ${f(q, 2)} × ${f(p * p, 2)} = ${f(q * p * p)}`, { size: 36, w: 1, c: c.nc, num: 1 });
+      if (st4 === 0) h += T(lx + 260, 200, `shared width = ${Q}`, { a: "end", size: 44, w: 1, c: c.acc, num: 1 });
+      else h += T(lx + 260, 200, `total area = ${revealTotal ? f(p * q * q + q * p * p) : Q}`, { a: "end", size: 44, w: 1, c: c.acc, num: 1 });
+    } else if (kind === "B") {
+      h += T(rc.x + rc.w / 2, ry0 + 46, `${f(p * q)}`, { a: "middle", size: 34, w: 1, c: c.acc, num: 1 }) + T(rn.x + rn.w / 2, ry0 + 46, `${f(p * q)}`, { a: "middle", size: 34, w: 1, c: c.acc, num: 1 });
+      h += T(rc.x + rc.w + 16, rc.y + rc.h / 2, `${f(q, 2)}`, { size: 36, w: 1, c: c.ck, num: 1 });
+      h += T(rn.x + rn.w + 16, rn.y + rn.h / 2 + 12, `${f(p, 2)}`, { size: 36, w: 1, c: c.nc, num: 1 });
+      h += T(940, 300, `click: ${f(p * q)} wide × ${f(q, 2)} tall`, { size: 36, c: c.ck, num: 1 });
+      h += T(940, 360, `non-click: ${f(p * q)} wide × ${f(p, 2)} tall`, { size: 36, c: c.nc, num: 1 });
+      h += T(940, 440, "same areas, same width", { size: 36, w: 1, c: c.acc });
+    } else {
+      h += T(rc.x + rc.w / 2, ry0 + 46, `width ${f(p * q)}`, { a: "middle", size: 34, w: 1, c: c.acc, num: 1 });
+      h += T(rc.x + rc.w + 16, rc.y + rc.h / 2, `${f(q, 2)}`, { size: 36, w: 1, c: c.ck, num: 1 });
+      h += T(rc.x + rc.w + 16, rn.y + rn.h / 2 + 12, `${f(p, 2)}`, { size: 36, w: 1, c: c.nc, num: 1 });
+      h += T(800, 300, `heights: ${f(q, 2)} + ${f(p, 2)} = 1`, { size: 40, w: 1 });
+      h += T(800, 380, `area = ${f(p * q)} × 1 = ${f(p * q)}`, { size: 44, w: 1, c: c.acc, num: 1 });
+      h += T(800, 450, `= rate × (1 − rate)`, { size: 40, c: c.acc });
+    }
+    return h;
+  }
+
+  // count and rate squares use one scale per n, centered
+  const sqScale = n => Math.min(440, 640 / kOf(n));
+  const sx0 = 360, sy0 = 780;
+  function drawCount(st) {
+    const c = C(), n = S.n, k = kOf(n), U = sqScale(n), W = k * U; let h = "";
+    h += Rr(sx0, sy0 - W, W, W, { fill: c.nc, op: .45 });
+    for (let i = 1; i < k; i++) h += L(sx0 + i * U, sy0 - W, sx0 + i * U, sy0, c.pan, 3) + L(sx0, sy0 - i * U, sx0 + W, sy0 - i * U, c.pan, 3);
+    if (U >= 120) for (let i = 0; i < n; i++) h += T(sx0 + (i % k) * U + U / 2, sy0 - Math.floor(i / k) * U - U / 2 + 12, "0.21", { a: "middle", size: 34, num: 1 });
+    h += Rr(sx0, sy0 - W, W, W, { stroke: c.mu });
+    h += L(sx0, sy0 - W - 20, sx0 + W, sy0 - W - 20, c.ink, 3);
+    h += T(sx0 + W / 2, sy0 - W - 36, `side = ${k} × 0.458 = ${f(k * s1)}`, { a: "middle", size: 34, w: 1, num: 1 });
+    const lx = 1060;
+    h += T(lx, 300, `${n} view${n > 1 ? "s" : ""}`, { size: 44, w: 1 });
+    h += T(lx, 370, "count's area", { size: 36, c: c.mu });
+    h += T(lx, 430, `= ${n} × 0.21 = ${st ? f(n * v1) : Q}`, { size: 44, w: 1, c: c.acc, num: 1 });
+    if (U < 120) h += T(lx, 510, "each small square = one view, 0.21", { size: 30, c: c.mu });
+    return h;
+  }
+  function drawRate(st, anim) {
+    const c = C(), n = S.n, k = kOf(n), U = sqScale(n), W = k * U, to = U / k; let h = "";
+    h += Rr(sx0, sy0 - U, U, U, { stroke: c.mu, dash: "10 8", sw: 3 });
+    h += T(sx0 + U + 16, sy0 - U + 34, "one view", { size: 30, c: c.mu });
+    const r = st === 0 ? { x: sx0, y: sy0 - W, w: W, h: W } : { x: sx0, y: sy0 - to, w: to, h: to };
+    h += Rr(r.x, r.y, r.w, r.h, { fill: st ? c.acc : c.nc, op: st ? .9 : .45, id: "sq" });
+    const lx = 1060;
+    h += T(lx, 260, `rate = count ÷ ${n}`, { size: 44, w: 1, c: c.acc });
+    h += T(lx, 340, `count's side ${f(k * s1)}`, { size: 34, c: c.mu, num: 1 });
+    h += T(lx, 410, `rate's side = ${f(k * s1)} ÷ ${n}`, { size: 38, w: 1, num: 1 });
+    h += T(lx, 470, `= ${st ? f(s1 / k) : Q}`, { size: 52, w: 1, c: c.acc, num: 1 });
+    if (st) h += T(lx, 550, `area ${f(n * v1)} ÷ ${n * n} = ${f(v1 / n, 4)}`, { size: 34, c: c.mu, num: 1 });
+    if (anim && st) setTimeout(() => tween([$("sq")], [{ x: sx0, y: sy0 - W, w: W, h: W }], [{ x: sx0, y: sy0 - to, w: to, h: to }], 1300));
+    return h;
+  }
+  function drawCompare(st) {
+    const c = C(), n = S.n, k = kOf(n), D = 560, x0 = 340, y0 = 790, t = D / k; let h = "";
+    h += Rr(x0, y0 - D, D, D, { stroke: c.mu, dash: "10 8", sw: 3 });
+    for (let i = 1; i < k; i++) h += L(x0 + i * t, y0 - D, x0 + i * t, y0, c.mu, 2, "3 7") + L(x0, y0 - i * t, x0 + D, y0 - i * t, c.mu, 2, "3 7");
+    h += Rr(x0, y0 - t, t, t, { fill: c.acc, op: .9 });
+    h += L(x0, y0 - D - 20, x0 + D, y0 - D - 20, c.mu, 3) + T(x0 + D / 2, y0 - D - 36, "one view's side 0.458", { a: "middle", size: 32, c: c.mu, num: 1 });
+    if (k > 1) h += L(x0 - 20, y0 - t, x0 - 20, y0, c.acc, 5) + T(x0 - 30, y0 - t / 2 + 12, st ? f(s1 / k) : Q, { a: "end", size: 34, w: 1, c: c.acc, num: 1 });
+    const lx = 1000;
+    h += T(lx, 280, `${n} rate squares`, { size: 44, w: 1 });
+    h += T(lx, 340, "fill one view's square", { size: 36, c: c.mu });
+    h += T(lx, 430, `each side cut into ${st ? k : Q}`, { size: 40, w: 1, num: 1 });
+    if (st) {
+      h += T(lx, 490, `${k} = √${n}`, { size: 40, c: c.acc, num: 1 });
+      h += T(lx, 580, `standard error = 0.458 ÷ ${k}`, { size: 36, c: c.acc, num: 1 });
+      h += T(lx, 640, `= ${f(s1 / k)}`, { size: 52, w: 1, c: c.acc, num: 1 });
+    }
+    return h;
+  }
+  function runOnce(n) { let c = 0; for (let i = 0; i < n; i++) if (Math.random() < P0) c++; return c / n; }
+  function batch() { const a = new Float64Array(1000); for (let i = 0; i < 1000; i++) a[i] = runOnce(S.n); S.sims[S.n] = a; }
+  function drawHist() {
+    const c = C(), n = S.n, se = Math.sqrt(v1 / n), x0 = 140, X = 1320, y0 = 700, H = 420, at = v => x0 + v * X; let h = "";
+    if (!S.sims[n]) batch();
+    const sims = S.sims[n], counts = new Array(n + 1).fill(0);
+    sims.forEach(v => counts[Math.round(v * n)]++);
+    const max = Math.max(...counts), bw = Math.max(X / (n + 1) - 2, 3);
+    h += Rr(at(Math.max(0, P0 - se)), y0 - H - 10, at(Math.min(1, P0 + se)) - at(Math.max(0, P0 - se)), H + 10, { fill: c.soft });
+    counts.forEach((ct, i) => { if (ct) { const hh = ct / max * H; h += Rr(at(i / n) - bw / 2, y0 - hh, bw, hh, { fill: c.acc, op: .85 }); } });
+    h += L(at(P0), y0 - H - 20, at(P0), y0, c.ck, 4);
+    h += L(x0, y0, x0 + X, y0, c.mu, 3);
+    for (let t = 0; t <= 10; t += 2) h += T(at(t / 10), y0 + 44, f(t / 10, 1), { a: "middle", size: 30, c: c.mu, num: 1 });
+    h += T(x0 + X / 2, y0 + 92, "measured rate in one run →", { a: "middle", size: 32, w: 1 });
+    h += T(at(P0) + 14, y0 - H - 30, "true rate 0.3", { size: 32, w: 1, c: c.ck });
+    h += T(at(Math.min(1, P0 + se)) + 10, y0 - H + 30, `± one standard error (${f(se)})`, { size: 30, c: c.acc });
+    let ss = 0; sims.forEach(v => ss += (v - P0) * (v - P0));
+    const spread = Math.sqrt(ss / sims.length), inside = sims.filter(v => Math.abs(v - P0) <= se + 1e-12).length / 10;
+    h += T(1500, 60, `1,000 runs: typical miss ${f(spread)}`, { a: "end", size: 32, w: 1, num: 1 });
+    h += T(1500, 104, `formula ${f(se)} · ${f(inside, 1)}% inside the band`, { a: "end", size: 30, c: c.mu, num: 1 });
+    if (S.last != null) {
+      const d = S.last - P0, txt = Math.abs(d) < 1e-12 ? "exactly on 0.3" : (d > 0 ? `▲ ${f(d)} above 0.3` : `▼ ${f(-d)} below 0.3`);
+      h += T(140, 60, `last run: ${f(S.last)}`, { size: 40, w: 1, num: 1 }) + T(140, 108, txt, { size: 36, w: 1, c: d > 0 ? c.ck : c.nc, num: 1 });
+      h += `<circle cx="${at(S.last)}" cy="${y0 + 14}" r="12" fill="${c.ink}"/>`;
+    }
+    return h;
+  }
+
+  // ---------- details drawer content (Study mode)
+  const GLOSS = {
+    score: ["Score", "Each view gets a number: a click is 1, a non-click is 0. A convention, chosen so the average score equals the click rate."],
+    average: ["Average score", "The scores added up, divided by the number of views. 3 clicks in 10 views: 0.3. Not the midpoint of 1 and 0."],
+    distance: ["Distance from the average", "How far a score sits from the average score. A click (1) is 0.7 from 0.3."],
+    variance: ["Variance", "The average squared distance, weighted by how often each score happens. Squared units, like an area."],
+    count: ["Count vs rate", "The count is how many clicks you saw. The rate is the count divided by the number of views."],
+    se: ["Standard error", "How far the measured rate typically lands from the true rate across reruns. The square root of the rate's variance: the side of the square."],
+  };
+  const terms = ks => `<h2>Words in this scene</h2><dl>${ks.map(k => `<dt>${GLOSS[k][0]}</dt><dd>${GLOSS[k][1]}</dd>`).join("")}</dl>`;
+  function algebra(upto) {
+    const p = P0, q = 1 - p;
+    const lines = [
+      ["click piece + non-click piece", `${f(p * q * q)} + ${f(q * p * p)}`, "How often × squared distance, for each score."],
+      ["p·(1−p)·(1−p) + (1−p)·p·p", `0.3·0.7·0.7 + 0.7·0.3·0.3`, "A click happens p of the time and sits 1−p away; a non-click happens 1−p of the time and sits p away."],
+      ["p·(1−p) · [ (1−p) + p ]", `0.21 · [0.7 + 0.3]`, "Both pieces contain p·(1−p): pull it out, as 3×5 + 3×2 = 3×(5+2)."],
+      ["p·(1−p) · 1", "0.21 · 1", "(1−p) + p is every view: always 1."],
+      ["p·(1−p)", "0.21", "The variance of one view."],
+      ["p − p²", "0.3 − 0.09 = 0.21", "Multiplied out: rate − rate²."],
+    ];
+    return `<h2>The algebra</h2>` + lines.slice(0, upto).map((l, i) => `<div class="line">${i ? "= " : ""}${l[0]}<br><span style="color:var(--accent)">${i ? "= " : ""}${l[1]}</span></div><div class="why">${l[2]}</div>`).join("");
+  }
+  function chain(n) {
+    const k = kOf(n);
+    return `<h2>The numbers, ${n} view${n > 1 ? "s" : ""}</h2><dl>
+      <dt>One view</dt><dd>variance 0.21, side √0.21 = ${f(s1)}</dd>
+      <dt>Count</dt><dd>variance ${n} × 0.21 = ${f(n * v1)}, side ${f(Math.sqrt(n * v1))}</dd>
+      <dt>Rate = count ÷ ${n}</dt><dd>variance ${f(n * v1)} ÷ ${n}² = ${f(v1 / n, 4)}, side ${f(Math.sqrt(n * v1))} ÷ ${n} = ${f(Math.sqrt(v1 / n))}</dd>
+      <dt>Standard error</dt><dd>${f(s1)} ÷ √${n} = ${f(s1)} ÷ ${k} = ${f(Math.sqrt(v1 / n))}</dd></dl>`;
+  }
+
+  // ---------- controls for the current scene
+  function renderControls() {
+    const sc = SCENES[S.scene], box = $("controls"); box.innerHTML = "";
+    if (sc.control === "views") {
+      box.insertAdjacentHTML("beforeend", `<label>Views</label>`);
+      VIEWS.forEach(v => { const b = document.createElement("button"); b.textContent = v; b.setAttribute("aria-pressed", String(v === S.n)); b.addEventListener("click", () => { S.n = v; S.last = null; render(false); }); box.append(b); });
+    } else if (sc.control === "rate") {
+      box.insertAdjacentHTML("beforeend", `<label for="p5">Click rate</label><input type="range" id="p5" min="0.02" max="0.98" step="0.01" value="${S.p5}"><span class="readout" id="p5o">${S.p5.toFixed(2)}</span>`);
+      const r = $("p5"), h = () => { S.p5 = +r.value; $("p5o").textContent = S.p5.toFixed(2); $("pic").innerHTML = sc.draw(0); };
+      r.addEventListener("input", h); r.addEventListener("change", h);
+    } else if (sc.control === "run") {
+      box.insertAdjacentHTML("beforeend", `<label>Views</label>`);
+      VIEWS.forEach(v => { const b = document.createElement("button"); b.textContent = v; b.setAttribute("aria-pressed", String(v === S.n)); b.addEventListener("click", () => { S.n = v; S.last = null; render(false); }); box.append(b); });
+      const once = document.createElement("button"); once.textContent = "Run once"; once.style.marginLeft = "16px";
+      once.addEventListener("click", () => { S.last = runOnce(S.n); $("pic").innerHTML = sc.draw(0); });
+      const many = document.createElement("button"); many.textContent = "Run 1,000 times"; many.className = "primary";
+      many.addEventListener("click", () => { batch(); $("pic").innerHTML = sc.draw(0); });
+      box.append(once, many);
+    } else if (sc.control === "mult") {
+      box.insertAdjacentHTML("beforeend", `<label>Views up</label>`);
+      [4, 9, 25, 100].forEach(m => { const b = document.createElement("button"); b.textContent = "× " + m; b.setAttribute("aria-pressed", String(m === S.mult)); b.addEventListener("click", () => { S.mult = m; S.st = 0; render(false); }); box.append(b); });
+    }
+    // study-mode prediction box
+    const pr = sc.predict;
+    if (pr && pr.st === S.st) {
+      const wrap = document.createElement("span"); wrap.className = "predict on"; wrap.style.marginLeft = box.children.length ? "24px" : "0";
+      wrap.innerHTML = `<label for="guess">Your prediction${pr.label ? ` (${pr.label})` : ""}</label><input id="guess" inputmode="decimal"><button id="checkG">Check</button><span class="fb" id="fbG" aria-live="polite"></span>`;
+      box.append(wrap);
+      $("checkG").addEventListener("click", () => {
+        const want = typeof pr.value === "function" ? pr.value() : pr.value, got = parseFloat($("guess").value);
+        const ok = isFinite(got) && Math.abs(got - want) <= Math.max(0.006, Math.abs(want) * 0.02);
+        $("fbG").textContent = !isFinite(got) ? "Type a number." : ok ? "Right. Press Next to see it." : "Not yet. Press Next to see it, or try again.";
+        $("fbG").style.color = ok ? css("--accent") : css("--click");
+      });
+    }
+  }
+
+  // ---------- render and navigation
+  function render(anim) {
+    const sc = SCENES[S.scene];
+    $("pic").innerHTML = sc.draw(S.st, anim);
+    $("caption").innerHTML = sc.caption(S.st);
+    renderControls();
+    $("drawerBody").innerHTML = sc.details ? sc.details() : "";
+    document.querySelectorAll("#dots button").forEach((b, i) => b.setAttribute("aria-current", i === S.scene ? "step" : "false"));
+    $("back").disabled = S.scene === 0 && S.st === 0;
+    $("next").disabled = S.scene === SCENES.length - 1 && S.st === SCENES[S.scene].states - 1;
+    try { history.replaceState(null, "", "#scene-" + (S.scene + 1)); } catch (e) {}
+  }
+  function next() {
+    const sc = SCENES[S.scene];
+    if (S.st < sc.states - 1) { S.st++; render(true); }
+    else if (S.scene < SCENES.length - 1) { S.scene++; S.st = 0; render(false); }
+  }
+  function back() {
+    if (S.st > 0) { S.st--; render(false); }
+    else if (S.scene > 0) { S.scene--; S.st = SCENES[S.scene].states - 1; render(false); }
+  }
+  SCENES.forEach((sc, i) => { const b = document.createElement("button"); b.textContent = i + 1; b.title = sc.name; b.setAttribute("aria-label", `Scene ${i + 1}: ${sc.name}`); b.addEventListener("click", () => { S.scene = i; S.st = 0; render(false); }); $("dots").append(b); });
+  $("next").addEventListener("click", next);
+  $("back").addEventListener("click", back);
+  document.addEventListener("keydown", e => {
+    if (/INPUT|TEXTAREA/.test(document.activeElement.tagName)) return;
+    if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); next(); }
+    if (e.key === "ArrowLeft") { e.preventDefault(); back(); }
+  });
+  function setMode(study) {
+    S.study = study; document.body.classList.toggle("study", study);
+    $("modePresent").setAttribute("aria-pressed", String(!study)); $("modeStudy").setAttribute("aria-pressed", String(study));
+    if (!study) $("drawer").classList.remove("open");
+    render(false);
+  }
+  $("modePresent").addEventListener("click", () => setMode(false));
+  $("modeStudy").addEventListener("click", () => setMode(true));
+  $("details").addEventListener("click", () => $("drawer").classList.toggle("open"));
+  $("closeDrawer").addEventListener("click", () => $("drawer").classList.remove("open"));
+  try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => render(false)); } catch (e) {}
+  const m = /^#scene-(\d+)$/.exec(location.hash || ""); if (m) S.scene = Math.min(SCENES.length, Math.max(1, +m[1])) - 1;
+  render(false);
+})();
+</script>
+</body>
+</html>

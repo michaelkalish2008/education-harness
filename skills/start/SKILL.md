@@ -37,6 +37,8 @@ Treat **"Let's learn"** as the canonical explicit invocation and begin onboardin
 | `choose` | They have several goals: ask which one this chat is for, naming each by its goal. |
 | `retro`, `zoom-out` | Load **reflect**. |
 
+If the learner says they're walking, driving or only listening, or the chat brings in an earlier spoken exchange, load **tutor** and follow its *Voice sessions* or *Taking in a voice session* part, whatever the move.
+
 ## The help card (when asked: "where am I?", "help", "I'm lost", "what can this do?", "how do I use this?")
 
 One screen, plain words:

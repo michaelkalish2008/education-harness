@@ -18,10 +18,12 @@ Plans are built backward from the learner's question, never from a syllabus. Kee
    - The default data-science path uses `anchor_project`, a recommendation system. Begin with the current idea's concrete recommendation-system milestone so the learner knows why the work matters. Then teach the idea's `foundation` independently, without reducing it to an application trick. Return to build or evaluate the milestone, and end by making `converges_on_transformers` concrete: name whether the idea is inside the transformer or supports it externally, where it appears, and what it does there.
    - Each idea follows `learning_stages`: math with no code required; from-scratch code; an appropriate package implementation; then a coding-harness parity check. Use the idea's `practice` details. For stochastic training, parity means fixed inputs and seeds plus objective, gradient, invariant or one-step agreement—not identical full training trajectories.
 9. **A tiny example** is workable by hand and comes from their interests when known.
-10. **Plan size:** structured uses three to five steps; semi-structured uses one or two. Each step is `{id, does, concepts, strong_version_shows, requires, standards_cited?}`.
-11. **Share-out:** the final structured step is a share-out. Semi-structured adds one only when useful.
-12. `write_plan(project, question, steps, example, audience)` when the chosen mode calls for a plan.
-13. **Solutions:** skip by default; work them out and check them on request.
-14. Tell the learner the plan or current segment in two or three lines, then start below the first unconfirmed prerequisite.
+10. **Plan size:** structured uses three to five steps; semi-structured uses one or two. Each step is `{id, does, concepts, strong_version_shows, requires, terms?, standards_cited?}`.
+    - `terms`: each word the step uses that has an everyday meaning, with the one meaning it has here as a concrete phrase, e.g. `{"average": "the average score over all views, with a click scored 1 and a non-click 0 (1 click in 10 views is 0.1)"}`. Pick one word per idea and don't reuse a word for a second thing.
+11. **Explorers:** for a step whose idea turns on a quantity the learner can vary, name the explorer in `strong_version_shows` (what to vary, what to watch), so the tutor builds it at the start of the step.
+12. **Share-out:** the final structured step is a share-out. Semi-structured adds one only when useful.
+13. `write_plan(project, question, steps, example, audience)` when the chosen mode calls for a plan.
+14. **Solutions:** skip by default; work them out and check them on request.
+15. Tell the learner the plan or current segment in two or three lines, then start below the first unconfirmed prerequisite.
 
 For a goal with several parts, propose the path in plain words after the first session, from what they actually did, and save it with `set_arc` on their yes. Choose the lens that fits (math, philosophy, general) and say it in one line.

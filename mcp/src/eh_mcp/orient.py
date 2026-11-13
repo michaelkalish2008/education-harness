@@ -25,6 +25,11 @@ NAMED_SOFT_CAP = 12  # past this many of the learner's own bookmarks, saving one
 
 # What the learner can say. Shown on the help card and in MAP.md; the start skill
 # answers all of them. Plain phrases, no commands to memorize.
+# Profile fields the tutor needs every turn to fit the teaching to the learner.
+LEARNER_FIELDS = ("lesson_mode", "sociability", "mastery_mode", "depth_mode", "learning_context",
+                  "school_level", "target_role", "professional_context", "interests",
+                  "formats_that_fit", "voice_mode", "keep_slips")
+
 PHRASES = [
     ("Let's learn", "start a new learning path"),
     ("Let's go", "pick up where you left off, or start"),
@@ -257,7 +262,9 @@ class Orientation:
                           **({"standards_cited": list(s["standards_cited"])} if s.get("standards_cited") else {}),
                           "format": s.get("format", "solve-it"),
                           "strong_version_shows": list(s["strong_version_shows"]),
-                          "requires": list(s.get("requires", []))})
+                          "requires": list(s.get("requires", [])),
+                          **({"terms": {str(k): str(v) for k, v in dict(s["terms"]).items()}}
+                             if s.get("terms") else {})})
         if not clean:
             raise HarnessError("A plan needs at least one step.")
         old = _read_yaml(d / "program.yaml", {}) or {}
@@ -297,6 +304,7 @@ class Orientation:
                 "example": plan.get("project", {}).get("example", ""),
                 "steps": [{"id": x["id"], "does": x["does"], "concepts": x.get("concepts", []),
                            "format": x.get("format", ""), "strong_version_shows": x.get("strong_version_shows", []),
+                           "terms": x.get("terms", {}),
                            "status": prog.get(x["id"], {}).get("status", "not started"),
                            "seen": prog.get(x["id"], {}).get("seen", []),
                            "follow_on_owed": prog.get(x["id"], {}).get("follow_on_owed", False)}
@@ -656,6 +664,7 @@ class Orientation:
                "open_questions": self.ws.journal.open_questions(project=(current or {}).get("project", ""), limit=3),
                "waiting": {"notes_for_tutor": notes, "proposals": pending,
                            "retrospective_due": retro},
+               "learner": {k: learner[k] for k in LEARNER_FIELDS if learner.get(k) not in (None, "", [])},
                "suggested": move,
                "phrases": [{"say": s_, "does": d} for s_, d in PHRASES],
                "map": "MAP.md"}
