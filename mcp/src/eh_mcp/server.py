@@ -47,7 +47,7 @@ CHATGPT_TOOLS = {
 
 def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServer:
     ws = Workspace(root or workspace_root())
-    server = MCPServer(name="education-harness", version="0.7.1", instructions=INSTRUCTIONS)
+    server = MCPServer(name="education-harness", version="0.8.0", instructions=INSTRUCTIONS)
 
     def tool(fn):
         if chatgpt and fn.__name__ not in CHATGPT_TOOLS:
@@ -89,7 +89,8 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
     def write_plan(project: str, question: str, steps: list[dict], example: str = "", audience: str = "",
                    audience_format: str = "walkthrough", idea: str = "", solutions: dict | None = None) -> dict:
         """Write a project plan (creating the project). Each step: {id, does, concepts, strong_version_shows,
-        requires?, format? ('share-out' for the last step)}. audience: who the learner would show it to, as a
+        requires?, format? ('share-out' for the last step), terms? ({word: its one meaning here,
+        as a concrete phrase} for words with an everyday meaning)}. audience: who the learner would show it to, as a
         relationship or place, never a name; audience_format: walkthrough, post, explainer or show-and-tell.
         solutions: optional {step_id: {hints, answer, method, follow_ons}}, only where an answer needs computed
         numbers worth checking ahead of time. Steps with work on them are never dropped."""
@@ -229,7 +230,8 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
         spoken or both; depth_mode: civic-overview, foundational, practitioner or advanced;
         learning_context: job-interview,
         school, curiosity-personal-growth or professional-growth, with school_level, target_role or
-        professional_context when relevant; whether to keep slips). show;
+        professional_context when relevant; voice_mode: the learner's words for how to teach when they
+        are only listening, e.g. on a walk or driving; whether to keep slips). show;
         propose a change; list proposals; accept or reject one. Nothing changes without the learner's yes."""
         if action == "show":
             ws.ensure_workspace()

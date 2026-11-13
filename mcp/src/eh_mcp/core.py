@@ -392,6 +392,8 @@ class Workspace:
             for field, allowed in choices.items():
                 if field in change and change[field] not in allowed:
                     raise HarnessError(f"{field} must be one of {sorted(allowed)}.")
+            if "voice_mode" in change and not isinstance(change["voice_mode"], str):
+                raise HarnessError("voice_mode is the learner's own words for how to teach by voice.")
             for field in ("school_level", "target_role", "professional_context"):
                 if field in change and not str(change[field]).strip():
                     raise HarnessError(f"{field} cannot be blank when provided.")

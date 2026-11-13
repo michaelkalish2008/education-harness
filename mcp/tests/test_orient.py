@@ -191,3 +191,20 @@ def test_many_named_bookmarks_suggest_tidying_but_still_save(ws):
         r = ws.orient.save_checkpoint(f"b{i}", "t", "n")
     assert "consider_tidying" in r and r["saved"]
     assert len(ws.orient.list_checkpoints(limit=100)["checkpoints"]) == 13
+
+
+def test_where_am_i_carries_teaching_preferences(ws):
+    p = ws.propose_profile_change("propose", {"lesson_mode": "structured",
+                                              "voice_mode": "short turns, plain words, no symbols",
+                                              "formats_that_fit": ["analogies"]})["proposed"]
+    ws.propose_profile_change("accept", proposal_id=p)
+    learner = ws.orient.where_am_i()["learner"]
+    assert learner["voice_mode"].startswith("short turns") and learner["formats_that_fit"] == ["analogies"]
+    assert learner["lesson_mode"] == "structured" and "keep_slips" not in learner
+
+
+def test_plan_terms_reach_the_tutor(ws):
+    steps = [dict(STEPS[0], terms={"average": "the average score over all views"})] + STEPS[1:]
+    ws.orient.write_plan("terms", "What is the spread of one view?", steps)
+    s = ws.orient.where_am_i(focus="terms")
+    assert s["plan"]["steps"][0]["terms"]["average"].startswith("the average score")

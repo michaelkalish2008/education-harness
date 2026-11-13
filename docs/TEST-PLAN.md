@@ -16,6 +16,9 @@ Three sessions on the shipped plugin, and one baseline. The point is to find wha
 | **A** | Day 1, new chat | "Explain the chain rule." | Before content, the tutor asks the goal, structured/semi-structured/free-form preference, group/guided/solo preference, and the smallest relevant notation/background question. The explanation begins with rates of change independently, then converges on backpropagation in transformers. |
 | **B** | Day 2, new chat | "Let's go." | One line on where you are, quoting a note or bookmark from A correctly; the next step starts. |
 | **C** | Any day, new chat in "Computational Phenomenology" | "Let's look at one passage on care in Heidegger." | It cites the passage, keeps text and interpretation apart, and doesn't feel like a problem set. |
+| **D** | Any day, voice, on a walk | "I'm on a walk, keep it conceptual. Why does more data make a click rate more trustworthy?" | Two-to-three-sentence turns, no symbols, real numbers side by side, a say-back after each idea; a derivation is parked for the screen. Mentioning traffic pauses the lesson. Back at the computer, the session is taken into notes in one pass. |
+| **E** | Any session with loaded words | Work a variance example ("what's the spread of one view?") | Every word with an everyday meaning (average, miss, spread) is defined as a concrete phrase before use and keeps one meaning; an off answer prompts a check on how the learner read the word. |
+| **F** | A step with a dial (sample size, rate) | "Show me how the standard error changes with more views." | An explorer in scenes appears early in the step: no scrolling, one control per scene, predict-then-reveal, labeled axes and quantities, numbers checked against the formula; its link is in the notes. |
 | **Baseline** | Day 1, plain Claude in a Project, harness disabled | Same as A | For comparison. |
 
 ## Watch
