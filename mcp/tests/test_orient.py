@@ -146,12 +146,13 @@ def test_checkpoints_save_list_reopen_and_search(ws):
 def test_program_lists_ideas_without_solutions(ws):
     p = ws.orient.get_program()
     assert [i["id"] for i in p["ideas"]][:2] == ["calculus-foundations", "vectors-dot-products"]
-    assert p["title"] == "Data science foundations through transformers"
+    assert p["title"] == "Mathematical data science for recommendation and post-training"
     assert all(i["foundation"] and i["converges_on_transformers"] for i in p["ideas"])
     assert len(p["modules"]) == 6 and [s["id"] for s in p["learning_stages"]] == ["math", "scratch", "package", "parity"]
     assert all(set(i["practice"]) == {"scratch", "package", "parity"} for i in p["ideas"])
     assert set(p["anchor_project"]["milestones"]) == {i["id"] for i in p["ideas"]}
     assert p["depth_modes"]["civic-overview"]["stages"] == ["math"] and p["civic_lens"]["recurring_questions"]
+    assert p["default_arc"]["path"][-3]["idea"] == "dpo"
     assert "solution" not in str(p).lower()
 
 

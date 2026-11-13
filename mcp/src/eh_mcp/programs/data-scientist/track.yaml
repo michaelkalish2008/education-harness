@@ -4,9 +4,9 @@
 # Standards are reference points, never the source of scope or sequence.
 schema: 2
 track: data-scientist
-title: Data science foundations through transformers
-guiding_question: How do core data-science methods work, and where do they meet transformers?
-sequence_rule: Establish the independent foundation, complete the four learning stages, then locate the transformer connection honestly.
+title: Mathematical data science for recommendation and post-training
+guiding_question: How can we derive, implement and validate the methods behind recommendation models, then tune them with SFT, RL, PPO and DPO?
+sequence_rule: Start from the recommendation decision, derive the mathematics, work a tiny example by hand, implement it from first principles, reproduce it with an appropriate package, check parity, then explain assumptions and failure modes.
 learning_stages:
   - {id: math, does: Understand the underlying mathematics with no code required.}
   - {id: scratch, does: Implement the method from first principles in plain Python or NumPy.}
@@ -22,6 +22,38 @@ example_rules:
   workable_by_hand: true
   from_interests: true
   numbers_computed_by_code: true
+
+# Offered when a learner asks for the default data-science path. It is a design,
+# not learner state: the learner still chooses and approves their own saved goal.
+default_arc:
+  name: recommendation-post-training
+  goal: Build a rock-solid understanding of the mathematics behind recommendation models, implement each major idea from scratch before PyTorch, and progress through SFT, RL, PPO and DPO.
+  intended_context: Interview preparation and practical model development.
+  default_depth: advanced
+  evidence_cycle:
+    - Intuition, visual LaTeX with a separate read-aloud notation key, and assumptions
+    - Mathematical derivation
+    - Hand-worked recommendation example
+    - Implementation from first principles in Python or NumPy
+    - Equivalent PyTorch or appropriate package implementation
+    - Numerical, shape, gradient and behavioral parity checks
+    - Recommender-system application
+    - Interview explanation, tradeoffs and failure modes
+  path:
+    - {title: "Probability, statistics and estimation for behavioral data"}
+    - {title: "Linear algebra and vector geometry", idea: vectors-dot-products}
+    - {title: "Calculus, gradients and optimization", idea: calculus-foundations}
+    - {title: "Regression, classification and ranking baselines", idea: logistic-regression}
+    - {title: "Collaborative filtering, matrix factorization, retrieval and ranking", idea: matrix-multiplication}
+    - {title: "Neural recommenders and backpropagation", idea: backpropagation}
+    - {title: "Embeddings, attention and sequential transformers", idea: attention}
+    - {title: "Supervised fine-tuning for recommendations", idea: supervised-fine-tuning}
+    - {title: "Bandits and reinforcement learning for repeated recommendations", idea: reinforcement-learning}
+    - {title: "Reward and preference modeling for recommendation feedback"}
+    - {title: "Proximal Policy Optimization", idea: ppo}
+    - {title: "Direct Preference Optimization", idea: dpo}
+    - {title: "Offline and online evaluation, bias, feedback loops and system design"}
+    - {title: "Interview synthesis and an end-to-end recommendation project"}
 
 anchor_project:
   title: Build and understand a recommendation system

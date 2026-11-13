@@ -20,6 +20,7 @@ semantic = ["fastembed==0.9.1", "numpy>=1.26"]
 
 [project.scripts]
 eh-mcp = "eh_mcp.server:main"
+eh-ollama = "eh_mcp.ollama_runner:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

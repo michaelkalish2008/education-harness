@@ -12,6 +12,17 @@ python3 -m venv .venv                      # Python 3.10 or newer
 
 The venv lives at `mcp/.venv` and is git-ignored. The workspace defaults to `~/learning`; set `EH_WORKSPACE` to put it elsewhere.
 
+## Resume with Ollama
+
+From the repository root, after installing Ollama and `uv`:
+
+```bash
+ollama pull gpt-oss:20b
+./servers/ollama.sh
+```
+
+The runner uses Ollama's OpenAI-compatible local endpoint, exposes the same ChatGPT-sized MCP tool surface in-process, and calls `where_am_i` before the first turn. Configuration: `OLLAMA_MODEL`, `OLLAMA_BASE_URL`, `OLLAMA_TIMEOUT`, `OLLAMA_MAX_MESSAGES`, and `EH_WORKSPACE`, or the equivalent command-line flags shown by `./servers/ollama.sh --help`.
+
 ## Register with Claude Code (before the plugin is packaged)
 
 ```bash

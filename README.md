@@ -47,9 +47,20 @@ Anything else is plain language: "show me the answer", "can we try it another wa
 
 Optional: your own library of articles and notes ("add this folder to my library"); smart search, a small local model; Common Core math standards as reference points.
 
+### Continue locally with Ollama
+
+The same saved goal, lesson plan, notes and bookmarks can be used with a local model when a hosted-model allowance is unavailable. With Ollama and `uv` installed:
+
+```bash
+ollama pull gpt-oss:20b
+./servers/ollama.sh
+```
+
+The runner loads `where_am_i` automatically and gives the model the harness's learning tools. Use `/resume` to discard the temporary chat context and reload saved progress, `/where` to inspect it, and `/quit` to exit. Set `OLLAMA_MODEL` or pass `--model` to use another tool-capable Ollama model. This moves inference local, but the model's quality, tool calling and context capacity still determine how well it tutors.
+
 ## Default path: Data science foundations through transformers
 
-Six modules build a recommendation system while covering mathematical foundations, classical statistical learning, text and vector representations, data systems, neural networks and transformers, and model training/post-training. Topics include derivatives and gradient descent, linear and logistic regression, tree models, TF-IDF, cosine similarity, PCA, SQLite, MapReduce, feed-forward networks, attention, transformers, hyperparameter optimization, SFT, reinforcement learning, PPO and DPO. Each idea begins with the recommendation decision it enables, is learned independently, then returns to the project and its honest connection to transformers.
+Six modules build a recommendation system while covering mathematical foundations, classical statistical learning, text and vector representations, data systems, neural networks and transformers, and model training/post-training. The default goal is math-first interview and implementation mastery: derive the idea, work it by hand, build it from scratch, reproduce it in PyTorch or the appropriate package, run parity checks, and explain its assumptions and failure modes. The path culminates in recommendation-specific SFT, reinforcement learning, reward and preference modeling, PPO and DPO. Each idea begins with the recommendation decision it enables, is learned independently, then returns to the project and its honest connection to transformers.
 
 Every idea has four stages: understand the mathematics without code; implement it from scratch; implement it with an appropriate package such as scikit-learn or PyTorch; then use a coding harness to check parity on fixed cases. Use the structured path, work in adaptive segments, or bring a free-form question.
 

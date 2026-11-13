@@ -32,6 +32,22 @@ def test_recommendation_project_gives_every_idea_a_purpose():
     assert all(anchor["milestones"][i["id"]] for i in TRACK["ideas"])
 
 
+def test_default_arc_is_math_first_and_reaches_recommender_post_training():
+    arc = TRACK["default_arc"]
+    assert arc["default_depth"] == "advanced"
+    assert "visual LaTeX" in arc["evidence_cycle"][0]
+    assert "separate read-aloud notation key" in arc["evidence_cycle"][0]
+    assert [stage.split()[0] for stage in arc["evidence_cycle"][:6]] == [
+        "Intuition,", "Mathematical", "Hand-worked", "Implementation", "Equivalent", "Numerical,"
+    ]
+    text = " ".join(item["title"] for item in arc["path"])
+    for needed in ["Probability", "matrix factorization", "PyTorch"]:
+        assert needed in (text + " " + " ".join(arc["evidence_cycle"]))
+    assert [item.get("idea") for item in arc["path"] if item.get("idea")][-4:] == [
+        "supervised-fine-tuning", "reinforcement-learning", "ppo", "dpo"
+    ]
+
+
 def test_civic_depth_and_philosophy_sources_are_explicit():
     assert set(TRACK["depth_modes"]) == {"civic-overview", "foundational", "practitioner", "advanced"}
     assert TRACK["depth_modes"]["civic-overview"]["stages"] == ["math"]

@@ -39,6 +39,7 @@ Add once, the first time: "MAP.md in your learning folder shows this too, even w
 ## Goals and chats
 
 - Words to use with the learner: **goal**, **step**, **notes**, **bookmark**. Internally a goal is an arc; don't say arc, space, lens or focus to them.
+- When the learner asks for the default data-science path, offer `program.default_arc` as the starting design. Personalize it from their goal and background, and save it only after their yes. Do not silently replace it with the raw idea order.
 - Several goals can share one Claude project. If a chat drifts to another goal, suggest a new chat: "In a new chat, say 'let's go on <goal>'." Never insist.
 - `ask_later` lists what isn't known yet. For a fresh learner, goal, `lesson_mode`, `sociability`, `mastery_mode`, `depth_mode`, `learning_context`, its required detail, and one topic-specific background/notation question come before content.
 

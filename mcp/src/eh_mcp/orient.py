@@ -70,6 +70,7 @@ class Orientation:
                 "modules": t.get("modules", []), "anchor_project": t.get("anchor_project", {}),
                 "civic_lens": t.get("civic_lens", {}),
                 "example_rules": t.get("example_rules"),
+                "default_arc": t.get("default_arc", {}),
                 "ideas": [{"id": i["id"], "order": i.get("order"), "idea": i.get("idea"),
                            "module": i.get("module"),
                            "foundation": i.get("foundation"),
@@ -611,6 +612,7 @@ class Orientation:
                "plan": self._plan_brief(current["project"]) if current else None,
                "program": None if arcs or projects else
                [{"id": i["id"], "idea": i["idea"]} for i in self.get_program()["ideas"]],
+               "default_arc": None if arcs or projects else self.get_program().get("default_arc"),
                "ask_later": ask_later,
                "onboarding_choices": {
                    "lesson_mode": {
