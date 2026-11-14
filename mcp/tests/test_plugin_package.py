@@ -60,6 +60,26 @@ def test_catalog_and_academic_advisor_ship_together():
     assert (ROOT / "skills/start/knowledge-map.html").exists()
 
 
+def test_knowledge_map_has_standalone_click_feedback_and_context_exploration():
+    page = (ROOT / "skills/start/knowledge-map.html").read_text()
+    for marker in ('id="demo"', 'id="exitSample"', 'Back to my map', 'Back to setup',
+                   'id="recenter"', 'Map recentered.', 'preventScroll:true',
+                   'ResizeObserver', '100dvh', 'tools/call', 'Step 1 of 2', 'Step 2 of 2',
+                   'id="buildChip"', 'aria-busy', 'Starting smart search…',
+                   'role="progressbar"', 'id="buildElapsed"', 'data-build-stage="indexing"',
+                   'attempt<1800', "stopBuild('Check status','Still working')",
+                   'id="firstRunNote"', 'The first map takes longer.',
+                   'Later updates normally process only new or changed material',
+                   'id="tooltip"', 'id="legend"', 'id="inspector"',
+                   "requestFullscreen", "row_normalization"):
+        if marker == "row_normalization":
+            assert marker in (ROOT / "mcp/src/eh_mcp/index.py").read_text()
+        else:
+            assert marker in page
+    assert "semantic vectors" not in page
+    assert "See how your learning connects" in page
+
+
 def test_how_it_works_ships_with_start_and_names_the_real_files():
     text = (ROOT / "skills/start/references/how-it-works.md").read_text()
     assert "references/how-it-works.md" in (ROOT / "skills/start/SKILL.md").read_text()
