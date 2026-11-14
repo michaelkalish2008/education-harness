@@ -22,7 +22,7 @@ def s(tmp_path):
 def test_the_surface_is_small(s):
     names = {t.name for t in asyncio.run(s.list_tools())}
     assert names == {"where_am_i", "set_arc", "write_plan", "note", "look_back", "reveal", "set_status",
-                     "bookmark", "save_doc", "profile", "library", "setup", "check_links", "catalog", "standards", "expectations",
+                     "bookmark", "save_doc", "profile", "library", "setup", "check_links", "catalog", "standards",
                      "knowledge_map"}
 
 

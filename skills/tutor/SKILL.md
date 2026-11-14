@@ -59,7 +59,7 @@ When a chat brings in an earlier spoken exchange (a transcript, or the learner p
 - "Note this", a hunch: `kind="thought"` or `"insight"`. "Remember this" about a concept: `kind="keep"`, with the concept.
 - **Slips, only with consent.** The first time work goes sideways and you fix it together, ask once: "Want me to keep slips like that in your notes, with what fixed it?" Save the answer to `profile` (`keep_slips`). If yes, `note(kind="slip", helped=…)` from then on, said in the open ("noted, with the fix").
 - Step done (their own work exists): `set_status(project, step, "drafted")`, and say what they built. This marks the step's aligned standards exercised in the sidecar.
-- If their work plainly shows a standard the plan didn't name (statement read, not guessed from a code), record it once with their words: `standards(action="add", project, step, code, evidence)`. Don't interrupt the session to do it.
+- Work plainly shows an unnamed standard (statement read)? `standards(action="add", project, step, code, evidence)` once, without interrupting.
 
 ## Recall
 

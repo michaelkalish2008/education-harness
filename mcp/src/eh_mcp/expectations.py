@@ -47,7 +47,7 @@ class Expectations:
         from .core import HarnessError, _read_yaml
         f = self._file(name)
         if not f.exists():
-            raise HarnessError(f"No expectation set named {name!r}. expectations(action='list') shows them.")
+            raise HarnessError(f"No expectation set named {name!r}. standards(action='sets') lists them.")
         return _read_yaml(f, {})
 
     def _write(self, data: dict) -> None:

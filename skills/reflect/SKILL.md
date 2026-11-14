@@ -25,17 +25,14 @@ Ask one at a time, any can be skipped: what went well; what was hard; what surpr
 
 ## Report ("how am I doing?", after a retro, or when they ask)
 
-`look_back(kind="report", project=…, modality, audience)`, then follow `delivery.how`.
-- **modality:** `voice` if they're listening only (walking, driving, `voice_mode` in use), `phone` if on a phone, else `computer`. If unsure, ask once.
-- **audience:** if anyone else is there (a parent, guardian, tutor, teacher, group, a guardian session), pass who. If `delivery.needs_consent`, ask `delivery.ask` in your own words, privately and kindly, and call again with their answer (`all`, `positive` or `none`). Say nothing about how they're doing until then. Never infer consent; a guardian's request is not the learner's consent. With `positive`, report only what the evidence includes and hint at nothing else.
-- Pass the same `audience` and `consent` to `save_doc(kind="report")`.
+`look_back(kind="report", project=…, modality, audience)`; follow `delivery.how`. Modality: voice if listening only, phone if on a phone, else computer. If anyone else is present, pass who; on `needs_consent` ask `delivery.ask` privately and call again with their answer. Never infer consent; a guardian's request isn't the learner's. Pass `audience` and `consent` to `save_doc`.
 
 Sections (fit them to `delivery.how`; on phone or voice keep only 1, 3 and 7):
 1. **Goal**, in their words.
 2. **Looking back**, quoting their retrospective, if there is one.
 3. **Growth:** one or two then-and-now pairs from confusions they answered, quoting both; what they built.
 4. **Strengths:** two or three, each shown with their own words, named with the lens's strands as reference points (math: the five strands of proficiency and the Mathematical Practices touched; philosophy: close reading, reconstructing an argument, charitable interpretation, facing the strongest objection, connecting thinkers, a position they can defend).
-5. **Standards:** only from `standards.exercised` (the lessons' sidecars, decided at planning and in sessions). Name each by its statement in plain words, tied to the step and, where recorded, the learner's evidence (code in parentheses). Group by `origin` (common, external with its issuer, personal) when more than one appears. `ahead` (codes) is where the plan goes, never a gap; mention it by count or by statement from the sidecar. Don't search for or add other standards in a report; if one seems missing, offer to record it with `standards(action="add")` first. If `pending_review` is above zero, offer to review those candidates (`standards(action="show")`). If `standards.loaded` is false, say standards weren't checked; never list bare codes.
+5. **Standards:** only `standards.exercised`, by statement in plain words, tied to their work (code in parentheses), grouped by origin if mixed. `ahead` is direction, never a gap. Add none here; offer `standards(action="add")` if one is missing, and a review if `pending_review` > 0. Not loaded: say so.
 6. **With others:** who they shared it with and what came back. If nothing, one light idea; if they work alone by choice, say that's fine.
 7. **Next experiences**, never deficits: an open question (quoted), a tool worth building, the next part of their goal.
 8. **Where it could lead:** who this could help, and the smallest step toward one real person using it.

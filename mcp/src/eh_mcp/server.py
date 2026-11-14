@@ -35,7 +35,7 @@ def workspace_root() -> Path:
     return Path(os.environ.get("EH_WORKSPACE", Path.home() / "learning")).expanduser()
 
 
-CHANGES_THE_MAP = {"set_arc", "write_plan", "standards", "expectations", "note", "reveal", "set_status", "bookmark", "save_doc", "profile", "catalog"}
+CHANGES_THE_MAP = {"set_arc", "write_plan", "standards", "note", "reveal", "set_status", "bookmark", "save_doc", "profile", "catalog"}
 
 NOTE_KINDS = ("attempt", "question", "confusion", "insight", "thought", "keep", "slip", "shared", "heard_back",
               "diary", "session", "review")
@@ -211,9 +211,8 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
         or retrospective report; kind='review': a run-through of past learnings, one card per concept (their
         kept words, insights, answered questions), least-recently-reviewed first. Otherwise: the journal,
         day by day, for since/until/project (default 14 days);
-        write=true saves it as a file. For kind='report': modality computer|phone|voice shapes delivery; audience
-        alone|parent|guardian|tutor|teacher|group|other; with anyone present, progress details need consent
-        (all|positive|none) — call first without it and ask the learner the returned question."""
+        write=true saves it as a file. Report: modality computer|phone|voice; audience (who else is present);
+        consent all|positive|none once the learner answers the returned question."""
         if kind == "open":
             return ws.journal.open_questions(project, limit)
         if kind == "report":
@@ -243,20 +242,19 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
 
     @tool
     def standards(action: str = "show", project: str = "", step: str = "", code: str = "", decision: str = "",
-                  evidence: str = "", by: str = "tutor") -> dict:
-        """Lesson standards sidecar, the only source for reports and the catalog. show; review (code, decision
-        accept|decline, at planning); add (code, step, evidence in the learner's words); drop (code, step?)."""
-        return ws.alignment.manage(action, project, step, code, decision, evidence, by)
-
-    @tool
-    def expectations(action: str = "list", set: str = "", origin: str = "", title: str = "", issuer: str = "",
-                     context: dict | None = None, source: dict | None = None, items: list[dict] | None = None,
-                     code: str = "", query: str = "", confirmed: bool = False) -> dict:
-        """Expectation sets. origin: external (school, class, program, employer; needs issuer + source) or
-        personal (the learner's own). list; create; add (items [{statement, code?, area?, level?}],
-        confirmed=true after the learner's yes); show; retire (code); archive/restore; search (query, origin?)."""
-        return ws.expectations.manage(action, set, origin, title, issuer, context, source, items, code, query,
-                                      confirmed)
+                  evidence: str = "", set: str = "", origin: str = "", issuer: str = "", source: dict | None = None,
+                  items: list[dict] | None = None, query: str = "", confirmed: bool = False) -> dict:
+        """Lesson sidecar (reports read only this): show, review (code, decision accept|decline), add (code, step,
+        evidence), drop. Expectation sets: sets, create (set, origin external|personal, issuer+source if external),
+        items (set, items [{statement}], confirmed after the learner's yes), retire (set, code), search (query)."""
+        if action in ("show", "review", "add", "drop"):
+            return ws.alignment.manage(action, project, step, code, decision, evidence)
+        a = {"sets": "list", "items": "add", "retire": "retire", "create": "create", "search": "search",
+             "archive": "archive", "restore": "restore", "show_set": "show"}.get(action)
+        if not a:
+            raise HarnessError("action: show, review, add, drop, sets, create, items, show_set, retire, archive, "
+                               "restore or search.")
+        return ws.expectations.manage(a, set, origin, "", issuer, None, source, items, code, query, confirmed)
 
     # -------------------------------------------------------------- bookmark
     @tool
@@ -287,7 +285,7 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
     def save_doc(kind: str, text: str = "", project: str = "", step: str = "", answers: dict | None = None,
                  reviewed: bool = False, parked: list[str] | None = None, since: str = "", until: str = "",
                  title: str = "", audience: str = "alone", consent: str = "") -> dict:
-        """Save something the learner has read or written. kind: report (since/until, audience, consent), retro (answers: any of
+        """Save something the learner has read or written. kind: report (since/until), retro (answers: any of
         went_well, was_hard, surprised, differently, how_i_learn, sharing, next), share_draft (a new version,
         from their own words), defense (their words, never paraphrased: first as a draft, then reviewed=true
         after they've read it)."""
