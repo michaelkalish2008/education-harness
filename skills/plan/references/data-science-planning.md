@@ -1,0 +1,4 @@
+# Default data-science path
+
+- The default data-science path uses `anchor_project`, a recommendation system. Begin with the current idea's concrete recommendation-system milestone so the learner knows why the work matters. Then teach the idea's `foundation` independently, without reducing it to an application trick. Return to build or evaluate the milestone, and end by making `converges_on_transformers` concrete: name whether the idea is inside the transformer or supports it externally, where it appears, and what it does there.
+   - Each idea follows `learning_stages`: math with no code required; from-scratch code; an appropriate package implementation; then a coding-harness parity check. Use the idea's `practice` details. For stochastic training, parity means fixed inputs and seeds plus objective, gradient, invariant or one-step agreement—not identical full training trajectories.

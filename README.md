@@ -75,7 +75,7 @@ With optional local smart search enabled, **“show my knowledge map”** opens 
 - **Looking back.** When a project is done: a short retrospective, then a report on your growth, strengths and what's next, quoting you. No grades, scores or comparisons, ever.
 - **Slips are kept only if you say so.**
 - **Standards, recorded as you go.** If you load the open math standards, each lesson keeps a sidecar, `projects/<lesson>/standards.yaml`: what each step cites (decided when the plan is written, candidates accepted or declined then, additions during a session with your words), marked exercised with a date when a step is drafted or defended. Reports and the catalog read only this file, so reports over time agree.
-- **Ask how it works.** "How does the education harness work?" or "Show me how this works" gets an overview fitted to how you learn (a diagram, your own files, a spoken walk-through), from `skills/start/how-it-works.md`.
+- **Ask how it works.** "How does the education harness work?" or "Show me how this works" gets an overview fitted to how you learn (a diagram, your own files, a spoken walk-through), from `skills/start/references/how-it-works.md`.
 - **Fast and lazy.** One call to open a chat, about one per turn after that; nothing loads until it's needed.
 
 Optional: your own library of articles and notes ("add this folder to my library"); smart search, a small local model; Common Core math standards as reference points.

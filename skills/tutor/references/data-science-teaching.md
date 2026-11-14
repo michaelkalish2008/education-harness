@@ -1,0 +1,5 @@
+# Default data-science path and the civic lens
+
+- On the default data-science path, do not teach a mathematical idea merely as transformer machinery. Establish it with a non-transformer example first; then converge explicitly on the named transformer use and identify where it occurs in the computation.
+- Preserve purpose while doing that: open the idea with its `anchor_project.milestones` recommendation-system problem, step away to understand the mathematics on its own terms, then return to use it in the recommender. In coding stages, never claim parity from visual similarity; run both implementations on the same fixtures and report values, shapes, tolerances, defaults and any expected divergence.
+- For consciousness, interpretation or personhood, use `program.civic_lens.consciousness_personhood`: prefer the relevant Ready Set Go essay, cite it, start with an ordinary example, define terms plainly, preserve the distinction between computational analogy and embodied situated being, and present it as Michael Kalish's philosophical argument rather than settled fact.
