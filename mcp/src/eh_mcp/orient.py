@@ -34,6 +34,7 @@ PHRASES = [
     ("Let's learn", "start a new learning path"),
     ("Let's go", "pick up where you left off, or start"),
     ("Where am I?", "what's done, what's now, what's next"),
+    ("Show my catalog", "browse, prioritize or archive learning paths"),
     ("Note this", "keep a thought in your words, half-formed is fine"),
     ("Bookmark this", "save where your thinking is right now"),
     ("Look back", "your notes and what you've done, brought back together"),
@@ -238,7 +239,7 @@ class Orientation:
     # --------------------------------------------------------------------- plan
     def write_plan(self, project: str, question: str, steps: list[dict], example: str = "",
                    interests_used: list[str] | None = None, idea: str = "",
-                   constellation: dict | None = None) -> dict:
+                   constellation: dict | None = None, sources: list[dict] | None = None) -> dict:
         """Lesson planner. Writes program.yaml after checking every step, and keeps progress:
         a step with work on it is never dropped (it is kept, marked retired)."""
         from .core import HarnessError, SCHEMA, _check_name, _read_yaml, _write_yaml
@@ -274,7 +275,12 @@ class Orientation:
             plan["track"], plan["idea"] = track, idea_id
         plan["project"] = {"question": question or old.get("project", {}).get("question", ""),
                            **({"example": example} if example else {}),
-                           **({"interests_used": list(interests_used)} if interests_used else {})}
+                           **({"interests_used": list(interests_used)} if interests_used else {}),
+                           **({"sources": [{k: str(s[k]).strip()
+                                            for k in ("kind", "url", "title", "library_id", "accessed_on")
+                                            if s.get(k)}
+                                           for s in sources if s.get("url") or s.get("library_id") or s.get("title")]}
+                              if sources else {})}
         plan["steps"] = clean
         plan["constellation"] = constellation or old.get("constellation", {})
         _write_yaml(d / "program.yaml", plan)
@@ -673,6 +679,7 @@ class Orientation:
         self.write_map(all_views, by_name, move)
         try:  # JOURNEY.html beside MAP.md; never breaks orientation
             self.ws.journey.write(move)
+            self.ws.catalog.write()
         except Exception:
             pass
         return out

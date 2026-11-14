@@ -22,7 +22,7 @@ def s(tmp_path):
 def test_the_surface_is_small(s):
     names = {t.name for t in asyncio.run(s.list_tools())}
     assert names == {"where_am_i", "set_arc", "write_plan", "note", "look_back", "reveal", "set_status",
-                     "bookmark", "save_doc", "profile", "library", "setup", "check_links"}
+                     "bookmark", "save_doc", "profile", "library", "setup", "check_links", "catalog"}
 
 
 def test_lazy_first_session_then_coming_back(s):
@@ -52,6 +52,15 @@ def test_lazy_first_session_then_coming_back(s):
          project="chain")
     assert call(s, "look_back", kind="report", project="chain")["sociability"]["count"] >= 1
     assert call(s, "note", kind="poem", text="x")["refused"]
+
+
+def test_plan_preserves_public_source_provenance(s):
+    steps = [{"id": "s1", "does": "compare two classifiers", "concepts": ["classification"],
+              "strong_version_shows": ["explains the different boundaries"]}]
+    call(s, "write_plan", project="source-plan", question="How do classifiers differ?", steps=steps,
+         sources=[{"url": "https://open.example.edu/course/", "title": "ML course", "library_id": "u123"}])
+    back = call(s, "where_am_i")
+    assert back["current"]["question"] == "How do classifiers differ?"
 
 
 def test_calls_are_fast(s):

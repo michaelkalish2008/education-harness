@@ -32,7 +32,8 @@ TEXT_TYPES = {
     ".py": "python", ".ipynb": "notebook", ".r": "r", ".sql": "sql",
 }
 BINARY_TYPES = {".pdf": "pdf", ".docx": "docx", ".epub": "epub", ".png": "image", ".jpg": "image",
-                ".jpeg": "image"}
+                ".jpeg": "image", ".heic": "image", ".webp": "image", ".gif": "image",
+                ".mp4": "video", ".mov": "video", ".m4v": "video", ".webm": "video"}
 
 
 def has_pii(content: str) -> bool:

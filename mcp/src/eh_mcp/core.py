@@ -25,6 +25,7 @@ from .report import Reports
 from .share import Share
 from .orient import Orientation
 from .journey import Journey
+from .catalog import Catalog
 from .review import Review
 from .knowledge import Knowledge
 from .library import GREP_RRF_K, GREP_SELECTIVITY_MAX, Library
@@ -101,6 +102,7 @@ class Workspace:
         self.reports = Reports(self)
         self.share = Share(self)
         self.journey = Journey(self)
+        self.catalog = Catalog(self)
         self.review = Review(self)
 
     # ------------------------------------------------------------------ paths

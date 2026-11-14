@@ -35,19 +35,20 @@ def workspace_root() -> Path:
     return Path(os.environ.get("EH_WORKSPACE", Path.home() / "learning")).expanduser()
 
 
-CHANGES_THE_MAP = {"set_arc", "write_plan", "note", "reveal", "set_status", "bookmark", "save_doc", "profile"}
+CHANGES_THE_MAP = {"set_arc", "write_plan", "note", "reveal", "set_status", "bookmark", "save_doc", "profile", "catalog"}
 
 NOTE_KINDS = ("attempt", "question", "confusion", "insight", "thought", "keep", "slip", "shared", "heard_back",
               "diary", "session", "review")
 
 CHATGPT_TOOLS = {
     "where_am_i", "set_arc", "write_plan", "note", "look_back", "reveal", "bookmark", "profile",
+    "catalog",
 }
 
 
 def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServer:
     ws = Workspace(root or workspace_root())
-    server = MCPServer(name="education-harness", version="0.9.0", instructions=INSTRUCTIONS)
+    server = MCPServer(name="education-harness", version="0.10.0", instructions=INSTRUCTIONS)
 
     def tool(fn):
         if chatgpt and fn.__name__ not in CHATGPT_TOOLS:
@@ -95,15 +96,31 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
         return ws.orient.set_arc(goal, path, why, change, name, space, lens, cadence)
 
     @tool
+    def catalog(action: str = "show", item: str = "", priority: str = "", rank: int = 0,
+                kind: str = "", title: str = "", provider: str = "", progress: str = "",
+                notes: str = "", url: str = "") -> dict:
+        """Show or organize the local learning catalog. action: show; archive or restore (item); prioritize
+        (item, priority: now/next/later/someday); rank (item, positive rank); classify (item, kind:
+        ad-hoc/developing/structured/continuous); add_external (title, optional provider/progress/notes/url/kind/
+        priority) for learner-reported work in tools without MCP access. item is a project slug, arc:<name> or
+        external:<name>. Returns catalog data,
+        the generated CATALOG.html file and its template. The learner controls every organization change."""
+        return ws.catalog.manage(action, item, priority, rank, kind, title, provider, progress, notes, url)
+
+    @tool
     def write_plan(project: str, question: str, steps: list[dict], example: str = "", audience: str = "",
-                   audience_format: str = "walkthrough", idea: str = "", solutions: dict | None = None) -> dict:
+                   audience_format: str = "walkthrough", idea: str = "", solutions: dict | None = None,
+                   sources: list[dict] | None = None) -> dict:
         """Write a project plan (creating the project). Each step: {id, does, concepts, strong_version_shows,
         requires?, format? ('share-out' for the last step), terms? ({word: its one meaning here,
         as a concrete phrase} for words with an everyday meaning)}. audience: who the learner would show it to, as a
         relationship or place, never a name; audience_format: walkthrough, post, explainer or show-and-tell.
         solutions: optional {step_id: {hints, answer, method, follow_ons}}, only where an answer needs computed
-        numbers worth checking ahead of time. Steps with work on them are never dropped."""
-        out = ws.orient.write_plan(project, question, steps, example, idea=idea)
+        numbers worth checking ahead of time. sources: lesson sources actually consulted, such as
+        [{kind: 'url', url, title?, library_id?}], [{kind: 'image', title, library_id?}] or
+        [{kind: 'video', title, library_id?}]; never list gated,
+        unread or non-visible content. Steps with work on them are never dropped."""
+        out = ws.orient.write_plan(project, question, steps, example, idea=idea, sources=sources)
         if audience:
             kind = "public" if audience_format == "post" else "person"
             out["audience"] = ws.share.set_audience(project, audience, kind, audience_format)["audience"]
@@ -260,13 +277,17 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
     @tool
     def library(action: str, path: str = "", area: str = "", doc_id: str = "", doc_ids: list[str] | None = None,
                 title: str = "", summary: str = "", sections: list[dict] | None = None, tags: list[str] | None = None,
-                concepts: list[str] | None = None, how: str = "opened", tier: str = "", confirmed: bool = False) -> dict:
-        """The learner's own library (opt-in). action: add (path, area), summarize (doc_id, title, a 10-200 word
+                concepts: list[str] | None = None, how: str = "opened", tier: str = "", confirmed: bool = False,
+                url: str = "") -> dict:
+        """The learner's own library (opt-in). action: add (path, area), add_url (public URL, area; returns the
+        publicly exposed text for planning), summarize (doc_id, title, a 10-200 word
         summary in your words, sections [{heading, anchor, summary}]), list (area), check (changed originals),
         use (doc_ids, how), tidy (cool what's unused), tier (doc_ids, tier: cold or active), forget (doc_id, only
         with confirmed=true after the learner's yes). Search it with look_back."""
         if action == "add":
             return ws.library.add(path, area, tags, concepts)
+        if action == "add_url":
+            return ws.library.add_url(url, area, tags, concepts)
         if action == "summarize":
             return ws.library.write_summary(doc_id, title, summary, sections, "", tags, concepts)
         if action == "list":
@@ -281,7 +302,7 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
             return ws.knowledge.set_tier(doc_ids or [doc_id], tier)
         if action == "forget":
             return ws.knowledge.forget(doc_id, confirmed)
-        raise HarnessError("action must be add, summarize, list, check, use, tidy, tier or forget.")
+        raise HarnessError("action must be add, add_url, summarize, list, check, use, tidy, tier or forget.")
 
     @tool
     def setup(action: str = "status") -> dict:

@@ -20,10 +20,15 @@ You can say:
 • "Show me the data-science path"
 • "Let's go" to continue
 • "Where am I?" for your current step
+• "Show my catalog" to browse and organize all your learning
 • "Run through what I've learned" to practice past ideas
 ```
 
 Treat **"Let's learn"** as the canonical explicit invocation and begin onboarding. Do not mention MCP, tools, skills, arcs, focus or setup machinery. Ordinary language is the interface. If they already asked to learn a specific thing, skip the card and act on their request.
+
+When the learner asks to see or organize everything they are learning, call `catalog(action="show")` and point them to the generated `CATALOG.html`. Explain its four forms plainly: **ad hoc** is a question or short exploration; **developing** has a direction but only the next segment is formed; **structured** has an end-to-end lesson plan; **continuous** is an ongoing trajectory such as career or professional education that may contain several lessons. Use `catalog` to archive/restore, set now/next/later/someday priority, rank within a priority, or correct a classification only at the learner's direction.
+
+If the learner has courses or study activity in systems the harness cannot access, offer the academic advisor. It can build a learner-confirmed inventory from their description, pasted list, syllabus, URL, screenshot, certificate or export and add each item with `catalog(action="add_external", ...)`. Never request credentials or claim a platform was inspected without access.
 
 ## Every chat
 

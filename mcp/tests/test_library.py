@@ -1,6 +1,8 @@
 import pytest
+from email.message import Message
 
 from eh_mcp.core import HarnessError, Workspace
+from eh_mcp import library as library_module
 
 
 @pytest.fixture
@@ -34,6 +36,55 @@ def test_add_registers_without_touching_originals(lib):
                                                                "image.bin", "lines.md"]
     again = ws.library.add(str(docs / "ml"), "machine-learning")
     assert again["needs_summary"] == [] and again["unchanged"] == 3
+
+
+def test_public_url_becomes_a_citable_library_source(lib, monkeypatch):
+    ws, _ = lib
+    body = b"""<html><head><title>Introduction to Machine Learning</title></head><body>
+    <h1>Course outline</h1><h2>Week 1: Linear classifiers</h2><p>Learn decision boundaries.</p>
+    <h2>Week 4: Gradient descent</h2><p>Optimize a loss function one step at a time.</p>
+    <script>ignore secret navigation code</script></body></html>"""
+
+    class Response:
+        def __init__(self):
+            self.headers = Message()
+            self.headers["Content-Type"] = "text/html; charset=utf-8"
+        def __enter__(self): return self
+        def __exit__(self, *args): return False
+        def geturl(self): return "https://open.example.edu/course/"
+        def read(self, _limit): return body
+
+    monkeypatch.setattr(library_module.socket, "getaddrinfo",
+                        lambda *_: [(None, None, None, None, ("93.184.216.34", 443))])
+    monkeypatch.setattr(library_module.urllib.request, "urlopen", lambda *_args, **_kw: Response())
+    out = ws.library.add_url("https://open.example.edu/course/", "machine-learning")
+    source = out["source"]
+    assert source["title"] == "Introduction to Machine Learning"
+    assert source["accessed_on"]
+    assert "Gradient descent" in source["content"] and "secret navigation" not in source["content"]
+    ws.library.write_summary(source["id"], source["title"],
+                             "A public machine learning course outline covering classifiers, decision boundaries, "
+                             "gradient descent, and optimization of a loss function over successive steps.")
+    hit = ws.search_memory("gradient descent")["results"][0]
+    assert hit["url"] == "https://open.example.edu/course/"
+
+
+def test_public_url_rejects_private_network(lib, monkeypatch):
+    ws, _ = lib
+    monkeypatch.setattr(library_module.socket, "getaddrinfo",
+                        lambda *_: [(None, None, None, None, ("127.0.0.1", 80))])
+    with pytest.raises(HarnessError, match="public internet"):
+        ws.library.add_url("http://internal.example/course", "machine-learning")
+
+
+def test_image_and_video_can_be_registered_as_lesson_sources(tmp_path):
+    sources = tmp_path / "sources"
+    sources.mkdir()
+    (sources / "falling-apple.jpg").write_bytes(b"photo bytes")
+    (sources / "falling-apple.mp4").write_bytes(b"video bytes")
+    ws = Workspace(tmp_path / "learning")
+    out = ws.library.add(str(sources), "gravity")
+    assert {item["type"] for item in out["needs_summary"]} == {"image", "video"}
 
 
 def test_flags_are_deterministic(lib):

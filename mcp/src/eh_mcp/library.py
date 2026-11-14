@@ -17,7 +17,14 @@ from __future__ import annotations
 
 import datetime as _dt
 import hashlib
+import html
+import ipaddress
 import re
+import socket
+import urllib.error
+import urllib.parse
+import urllib.request
+from html.parser import HTMLParser
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -33,6 +40,96 @@ MAX_TEXT_BYTES = 5_000_000          # literal search and flags read text files u
 GREP_RRF_K = 10                     # decisive constant for a selective literal pattern (cat)
 GREP_SELECTIVITY_MAX = 40           # the match-count gate that earns it (cat)
 PLACEHOLDER = "placeholder"
+MAX_URL_BYTES = 2_000_000
+MAX_URL_TEXT = 500_000
+TOOL_CONTENT_LIMIT = 60_000
+
+
+class _PageText(HTMLParser):
+    """Small dependency-free HTML-to-text extractor for public lesson sources."""
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.skip = 0
+        self.parts: list[str] = []
+        self.title_parts: list[str] = []
+        self.in_title = False
+
+    def handle_starttag(self, tag: str, attrs) -> None:
+        if tag in {"script", "style", "noscript", "svg"}:
+            self.skip += 1
+        if tag == "title":
+            self.in_title = True
+        if tag in {"p", "div", "section", "article", "li", "br", "h1", "h2", "h3", "h4", "tr"}:
+            self.parts.append("\n")
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag in {"script", "style", "noscript", "svg"} and self.skip:
+            self.skip -= 1
+        if tag == "title":
+            self.in_title = False
+        if tag in {"p", "div", "section", "article", "li", "h1", "h2", "h3", "h4", "tr"}:
+            self.parts.append("\n")
+
+    def handle_data(self, data: str) -> None:
+        if self.skip:
+            return
+        if self.in_title:
+            self.title_parts.append(data)
+        self.parts.append(data)
+
+    def result(self) -> tuple[str, str]:
+        title = " ".join(" ".join(self.title_parts).split())
+        lines = [" ".join(line.split()) for line in "".join(self.parts).splitlines()]
+        return title, "\n".join(line for line in lines if line)
+
+
+def _assert_public_url(url: str) -> str:
+    from .core import HarnessError
+    parsed = urllib.parse.urlsplit((url or "").strip())
+    if parsed.scheme not in {"http", "https"} or not parsed.hostname or parsed.username or parsed.password:
+        raise HarnessError("Use a public http(s) URL without embedded credentials.")
+    try:
+        default_port = 443 if parsed.scheme == "https" else 80
+        addresses = {row[4][0] for row in socket.getaddrinfo(parsed.hostname, parsed.port or default_port)}
+    except socket.gaierror as exc:
+        raise HarnessError(f"Could not resolve that URL: {type(exc).__name__}.") from exc
+    for address in addresses:
+        ip = ipaddress.ip_address(address)
+        if not ip.is_global:
+            raise HarnessError("The URL must resolve to a public internet address.")
+    return urllib.parse.urlunsplit(parsed)
+
+
+def fetch_public_page(url: str, timeout: float = 15.0) -> dict:
+    """Fetch public HTML/plain text with a size cap; never fetch private-network URLs."""
+    from .core import HarnessError
+    safe_url = _assert_public_url(url)
+    req = urllib.request.Request(safe_url, headers={"User-Agent": "education-harness/0.9 (+lesson-source)"})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as response:
+            final_url = _assert_public_url(response.geturl())
+            content_type = response.headers.get_content_type().lower()
+            if content_type not in {"text/html", "text/plain", "text/markdown"}:
+                raise HarnessError(f"That URL returned unsupported content ({content_type}); use a public HTML or text page.")
+            raw = response.read(MAX_URL_BYTES + 1)
+            if len(raw) > MAX_URL_BYTES:
+                raise HarnessError("That page is too large to use as a lesson source (2 MB maximum).")
+            charset = response.headers.get_content_charset() or "utf-8"
+    except urllib.error.HTTPError as exc:
+        raise HarnessError(f"The public page could not be opened (HTTP {exc.code}).") from exc
+    except urllib.error.URLError as exc:
+        raise HarnessError(f"The public page could not be opened ({type(exc.reason).__name__}).") from exc
+    decoded = raw.decode(charset, errors="replace")
+    if content_type == "text/html":
+        parser = _PageText()
+        parser.feed(decoded)
+        title, text = parser.result()
+    else:
+        title, text = "", html.unescape(decoded)
+    text = text[:MAX_URL_TEXT].strip()
+    if len(text.split()) < 10:
+        raise HarnessError("The URL did not expose enough public text to inform a lesson plan.")
+    return {"url": final_url, "title": title, "text": text, "content_type": content_type}
 
 
 def file_hash(path: Path) -> str:
@@ -71,6 +168,10 @@ class Library:
     @staticmethod
     def _id_for(path: Path) -> str:
         return "d" + hashlib.sha256(str(path).encode()).hexdigest()[:12]
+
+    @staticmethod
+    def _id_for_url(url: str) -> str:
+        return "u" + hashlib.sha256(url.encode()).hexdigest()[:12]
 
     # ---------------------------------------------------------------- add
     def add(self, path: str, area: str, tags: list[str] | None = None, concepts: list[str] | None = None,
@@ -112,6 +213,43 @@ class Library:
                           "pii": rec["flags"]["pii"]})
         return {"needs_summary": added, "unchanged": len(unchanged),
                 "next": "Read each original and save a summary with write_library_summary."}
+
+    def add_url(self, url: str, area: str, tags: list[str] | None = None,
+                concepts: list[str] | None = None) -> dict:
+        """Capture the text publicly exposed by a URL as a versioned lesson source."""
+        from .core import _check_name
+        _check_name(area, "area")
+        page = fetch_public_page(url)
+        self.ws.ensure_workspace()
+        rid = self._id_for_url(page["url"])
+        source_dir = self.dir / "sources"
+        source_dir.mkdir(parents=True, exist_ok=True)
+        snapshot = source_dir / f"{rid}.txt"
+        content = f"Source: {page['url']}\nTitle: {page['title']}\n\n{page['text']}\n"
+        h = hashlib.sha256(content.encode()).hexdigest()
+        existing = self._load(rid)
+        if not snapshot.exists() or snapshot.read_text(encoding="utf-8", errors="replace") != content:
+            snapshot.write_text(content, encoding="utf-8")
+        unchanged = bool(existing and existing.get("hash") == h)
+        rec = existing if unchanged else {
+            "schema": SCHEMA, "id": rid, "path": str(snapshot), "url": page["url"], "hash": h,
+            "title": page["title"] or urllib.parse.urlsplit(page["url"]).hostname,
+            "area": area, "tags": sorted(set(tags or [])), "concepts": sorted(set(concepts or [])),
+            "summary": PLACEHOLDER, "sections": [],
+            "flags": derive.derive(snapshot, content), "status": "needs summary",
+            "pins": {"gen": None, "derive": derive.DERIVE_VERSION},
+            "added": (existing or {}).get("added") or _dt.date.today().isoformat(),
+        }
+        if unchanged:
+            rec.update({"area": area, "tags": sorted(set(rec.get("tags", [])) | set(tags or [])),
+                        "concepts": sorted(set(rec.get("concepts", [])) | set(concepts or []))})
+        self._save(rec)
+        shown = page["text"][:TOOL_CONTENT_LIMIT]
+        return {"source": {"id": rid, "url": page["url"], "title": rec["title"], "content": shown,
+                           "truncated": len(page["text"]) > len(shown), "status": rec["status"],
+                           "accessed_on": _dt.date.today().isoformat()},
+                "unchanged": unchanged,
+                "next": "Use only the exposed content, then save a 10-200 word summary and cite this URL in the plan."}
 
     def write_summary(self, rid: str, title: str, summary: str, sections: list[dict] | None = None,
                       model: str = "", tags: list[str] | None = None, concepts: list[str] | None = None) -> dict:
@@ -181,7 +319,7 @@ class Library:
     def list(self, area: str | None = None) -> dict:
         recs = [r for r in self._records() if not area or r["area"] == area]
         return {"documents": [{"id": r["id"], "title": r["title"], "area": r["area"], "status": r["status"],
-                               "path": r["path"]} for r in recs],
+                               "path": r["path"], **({"url": r["url"]} if r.get("url") else {})} for r in recs],
                 "areas": sorted({r["area"] for r in self._records()})}
 
     # ------------------------------------------------------------- search
@@ -231,6 +369,8 @@ class Library:
         meta: dict[str, Any] = {"area": rec["area"], "tags": rec["tags"], "concepts": rec["concepts"],
                                 "type": rec["flags"]["type"], "date": rec["added"], "path": rec["path"],
                                 "title": rec["title"], "pii": rec["flags"]["pii"], "status": rec["status"]}
+        if rec.get("url"):
+            meta["url"] = rec["url"]
         if rec.get("sections"):
             meta["sections"] = [{"heading": s["heading"], "anchor": s["anchor"]} for s in rec["sections"]]
         edges = [("in_area", f"area:{rec['area']}")] + [("about", f"concept:{c}") for c in rec["concepts"]]

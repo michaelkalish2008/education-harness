@@ -11,7 +11,7 @@ def test_visible_portable_manifest_and_starter_prompts():
     plugin = json.loads((ROOT / "plugin.json").read_text())
     ui = plugin["extensions"]["com.openai"]["interface"]
     assert plugin["$schema"] == "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
-    assert plugin["name"] == "education-harness" and plugin["version"] == "0.9.0"
+    assert plugin["name"] == "education-harness" and plugin["version"] == "0.10.0"
     assert ui["displayName"] == "Education Harness"
     assert len(ui["shortDescription"]) <= 30
     assert len(ui["defaultPrompt"]) == 3
@@ -24,7 +24,7 @@ def test_compatibility_manifests_keep_identity_in_sync():
     codex = json.loads((ROOT / ".codex-plugin/plugin.json").read_text())
     claude = json.loads((ROOT / ".claude-plugin/plugin.json").read_text())
     assert {(m["name"], m["version"]) for m in (root, codex, claude)} == {
-        ("education-harness", "0.9.0")}
+        ("education-harness", "0.10.0")}
 
 
 def test_local_mcp_and_start_skill_are_discoverable():
@@ -49,3 +49,10 @@ def test_claude_app_server_config_and_lockfile():
     assert server["args"] == ["${CLAUDE_PLUGIN_ROOT}/servers/launch.sh"]
     assert "--frozen" in (ROOT / "servers/launch.sh").read_text()
     assert (ROOT / "mcp/uv.lock").exists()   # --frozen refuses to run without it
+
+
+def test_catalog_and_academic_advisor_ship_together():
+    assert (ROOT / "skills/start/catalog.html").exists()
+    advisor = (ROOT / "agents/academic-advisor.md").read_text()
+    assert "suggestions are opt-in" in advisor.lower()
+    assert "notebooklm" in advisor.lower()
