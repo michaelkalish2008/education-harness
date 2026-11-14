@@ -20,7 +20,7 @@ PY
 mkdir -p "$(dirname "$OUT")"
 rm -f "$OUT"
 zip -qr "$OUT" . \
-  -x ".git/*" "dist/*" "_to_delete/*" "*/__pycache__/*" "*.pyc" "*/.pytest_cache/*" ".pytest_cache/*" \
+  -x ".git/*" ".claude/*" ".agents/*" "dist/*" "_to_delete/*" "*/__pycache__/*" "*.pyc" "*/.pytest_cache/*" ".pytest_cache/*" \
      "mcp/.venv/*" "mcp/tests/*" "hooks/*" "docs/*" "templates/*" "scripts/*" "mcp.json.example" "*.DS_Store" ".env"
 VERSION="$(python3 -c 'import json;print(json.load(open(".claude-plugin/plugin.json"))["version"])')"
 echo "built $OUT (version $VERSION, $(unzip -l "$OUT" | tail -1 | awk '{print $2}') files)"

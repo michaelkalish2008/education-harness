@@ -64,3 +64,13 @@ def test_how_it_works_ships_with_start_and_names_the_real_files():
     assert "how-it-works.md" in (ROOT / "skills/start/SKILL.md").read_text()
     for name in ("program.yaml", "progress.yaml", "standards.yaml", "learner.yaml", "MAP.md", "PRINCIPLES.md"):
         assert name in text
+
+
+def test_maintainer_release_skill_is_in_the_repo_but_not_the_package():
+    claude = ROOT / ".claude/skills/update-plugin/SKILL.md"
+    codex = ROOT / ".agents/skills/update-plugin/SKILL.md"
+    assert claude.read_text() == codex.read_text(), "edit both copies of the update-plugin skill together"
+    policy = yaml.safe_load((codex.parent / "agents/openai.yaml").read_text())["policy"]
+    assert policy["allow_implicit_invocation"] is False
+    build = (ROOT / "scripts/build-plugin.sh").read_text()
+    assert '".claude/*"' in build and '".agents/*"' in build

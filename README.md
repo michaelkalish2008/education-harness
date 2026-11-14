@@ -116,6 +116,10 @@ What the harness can do is keep a stance in its own voice. In the spirit of John
 
 v0.11.0: standards sidecars per lesson, external and personal expectation sets, the "how it works" overview, and principles 19 (neutral point of view) and 20 (ownership and a culture of growth). 17 tools; 5 skills; 3 optional agents. v0.10.0 added public-URL, document, image and video sources for lesson planning; a local learning catalog with archive, priority and ranking controls; portfolio analytics; external-course intake; and an optional academic advisor. Earlier, v0.9.0 added review run-throughs and the journey map. **Not yet tested with a real learner**; see [`docs/TEST-PLAN.md`](docs/TEST-PLAN.md).
 
+## Maintaining a fork
+
+Say "update plugin" in Claude Code, Codex or ChatGPT (the skill is in `.claude/skills/` and `.agents/skills/`) to test, bump the version, build the `.plugin`, commit on a branch, push and open a pull request. It reads your remote and git identity, so it works unchanged in a fork.
+
 ## License
 
 Code: MIT. Content: CC BY 4.0.

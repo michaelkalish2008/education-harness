@@ -208,6 +208,8 @@ class Index:
         if not rows:
             return {"points": [], "note": f"No TurboQuant vectors are available in the {scope!r} scope."}
         x = self._quantizer(self._embedder.dim).decode_many([r[1] for r in rows]).astype(np.float64)
+        # Semantic similarity is angular. Normalize every dequantized row before
+        # PCA and neighbor scoring so vector magnitude cannot distort the map.
         x /= np.maximum(np.linalg.norm(x, axis=1, keepdims=True), 1e-12)
         centered = x - x.mean(axis=0, keepdims=True)
         _, singular, vt = np.linalg.svd(centered, full_matrices=False)
@@ -228,6 +230,7 @@ class Index:
             meta = json.loads(row[4])
             points.append({"id": row[0], "kind": row[2], "scope": meta.get("scope", "domain"),
                            "title": meta.get("title") or meta.get("name") or Path(row[3]).stem or row[0],
+                           "file": row[3],
                            "area": meta.get("area", ""), "project": meta.get("project", ""),
                            "tier": meta.get("tier", ""), "snippet": _plain_snippet(row[5], 22),
                            "x": round(float(coords[i, 0]), 6), "y": round(float(coords[i, 1]), 6),
@@ -237,6 +240,7 @@ class Index:
         return {"points": points, "scope": scope, "count": len(points), "max_points": max_points,
                 "explained_variance": [round(float(v), 5) for v in explained] + [0.0] * (3 - len(explained)),
                 "source": "TurboQuant-dequantized rotated vectors",
+                "preprocessing": {"row_normalization": "l2", "centered": True, "whitened": False},
                 "note": "PCA is a lossy three-dimensional projection of quantized embeddings; proximity is exploratory, not proof of conceptual equivalence."}
 
     def remove(self, doc_id: str) -> None:

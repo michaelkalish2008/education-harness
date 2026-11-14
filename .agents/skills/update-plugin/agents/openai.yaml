@@ -1,0 +1,7 @@
+interface:
+  display_name: Update plugin
+  short_description: Test, version, build, commit, push and open a PR for this harness
+  default_prompt: Update plugin.
+policy:
+  allow_implicit_invocation: false
+  products: [CHAT, CODEX]
