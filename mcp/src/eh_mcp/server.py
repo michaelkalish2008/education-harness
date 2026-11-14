@@ -35,14 +35,14 @@ def workspace_root() -> Path:
     return Path(os.environ.get("EH_WORKSPACE", Path.home() / "learning")).expanduser()
 
 
-CHANGES_THE_MAP = {"set_arc", "write_plan", "note", "reveal", "set_status", "bookmark", "save_doc", "profile", "catalog"}
+CHANGES_THE_MAP = {"set_arc", "write_plan", "standards", "expectations", "note", "reveal", "set_status", "bookmark", "save_doc", "profile", "catalog"}
 
 NOTE_KINDS = ("attempt", "question", "confusion", "insight", "thought", "keep", "slip", "shared", "heard_back",
               "diary", "session", "review")
 
 CHATGPT_TOOLS = {
     "where_am_i", "set_arc", "write_plan", "note", "look_back", "reveal", "bookmark", "profile",
-    "catalog",
+    "catalog", "knowledge_map",
 }
 
 
@@ -106,6 +106,31 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
         external:<name>. Returns catalog data,
         the generated CATALOG.html file and its template. The learner controls every organization change."""
         return ws.catalog.manage(action, item, priority, rank, kind, title, provider, progress, notes, url)
+
+    @server.resource("ui://education-harness/knowledge-map", name="knowledge_map_view",
+                     title="Knowledge Map", description="Interactive 3D PCA view of the local TurboQuant knowledge base.",
+                     mime_type="text/html;profile=mcp-app",
+                     meta={"ui": {"prefersBorder": False, "csp": {"connectDomains": [],
+                                                                    "resourceDomains": []}}})
+    def knowledge_map_view() -> str:
+        from .knowledge_map import PLACEHOLDER, template_path
+        empty = {"points": [], "count": 0, "scope": "domain", "explained_variance": [0, 0, 0],
+                 "note": "Waiting for the local knowledge-map data."}
+        return template_path().read_text(encoding="utf-8").replace(PLACEHOLDER, json.dumps(empty), 1)
+
+    @server.tool(title="Explore knowledge map", structured_output=True,
+                 meta={"ui": {"resourceUri": "ui://education-harness/knowledge-map",
+                               "visibility": ["model", "app"]},
+                       "openai/ui": {"entrypoints": [{"type": "global"}, {"type": "thread"}]}})
+    def knowledge_map(scope: str = "domain", max_points: int = 600) -> dict[str, Any]:
+        """Open an embedded interactive 3D PCA explorer for local TurboQuant vectors. scope:
+        domain (default), reflection, reference, meta or all; max_points: 3-2000. Requires optional local
+        smart search. Also saves KNOWLEDGE-MAP.html as a host-independent fallback."""
+        try:
+            return ws.knowledge_map.write(scope, max_points)
+        except HarnessError as e:
+            return {"refused": str(e), "data": {"points": [], "count": 0, "scope": scope,
+                                                  "explained_variance": [0, 0, 0], "note": str(e)}}
 
     @tool
     def write_plan(project: str, question: str, steps: list[dict], example: str = "", audience: str = "",
@@ -212,6 +237,23 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
         with checklist {explained, questions_worked (>=3), path_not_taken, limit_named}."""
         return ws.set_status(project, step, status, role, checklist)
 
+    @tool
+    def standards(action: str = "show", project: str = "", step: str = "", code: str = "", decision: str = "",
+                  evidence: str = "", by: str = "tutor") -> dict:
+        """Lesson standards sidecar, the only source for reports and the catalog. show; review (code, decision
+        accept|decline, at planning); add (code, step, evidence in the learner's words); drop (code, step?)."""
+        return ws.alignment.manage(action, project, step, code, decision, evidence, by)
+
+    @tool
+    def expectations(action: str = "list", set: str = "", origin: str = "", title: str = "", issuer: str = "",
+                     context: dict | None = None, source: dict | None = None, items: list[dict] | None = None,
+                     code: str = "", query: str = "", confirmed: bool = False) -> dict:
+        """Expectation sets. origin: external (school, class, program, employer; needs issuer + source) or
+        personal (the learner's own). list; create; add (items [{statement, code?, area?, level?}],
+        confirmed=true after the learner's yes); show; retire (code); archive/restore; search (query, origin?)."""
+        return ws.expectations.manage(action, set, origin, title, issuer, context, source, items, code, query,
+                                      confirmed)
+
     # -------------------------------------------------------------- bookmark
     @tool
     def bookmark(action: str, label: str = "", thinking: str = "", next_move: str = "", project: str = "",
@@ -305,10 +347,11 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
         raise HarnessError("action must be add, add_url, summarize, list, check, use, tidy, tier or forget.")
 
     @tool
-    def setup(action: str = "status") -> dict:
+    def setup(action: str = "status", scope: str = "domain", max_points: int = 600) -> dict:
         """Opt-in features. action: status; smart_search_on / smart_search_off (a small local model, about
         70 MB once); load_standards (pin openly licensed Common Core math standards from a download on this
-        computer, with attribution); rebuild_index."""
+        computer, with attribution); rebuild_index; knowledge_map (scope: domain/reflection/reference/meta/all,
+        max_points up to 2000) writes a private interactive 3D PCA view of TurboQuant vectors."""
         if action == "status":
             return {"smart_search": ws.semantic.status(), "standards": ws.knowledge._state().get("standards_source")}
         if action in ("smart_search_on", "smart_search_off"):
@@ -318,7 +361,9 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
             return ws.knowledge.load_standards(str(default_folder()))
         if action == "rebuild_index":
             return ws.rebuild_index()
-        raise HarnessError("action must be status, smart_search_on, smart_search_off, load_standards or rebuild_index.")
+        if action == "knowledge_map":
+            return ws.knowledge_map.write(scope, max_points)
+        raise HarnessError("action must be status, smart_search_on, smart_search_off, load_standards, rebuild_index or knowledge_map.")
 
     @tool
     def check_links(urls: list[str]) -> dict:

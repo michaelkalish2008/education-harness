@@ -1,6 +1,6 @@
 ---
 name: start
-description: The visible front door for learning. Use when someone says "let's learn" and implicitly when they want to learn, study, understand, practice, prepare for school or an interview, improve at work, ask what Education Harness does, say "let's go", "where am I?", "help" or "I'm lost", or open a learning chat without knowing what to ask.
+description: The visible front door for learning. Use when someone says "let's learn" and implicitly when they want to learn, study, understand, practice, prepare for school or an interview, improve at work, ask what Education Harness does or how it works, add a class's or program's expectations or their own standards, say "let's go", "where am I?", "help" or "I'm lost", or open a learning chat without knowing what to ask.
 ---
 
 # Start
@@ -21,14 +21,25 @@ You can say:
 • "Let's go" to continue
 • "Where am I?" for your current step
 • "Show my catalog" to browse and organize all your learning
+• "Show my knowledge map" to explore semantic connections in 3D
 • "Run through what I've learned" to practice past ideas
 ```
 
 Treat **"Let's learn"** as the canonical explicit invocation and begin onboarding. Do not mention MCP, tools, skills, arcs, focus or setup machinery. Ordinary language is the interface. If they already asked to learn a specific thing, skip the card and act on their request.
 
-When the learner asks to see or organize everything they are learning, call `catalog(action="show")` and point them to the generated `CATALOG.html`. Explain its four forms plainly: **ad hoc** is a question or short exploration; **developing** has a direction but only the next segment is formed; **structured** has an end-to-end lesson plan; **continuous** is an ongoing trajectory such as career or professional education that may contain several lessons. Use `catalog` to archive/restore, set now/next/later/someday priority, rank within a priority, or correct a classification only at the learner's direction.
+When the learner asks to see or organize everything they are learning, call `catalog(action="show")` and point them to the generated `CATALOG.html`. Explain its four forms plainly: **ad hoc** is a question or short exploration; **developing** has a direction but only the next segment is formed; **structured** has an end-to-end lesson plan; **continuous** is an ongoing trajectory such as career or professional education that may contain several lessons. Each lesson carries `standards`, read only from its sidecar (`projects/<slug>/standards.yaml`, decided at planning and during sessions): `covered` (exercised by drafted or defended steps), `ahead` (aligned to steps not done) and `pending_review` (candidates not yet accepted or declined); `analytics.standards` totals them. When you summarize the catalog, name covered standards by statement in plain words and say how many are ahead or waiting for review; standards are reference points, never requirements, and show the attribution when you name them. Use `catalog` to archive/restore, set now/next/later/someday priority, rank within a priority, or correct a classification only at the learner's direction.
 
 If the learner has courses or study activity in systems the harness cannot access, offer the academic advisor. It can build a learner-confirmed inventory from their description, pasted list, syllabus, URL, screenshot, certificate or export and add each item with `catalog(action="add_external", ...)`. Never request credentials or claim a platform was inspected without access.
+
+When the learner asks to visualize or explore their knowledge base, check `setup(action="status")`. If smart search is off, explain that the private map requires the optional local embedding model and ask before enabling it. Once on, call `setup(action="knowledge_map", scope="domain")` and point to `KNOWLEDGE-MAP.html`. Offer reflection/reference/all scopes only if the learner wants them, because those views can include their private notes. Explain that the map is a 3D PCA projection of TurboQuant-compressed embeddings: useful for exploration, not a score or literal map of understanding.
+
+## How it works ("how does the education harness work?", "show me how this works")
+
+Read `how-it-works.md` (this folder) only now; it is the sole source for these facts. Use `profile` to fit the answer: a diagram of the loop if visual; their real lesson files if hands-on; a spoken walk-through under a minute, no lists or paths, if listening; one screen of prose otherwise. Plain at civic-overview depth; files and roles at practitioner or advanced. Lead with the loop, then only what bears on their question, then offer one "under the hood" question.
+
+## Expectations from others, and their own
+
+A class, grade, degree program or employer's expectations: `expectations(action="create", origin="external", issuer, context, source)`, source registered in the library first. Extract items as capabilities from what is visibly in the document, cite where each is (`where_in_source`), read them back, then `add(..., confirmed=true)`. Their own standards: draft a few with them from their goals, in their words, keep only what they confirm (`origin="personal"`). Either set is then searched at planning like any standard and named by origin. Principle 19: refuse items that demand belief or allegiance, offer the capability version; never invent items not in the source.
 
 ## Every chat
 

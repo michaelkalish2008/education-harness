@@ -56,3 +56,11 @@ def test_catalog_and_academic_advisor_ship_together():
     advisor = (ROOT / "agents/academic-advisor.md").read_text()
     assert "suggestions are opt-in" in advisor.lower()
     assert "notebooklm" in advisor.lower()
+    assert (ROOT / "skills/start/knowledge-map.html").exists()
+
+
+def test_how_it_works_ships_with_start_and_names_the_real_files():
+    text = (ROOT / "skills/start/how-it-works.md").read_text()
+    assert "how-it-works.md" in (ROOT / "skills/start/SKILL.md").read_text()
+    for name in ("program.yaml", "progress.yaml", "standards.yaml", "learner.yaml", "MAP.md", "PRINCIPLES.md"):
+        assert name in text

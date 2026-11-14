@@ -134,3 +134,21 @@ def test_library_summaries_are_embedded(tmp_path):
     assert wait_on(ws) == "on"
     hit = ws.search_memory("vehicle value loss", kinds=["library"])["results"][0]
     assert hit["path"].endswith("car.md") and "semantic" in hit["signals"]
+
+
+def test_turboquant_vectors_project_to_a_private_3d_map(ws):
+    ws.enable_semantic_search("on", embedder_factory=FakeEmbedder)
+    assert wait_on(ws) == "on"
+    out = ws.knowledge_map.write(scope="reflection")
+    data = out["data"]
+    assert data["count"] == 3 and len(data["explained_variance"]) == 3
+    assert all(set(("x", "y", "z", "neighbors")) <= set(p) for p in data["points"])
+    page = (ws.root / "KNOWLEDGE-MAP.html").read_text()
+    assert "__KNOWLEDGE_MAP_DATA__" not in page and "Knowledge map" in page
+    assert "<h1 class=\"title\">TurboQuant" not in page
+
+
+def test_knowledge_map_requires_smart_search(ws):
+    from eh_mcp.core import HarnessError
+    with pytest.raises(HarnessError, match="Smart search must be on"):
+        ws.knowledge_map.write()

@@ -46,6 +46,11 @@ def _write(path: Path, data: Any) -> None:
     tmp.replace(path)
 
 
+
+def _concept_slug(text: str) -> str:
+    from .knowledge import _slug
+    return _slug(text)
+
 class Journal:
     def __init__(self, ws: "Workspace"):
         self.ws = ws
@@ -262,7 +267,7 @@ class Journal:
                                           "concepts": st.get("concepts", [])})
                 codes |= set(st.get("standards_cited", []))
                 for cpt in st.get("concepts", []):
-                    codes |= {x for x in cites.get(cpt, []) if x}
+                    codes |= {x for x in cites.get(cpt, []) + cites.get(_concept_slug(cpt), []) if x}
             day(d)["standards"] = sorted(codes)
             day(d)["exercises"] = [{"project": p, "step": s, "does": step_of(p, s).get("does", ""),
                                     "attempts": sum(1 for r in day(d)["responses"]

@@ -41,11 +41,12 @@ def test_evidence_covers_growth_strengths_sociability_and_opportunities(ws):
     j.record_error("net", "s2", "added slopes instead of multiplying", "procedure", helped="boxes")
     j.record_error("net", "s2", "dropped a minus sign", "arithmetic")
     ws.record_attempt("net", "s2", "dL/dw is the product of the local slopes")
+    ws.set_status("net", "s2", "drafted", "tutor")
     ws.reports.record_shared("explained", "Walked my sister through the boxes picture", who="my sister",
                              project="net", step="s2")
     e = ws.reports.report_evidence()
     g = e["growth"]
-    assert [b["step"] for b in g["built"]] == ["s1"]
+    assert [b["step"] for b in g["built"]] == ["s1", "s2"]
     assert g["confusions_answered"][0]["then"] == "why does the error go backwards??"
     assert e["sociability"]["count"] == 1 and e["sociability"]["shared"][0]["who"] == "my sister"
     assert {"text": "is momentum like a ball rolling?"}.items() <= e["opportunities"]["still_open"][0].items()

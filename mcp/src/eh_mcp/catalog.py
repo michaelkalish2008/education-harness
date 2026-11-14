@@ -53,6 +53,17 @@ class Catalog:
                 if stop.get("project"):
                     project_arcs.setdefault(stop["project"], []).append(name)
 
+        def lesson_standards(slug: str) -> dict:
+            """From the project's sidecar only: the catalog never searches standards."""
+            sm = self.ws.alignment.summary(slug)
+
+            def short(r: dict) -> dict:
+                return {"code": r["code"], "statement": r["statement"], "steps": r["steps"]}
+            return {"loaded": bool(sm["source"]), "file": sm["file"],
+                    "covered": [short(r) for r in sm["exercised"]],
+                    "ahead": [short(r) for r in sm["ahead"]],
+                    "pending_review": len(sm["pending_review"]), "attribution": sm["attribution"]}
+
         items = []
         for name, arc in arcs.items():
             key = f"arc:{name}"
@@ -83,7 +94,8 @@ class Catalog:
                           "next": (project.get("now") or {}).get("does", ""),
                           "last_active": _dt.datetime.fromtimestamp(project.get("_touched", 0)).date().isoformat()
                           if project.get("_touched") else "",
-                          "path": str(self.ws.project_dir(project["project"]))})
+                          "path": str(self.ws.project_dir(project["project"])),
+                          "standards": lesson_standards(project["project"])})
         for key, custom in state.items():
             if not key.startswith("external:"):
                 continue
@@ -119,6 +131,25 @@ class Catalog:
             "kinds": {kind: sum(x["kind"] == kind and not x["archived"] for x in items) for kind in KINDS},
             "priorities": {p: sum(x["priority"] == p and not x["archived"] for x in items) for p in PRIORITIES},
             "suggestions": "available only when the learner asks the academic advisor",
+        }
+        by_slug = {x["slug"]: x for x in items if x["entity"] == "lesson"}
+        for x in items:
+            if x["entity"] == "trajectory":
+                parts = [by_slug[s]["standards"] for s in x["lessons"] if s in by_slug]
+                x["standards"] = {"covered": sorted({c["code"] for p in parts for c in p.get("covered", [])}),
+                                  "ahead": sorted({c["code"] for p in parts for c in p.get("ahead", [])})}
+        lessons_std = [x["standards"] for x in active_lessons if x.get("standards", {}).get("loaded")]
+        covered_all: dict[str, dict] = {}
+        for st in lessons_std:
+            for c in st["covered"]:
+                covered_all.setdefault(c["code"], c)
+        analytics["standards"] = {
+            "loaded": bool(lessons_std) or self.ws.alignment._any_standards(),
+            "covered": sorted(covered_all.values(), key=lambda c: c["code"]),
+            "pending_review": sum(st["pending_review"] for st in lessons_std),
+            "ahead_count": len({r["code"] for st in lessons_std for r in st["ahead"]}),
+            "note": "Recorded in each lesson's standards.yaml as the work happened; reference points, not requirements or gaps.",
+            "attribution": " ".join(sorted({st["attribution"] for st in lessons_std if st.get("attribution")})),
         }
         dates = sorted(x["last_active"] for x in active_lessons if x.get("last_active"))
         analytics["activity_span"] = {"from": dates[0], "through": dates[-1]} if dates else None
@@ -193,7 +224,14 @@ class Catalog:
     def write(self) -> dict:
         data = self.data()
         page = self.render(data)
-        out: dict[str, Any] = {"data": data, "template": str(template_path())}
+        # The page gets every statement; the chat gets codes only, to keep the context small.
+        slim = json.loads(json.dumps(data))
+        for x in slim["items"]:
+            st = x.get("standards") or {}
+            for k in ("covered", "ahead"):
+                if isinstance(st.get(k), list):
+                    st[k] = [c["code"] if isinstance(c, dict) else c for c in st[k]]
+        out: dict[str, Any] = {"data": slim, "template": str(template_path())}
         if page is not None:
             path = self.ws.root / "CATALOG.html"
             path.write_text(page, encoding="utf-8")

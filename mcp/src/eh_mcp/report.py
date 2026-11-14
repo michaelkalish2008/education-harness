@@ -119,16 +119,22 @@ class Reports:
                 out[e["kind"]] = out.get(e["kind"], 0) + 1
             return out
 
-        standards = sorted({s for d in days for s in d["standards"]})
+        # Standards come only from each project's sidecar (projects/<slug>/standards.yaml), decided at
+        # planning and during sessions. Nothing is searched here, so reports over time agree.
+        names = [project] if project else sorted(p.name for p in base.iterdir() if (p / "program.yaml").exists()) \
+            if base.exists() else []
+        sums = {n: self.ws.alignment.summary(n, since, until) for n in names}
+        def merged(key: str) -> list[dict]:
+            out: dict[str, dict] = {}
+            for n, sm in sums.items():
+                for r in sm[key]:
+                    rec = out.setdefault(r["code"], {**r, "steps": []})
+                    rec["steps"] += [f"{n}/{x}" for x in r["steps"] if f"{n}/{x}" not in rec["steps"]]
+            return sorted(out.values(), key=lambda r: r["code"])
+        exercised, ahead = merged("exercised"), merged("ahead")
+        standards = sorted({r["code"] for r in exercised})
         practices = sorted({s for s in standards if s in PRACTICES})
-        with self.ws.index._conn() as c:
-            texts = {}
-            import json
-            for code in practices:
-                r = c.execute("SELECT meta FROM docs WHERE kind = 'standard' AND body LIKE ?",
-                              (f"{code} %",)).fetchone()
-                if r:
-                    texts[code] = json.loads(r[0]).get("statement", "")
+        texts = {r["code"]: r["statement"] for r in exercised}
         from .lenses import LENSES, lens_for
         arcs = self.ws.orient._arcs()
         key = arc and self.ws.orient._resolve_arc(arc)
@@ -175,8 +181,23 @@ class Reports:
                            "shared": self.ws.share.get_share(project)["shared"],
                            "heard_back": self.ws.share.get_share(project)["heard_back"]} if project else None),
             "standards_touched": standards,
-            "attribution": "Knowledge Graph is provided by CZI-E under the CC BY-4.0 license. CZI-E received "
-                           "state standards and written permission under CC BY-4.0 from 1EdTech." if standards else "",
+            "standards": {
+                "loaded": self.ws.alignment._any_standards(),
+                "exercised": [r for r in exercised if r["code"] not in PRACTICES],
+                "earlier": [r["code"] for r in merged("exercised_before") if r["code"] not in PRACTICES],
+                "ahead": [r["code"] for r in ahead if r["code"] not in PRACTICES][:12],
+                "pending_review": len([c for sm in sums.values() for c in sm["pending_review"]]),
+                "sidecars": [sm["file"] for sm in sums.values()],
+                "backfilled": {n: sm["backfilled"] for n, sm in sums.items() if sm["backfilled"]},
+                "use": "Name exercised standards by their statements in plain words, tied to the learner's own "
+                       "words where the sidecar records evidence. Ahead standards are where the plan goes, never "
+                       "gaps. Don't add standards that aren't in the sidecar; if one seems missing, offer to "
+                       "record it with standards(action='add').",
+            },
+            "attribution": (" ".join(sorted({sm["attribution"] for sm in sums.values() if sm["attribution"]}))
+                            or "Knowledge Graph is provided by CZI-E under the CC BY-4.0 license. CZI-E received "
+                               "state standards and written permission under CC BY-4.0 from 1EdTech.")
+            if (exercised or ahead) else "",
         }
 
     # ------------------------------------------------------------------ saving

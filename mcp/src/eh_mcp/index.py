@@ -41,7 +41,7 @@ def rrf(ranked: dict[str, list[str]], k_by_list: dict[str, int] | None = None) -
     return scored
 
 
-HARD_KEYS = ("scope", "project")  # identity filters; every other metadata filter is soft
+HARD_KEYS = ("scope", "project", "origin")  # identity filters; every other metadata filter is soft
 SOFT_FLOOR = 0.25                  # weight left to a strong text match with no metadata match
 
 
@@ -189,6 +189,55 @@ class Index:
         import numpy as np
         mats = mats / np.maximum(np.linalg.norm(mats, axis=1, keepdims=True), 1e-9)
         return {r[0]: mats[i] for i, r in enumerate(rows)}
+
+    def pca_projection(self, scope: str = "domain", max_points: int = 600) -> dict:
+        """Project TurboQuant-dequantized vectors to 3D with PCA for local exploration.
+
+        The stored vectors are in the fixed rotated space; an orthogonal rotation preserves
+        distances and PCA variance. Coordinates remain approximate because the vectors are quantized.
+        """
+        if not self._embedder:
+            return {"points": [], "note": "Smart search must be on before a knowledge map can be built."}
+        import numpy as np
+        max_points = max(3, min(int(max_points), 2000))
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT v.id, v.codes, d.kind, d.file, d.meta, d.body FROM vec v "
+                "JOIN docs d ON d.id = v.id AND d.hash = v.hash ORDER BY v.id LIMIT ?", (max_points,)).fetchall()
+        rows = [r for r in rows if scope == "all" or json.loads(r[4]).get("scope") == scope]
+        if not rows:
+            return {"points": [], "note": f"No TurboQuant vectors are available in the {scope!r} scope."}
+        x = self._quantizer(self._embedder.dim).decode_many([r[1] for r in rows]).astype(np.float64)
+        x /= np.maximum(np.linalg.norm(x, axis=1, keepdims=True), 1e-12)
+        centered = x - x.mean(axis=0, keepdims=True)
+        _, singular, vt = np.linalg.svd(centered, full_matrices=False)
+        dims = min(3, len(vt))
+        coords = centered @ vt[:dims].T
+        if dims < 3:
+            coords = np.pad(coords, ((0, 0), (0, 3 - dims)))
+        scale = np.max(np.abs(coords), axis=0)
+        coords /= np.where(scale > 1e-12, scale, 1.0)
+        variance = singular ** 2
+        explained = (variance[:3] / max(float(variance.sum()), 1e-12)).tolist()
+        similarities = x @ x.T
+        np.fill_diagonal(similarities, -np.inf)
+        neighbor_count = min(3, max(0, len(rows) - 1))
+        nearest = np.argsort(-similarities, axis=1)[:, :neighbor_count] if neighbor_count else np.empty((len(rows), 0), int)
+        points = []
+        for i, row in enumerate(rows):
+            meta = json.loads(row[4])
+            points.append({"id": row[0], "kind": row[2], "scope": meta.get("scope", "domain"),
+                           "title": meta.get("title") or meta.get("name") or Path(row[3]).stem or row[0],
+                           "area": meta.get("area", ""), "project": meta.get("project", ""),
+                           "tier": meta.get("tier", ""), "snippet": _plain_snippet(row[5], 22),
+                           "x": round(float(coords[i, 0]), 6), "y": round(float(coords[i, 1]), 6),
+                           "z": round(float(coords[i, 2]), 6),
+                           "neighbors": [{"id": rows[j][0], "similarity": round(float(similarities[i, j]), 4)}
+                                         for j in nearest[i]]})
+        return {"points": points, "scope": scope, "count": len(points), "max_points": max_points,
+                "explained_variance": [round(float(v), 5) for v in explained] + [0.0] * (3 - len(explained)),
+                "source": "TurboQuant-dequantized rotated vectors",
+                "note": "PCA is a lossy three-dimensional projection of quantized embeddings; proximity is exploratory, not proof of conceptual equivalence."}
 
     def remove(self, doc_id: str) -> None:
         with self._conn() as c:

@@ -100,7 +100,7 @@ class Knowledge:
     def tier_of(self, doc_id: str) -> str:
         return self._state()["items"].get(doc_id, {}).get("tier", "active")
 
-    def relevant_standards(self, query: str, limit: int = 6) -> dict:
+    def relevant_standards(self, query: str, limit: int = 6, expand: bool = True) -> dict:
         """Return standards that may describe prerequisites for a learner's topic.
 
         This is orientation evidence, not a curriculum: the project still determines
@@ -108,6 +108,8 @@ class Knowledge:
         judge relevance rather than treating a code or search rank as sufficient.
         """
         source = self._state().get("standards_source")
+        if not source and self.ws.expectations.list()["sets"]:
+            source = {"subject": "expectation sets only"}
         if not source:
             return {"loaded": False, "query": query.strip(), "matches": [],
                     "note": "No standards are loaded; do not claim they were checked."}
@@ -121,7 +123,7 @@ class Knowledge:
         # Use those authored concept/code links to bridge a topic name such as
         # "transformers" to standards language such as vectors or periodic functions.
         from .core import PROGRAMS
-        for track_file in PROGRAMS.glob("*/track.yaml"):
+        for track_file in PROGRAMS.glob("*/track.yaml") if expand else []:
             track = yaml.safe_load(track_file.read_text(encoding="utf-8")) or {}
             for idea in track.get("ideas", []):
                 label = " ".join([str(idea.get("id", "")), str(idea.get("idea", ""))])
@@ -145,6 +147,8 @@ class Knowledge:
                 "jurisdiction": meta.get("jurisdiction", ""),
                 "attribution": meta.get("attribution", ""),
                 "license": meta.get("license", ""),
+                "origin": meta.get("origin", "common"),
+                **({"set": meta["set"]} if meta.get("set") else {}),
                 "signals": hit.get("signals", []),
             })
         return {"loaded": True, "query": query.strip(), "expanded_query": search_query, "matches": matches,
@@ -403,7 +407,8 @@ class Knowledge:
             if up and items[up]["code"]:
                 edges.append((f"std:{uid}", "part_of", f"std:{up}"))
             domain = headings(uid)
-            meta: dict[str, Any] = {"scope": "reference", "tier": "pinned", "code": it["code"], "title": it["code"],
+            meta: dict[str, Any] = {"scope": "reference", "tier": "pinned", "origin": "common",
+                                    "code": it["code"], "title": it["code"],
                                     "grade": it["grade"], "subject": it["subject"], "domain": domain,
                                     "jurisdiction": it["jurisdiction"], "license": it["license"],
                                     "attribution": it["attribution"], "type": it["type"],
