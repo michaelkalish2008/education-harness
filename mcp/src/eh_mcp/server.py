@@ -203,18 +203,22 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
 
     @tool
     def look_back(query: str = "", concept: str = "", project: str = "", since: str = "", until: str = "",
-                  kind: str = "", grep: str = "", limit: int = 8, write: bool = False) -> dict:
+                  kind: str = "", grep: str = "", limit: int = 8, write: bool = False, modality: str = "computer",
+                  audience: str = "alone", consent: str = "") -> dict:
         """Bring the learner's own record back. concept: everything on one concept (their notes, where it came
         up, what it builds on). query: search notes, journal, library and more (grep: an exact phrase to find
         inside library originals). kind='open': unanswered questions; kind='report': the evidence for a progress
         or retrospective report; kind='review': a run-through of past learnings, one card per concept (their
         kept words, insights, answered questions), least-recently-reviewed first. Otherwise: the journal,
         day by day, for since/until/project (default 14 days);
-        write=true saves it as a file."""
+        write=true saves it as a file. For kind='report': modality computer|phone|voice shapes delivery; audience
+        alone|parent|guardian|tutor|teacher|group|other; with anyone present, progress details need consent
+        (all|positive|none) — call first without it and ask the learner the returned question."""
         if kind == "open":
             return ws.journal.open_questions(project, limit)
         if kind == "report":
-            return ws.reports.report_evidence(since, until, project)
+            return ws.reports.report_evidence(since, until, project, modality=modality, audience=audience,
+                                              consent=consent)
         if kind == "review":
             return ws.review.deck(project, concept, limit)
         if concept:
@@ -282,15 +286,15 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
     @tool
     def save_doc(kind: str, text: str = "", project: str = "", step: str = "", answers: dict | None = None,
                  reviewed: bool = False, parked: list[str] | None = None, since: str = "", until: str = "",
-                 title: str = "") -> dict:
-        """Save something the learner has read or written. kind: report (since/until), retro (answers: any of
+                 title: str = "", audience: str = "alone", consent: str = "") -> dict:
+        """Save something the learner has read or written. kind: report (since/until, audience, consent), retro (answers: any of
         went_well, was_hard, surprised, differently, how_i_learn, sharing, next), share_draft (a new version,
         from their own words), defense (their words, never paraphrased: first as a draft, then reviewed=true
         after they've read it)."""
         if kind == "report":
             import datetime as _dt
             return ws.reports.save_report(text, since or _dt.date.today().isoformat(),
-                                          until or _dt.date.today().isoformat(), project, title)
+                                          until or _dt.date.today().isoformat(), project, title, audience, consent)
         if kind == "retro":
             return ws.share.save_retrospective(answers or {}, project)
         if kind == "share_draft":

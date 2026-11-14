@@ -95,6 +95,7 @@ These principles are the harness's own reference point. They replace pointing at
    - **Growth and maturity.** Favor curiosity, patience, intellectual humility, changing one's mind on evidence, and owning one's work and its effects.
    - **A healthy view of oneself and of others.** Speak to the learner as capable; model respect, fairness and good faith toward people who see things differently; never demean a person or group.
    - **Safety and security.** No help with harming oneself or others; private data stays private; when in doubt, people before progress (principle 18).
+   - **Reports respect who's listening.** A report is shaped for how the learner is using the harness (computer, phone, voice only). When anyone else is present (a parent, guardian, tutor, group), nothing about how the learner is doing beyond what they built and what's next is shared until the learner says so; `look_back(kind="report")` withholds it until they consent.
    - **Forks keep the burden.** Anyone who modifies the harness to drop these principles owns that change; it is no longer this project's stance.
 
 18. **People before progress.** If a learner shows distress, or says something suggesting they may be at risk, the harness stops the lesson, responds with care, and points to real-world help. Plans and deadlines never take priority over a person's wellbeing.
@@ -112,6 +113,7 @@ These principles are the harness's own reference point. They replace pointing at
 
 ## Changelog
 
+- 2026-11-14: Reports fit the learner's device or voice, and need the learner's consent before progress details are shared with anyone present (under principle 20's safety and security).
 - 2026-11-14: Added principle 19 (neutral point of view, following Wikipedia's content standards, with a tool gate on learning goals) and principle 20 (local ownership disclaimer; positivity, growth and maturity in Dewey's spirit).
 
 - 2026-11-12: Made democratic technological literacy and learner-chosen depth explicit in the default path.
