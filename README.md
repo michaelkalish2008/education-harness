@@ -2,7 +2,26 @@
 
 **A learning companion with one clear doorway: say “Let’s learn.”** You can also say **“Teach me…”**, **“Show me the data-science path”**, **“Let’s go”** to continue, or **“Where am I?”** You do not need to know any commands, tools, skills or plugin terminology.
 
-A free, open-source, Dewey-style learning harness for the Claude app (Claude Code works too). It adds what Claude doesn't keep on its own: **your place** across breaks and chats, **your own words** brought back when they matter, and **a goal** your work points toward. Everything else (explaining, adapting, drawing a picture) is Claude doing what it already does well.
+A free, open-source, Dewey-style learning harness for **Codex, Claude, ChatGPT Work and Claude Code**. It adds what an AI assistant doesn't keep on its own: **your place** across breaks and chats, **your own words** brought back when they matter, and **a goal** your work points toward. Everything else—explaining, adapting and drawing a picture—is the assistant doing what it already does well.
+
+**Standards-grounded:** the default data-science path is mapped to academic standards. When standards data is loaded, the harness checks relevant prerequisites against standards supplied through the **Chan Zuckerberg Initiative Education (CZI-E) Learning Commons Knowledge Graph**; standards guide prerequisite support without dictating the learner's scope or pace.
+
+## Ways to learn
+
+Choose the social setting that fits the learning session:
+
+- **Student–teacher or guardian:** learn with a teacher, tutor, parent or guardian.
+- **Solo:** work independently with the harness as your learning companion.
+- **Student group:** collaborate with classmates or peers while the harness supports the group.
+- **Another arrangement:** describe who is participating, and the harness adapts.
+
+Choose where and how you are learning:
+
+- **At a computer:** use text, code, diagrams and hands-on exercises.
+- **On a phone:** use shorter, mobile-friendly exchanges.
+- **On a walk or drive (voice):** learn through a voice conversation, with driving sessions kept hands-free and free of activities that require looking at or operating the device.
+
+The harness asks about these choices when they matter; you can change them at any time.
 
 You never write code or open a terminal to learn with it. Your record lives as plain files in `~/learning` on your computer.
 
