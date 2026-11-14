@@ -29,6 +29,27 @@ if TYPE_CHECKING:
     from .core import Workspace
 
 SHARE_KINDS = ("explained", "worked-with", "helped", "asked", "showed", "heard-back")
+MODALITIES = ("computer", "phone", "voice")
+AUDIENCES = ("alone", "parent", "guardian", "tutor", "teacher", "group", "other")
+CONSENTS = ("", "all", "positive", "none")
+
+# How a report is delivered, by where the learner is reading or listening.
+DELIVERY = {
+    "computer": "One screen. Sections may have short headings. Offer to save it (save_doc) or open it as a page.",
+    "phone": "Five short lines at most, no tables or headings, one quote. Offer the full version to read later on a "
+             "computer.",
+    "voice": "Spoken, under a minute: plain sentences, no lists, codes, file names or symbols; say numbers as "
+             "words. One quote at most. Then ask whether to save a written copy.",
+}
+# Evidence that tells someone else how the learner is doing beyond what they built and what's next.
+PERSONAL = ("confusions_answered", "slips", "looked_at", "hints_per_worked_step")
+
+
+def _consent_question(audience: str) -> str:
+    who = {"group": "the group", "other": "the people with you"}.get(audience, f"your {audience}")
+    return (f"Before I go over how this is going: {who} can hear or see this. Should I include everything, "
+            "including what was hard and what you looked up, just what you've built and what's next, or keep "
+            "the report for later when it's just you?")
 PRACTICES = {f"MP{i}" for i in range(1, 9)}
 
 
@@ -64,7 +85,54 @@ class Reports:
         return {"saved": aid, "shared": it["shared"]}
 
     # ---------------------------------------------------------------- evidence
-    def report_evidence(self, since: str = "", until: str = "", project: str = "", arc: str = "") -> dict:
+    def report_evidence(self, since: str = "", until: str = "", project: str = "", arc: str = "",
+                        modality: str = "computer", audience: str = "alone", consent: str = "") -> dict:
+        """Evidence for a report, shaped for how it will be delivered and who else is present.
+
+        With anyone else present (a parent, tutor, group…), what would show how the learner is doing beyond what
+        they built (struggles, slips, reveals, open questions, their own private notes) is withheld until the
+        learner consents: consent all, positive (built, defended, strengths in their words they'd share, next
+        steps), or none (nothing now; report later alone)."""
+        from .core import HarnessError
+        if modality not in MODALITIES:
+            raise HarnessError(f"modality must be one of {', '.join(MODALITIES)}.")
+        if audience not in AUDIENCES:
+            raise HarnessError(f"audience must be one of {', '.join(AUDIENCES)}.")
+        if consent not in CONSENTS:
+            raise HarnessError("consent must be all, positive or none.")
+        full = self._evidence(since, until, project, arc)
+        full["delivery"] = {"modality": modality, "how": DELIVERY[modality], "audience": audience}
+        if audience == "alone" or consent == "all":
+            full["delivery"]["shared_with"] = audience if audience != "alone" else ""
+            return full
+        if not consent:
+            return {"period": full["period"], "delivery": {**full["delivery"], "needs_consent": True,
+                    "ask": _consent_question(audience),
+                    "note": "Ask in your own words, once, before saying anything about progress. Nothing about "
+                            "how the learner is doing is included until they answer."}}
+        if consent == "none":
+            return {"period": full["period"], "delivery": {**full["delivery"], "consent": "none",
+                    "note": "Say you'll keep the report for when they're on their own; offer the next step only."},
+                    "opportunities": {"next": full["opportunities"]["next"]}}
+        g = full["growth"]
+        return {
+            "period": full["period"], "arc": full["arc"], "lens": full["lens"],
+            "delivery": {**full["delivery"], "consent": "positive",
+                         "note": "Only what they built and what's next. Don't mention difficulties, reveals, slips "
+                                 "or open questions, and don't hint at them."},
+            "where_it_leads": {"goal": full["where_it_leads"]["goal"]},
+            "growth": {"built": [{k: b[k] for k in ("project", "step", "does")} for b in g["built"]],
+                       "defended": g["defended"]},
+            "strengths_evidence": {"practices_touched": full["strengths_evidence"]["practices_touched"],
+                                   "your_words": [w for w in full["strengths_evidence"]["your_words"]
+                                                  if w["kind"] == "gist"][:3]},
+            "standards": {k: full["standards"][k] for k in ("loaded", "exercised", "use")},
+            "opportunities": {"next": full["opportunities"]["next"],
+                              "next_on_arc": full["opportunities"]["next_on_arc"]},
+            "attribution": full["attribution"],
+        }
+
+    def _evidence(self, since: str = "", until: str = "", project: str = "", arc: str = "") -> dict:
         """Everything a progress report rests on, for the period (default: since the last
         report, or the last 30 days)."""
         from .core import _read_yaml
@@ -119,16 +187,22 @@ class Reports:
                 out[e["kind"]] = out.get(e["kind"], 0) + 1
             return out
 
-        standards = sorted({s for d in days for s in d["standards"]})
+        # Standards come only from each project's sidecar (projects/<slug>/standards.yaml), decided at
+        # planning and during sessions. Nothing is searched here, so reports over time agree.
+        names = [project] if project else sorted(p.name for p in base.iterdir() if (p / "program.yaml").exists()) \
+            if base.exists() else []
+        sums = {n: self.ws.alignment.summary(n, since, until) for n in names}
+        def merged(key: str) -> list[dict]:
+            out: dict[str, dict] = {}
+            for n, sm in sums.items():
+                for r in sm[key]:
+                    rec = out.setdefault(r["code"], {**r, "steps": []})
+                    rec["steps"] += [f"{n}/{x}" for x in r["steps"] if f"{n}/{x}" not in rec["steps"]]
+            return sorted(out.values(), key=lambda r: r["code"])
+        exercised, ahead = merged("exercised"), merged("ahead")
+        standards = sorted({r["code"] for r in exercised})
         practices = sorted({s for s in standards if s in PRACTICES})
-        with self.ws.index._conn() as c:
-            texts = {}
-            import json
-            for code in practices:
-                r = c.execute("SELECT meta FROM docs WHERE kind = 'standard' AND body LIKE ?",
-                              (f"{code} %",)).fetchone()
-                if r:
-                    texts[code] = json.loads(r[0]).get("statement", "")
+        texts = {r["code"]: r["statement"] for r in exercised}
         from .lenses import LENSES, lens_for
         arcs = self.ws.orient._arcs()
         key = arc and self.ws.orient._resolve_arc(arc)
@@ -175,12 +249,28 @@ class Reports:
                            "shared": self.ws.share.get_share(project)["shared"],
                            "heard_back": self.ws.share.get_share(project)["heard_back"]} if project else None),
             "standards_touched": standards,
-            "attribution": "Knowledge Graph is provided by CZI-E under the CC BY-4.0 license. CZI-E received "
-                           "state standards and written permission under CC BY-4.0 from 1EdTech." if standards else "",
+            "standards": {
+                "loaded": self.ws.alignment._any_standards(),
+                "exercised": [r for r in exercised if r["code"] not in PRACTICES],
+                "earlier": [r["code"] for r in merged("exercised_before") if r["code"] not in PRACTICES],
+                "ahead": [r["code"] for r in ahead if r["code"] not in PRACTICES][:12],
+                "pending_review": len([c for sm in sums.values() for c in sm["pending_review"]]),
+                "sidecars": [sm["file"] for sm in sums.values()],
+                "backfilled": {n: sm["backfilled"] for n, sm in sums.items() if sm["backfilled"]},
+                "use": "Name exercised standards by their statements in plain words, tied to the learner's own "
+                       "words where the sidecar records evidence. Ahead standards are where the plan goes, never "
+                       "gaps. Don't add standards that aren't in the sidecar; if one seems missing, offer to "
+                       "record it with standards(action='add').",
+            },
+            "attribution": (" ".join(sorted({sm["attribution"] for sm in sums.values() if sm["attribution"]}))
+                            or "Knowledge Graph is provided by CZI-E under the CC BY-4.0 license. CZI-E received "
+                               "state standards and written permission under CC BY-4.0 from 1EdTech.")
+            if (exercised or ahead) else "",
         }
 
     # ------------------------------------------------------------------ saving
-    def save_report(self, text: str, since: str, until: str, project: str = "", title: str = "") -> dict:
+    def save_report(self, text: str, since: str, until: str, project: str = "", title: str = "",
+                    audience: str = "alone", consent: str = "") -> dict:
         """Save the report the mentor wrote and the learner has read, as Markdown in .private/reports/."""
         from .core import HarnessError, _slug
         if not (text or "").strip():
@@ -191,7 +281,8 @@ class Reports:
         while path.exists():
             path = path.with_name(f"{name[:-3]}-{n}.md")
             n += 1
-        head = f"---\nsince: {since}\nuntil: {until}\nproject: {project}\ntitle: {title or 'Progress report'}\n---\n\n"
+        head = (f"---\nsince: {since}\nuntil: {until}\nproject: {project}\ntitle: {title or 'Progress report'}\n"
+                f"shared_with: {'' if audience == 'alone' else audience}\nconsent: {consent}\n---\n\n")
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(head + text.strip() + "\n", encoding="utf-8")
         rel = str(path.relative_to(self.ws.root))

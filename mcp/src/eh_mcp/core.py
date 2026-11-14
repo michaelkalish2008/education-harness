@@ -26,6 +26,7 @@ from .share import Share
 from .orient import Orientation
 from .journey import Journey
 from .catalog import Catalog
+from .knowledge_map import KnowledgeMap
 from .review import Review
 from .knowledge import Knowledge
 from .library import GREP_RRF_K, GREP_SELECTIVITY_MAX, Library
@@ -103,6 +104,11 @@ class Workspace:
         self.share = Share(self)
         self.journey = Journey(self)
         self.catalog = Catalog(self)
+        from .alignment import Alignment
+        self.alignment = Alignment(self)
+        from .expectations import Expectations
+        self.expectations = Expectations(self)
+        self.knowledge_map = KnowledgeMap(self)
         self.review = Review(self)
 
     # ------------------------------------------------------------------ paths
@@ -326,7 +332,8 @@ class Workspace:
             st["checklist"] = {**c, "at": _now().isoformat(timespec="seconds")}
         st["status"] = status
         self._save_progress(project, prog)
-        return {"step": step, "status": status}
+        marked = self.alignment.step_status(project, step, status)
+        return {"step": step, "status": status, **({"standards_exercised": marked} if marked else {})}
 
     # --------------------------------------------------------------- handoffs
     def record_defense(self, project: str, step: str, record: str, parked: list[str] | None = None,
@@ -576,6 +583,7 @@ class Workspace:
             self.library.index_record(rec); n += 1
         self.load_program_graph()
         self.knowledge.reload_standards()
+        self.expectations.reindex()
         for doc_id, it in self.knowledge._state()["items"].items():
             if it.get("tier") == "cold":
                 self.index.set_tier(doc_id, "cold")

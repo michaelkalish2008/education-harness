@@ -41,11 +41,12 @@ def test_evidence_covers_growth_strengths_sociability_and_opportunities(ws):
     j.record_error("net", "s2", "added slopes instead of multiplying", "procedure", helped="boxes")
     j.record_error("net", "s2", "dropped a minus sign", "arithmetic")
     ws.record_attempt("net", "s2", "dL/dw is the product of the local slopes")
+    ws.set_status("net", "s2", "drafted", "tutor")
     ws.reports.record_shared("explained", "Walked my sister through the boxes picture", who="my sister",
                              project="net", step="s2")
     e = ws.reports.report_evidence()
     g = e["growth"]
-    assert [b["step"] for b in g["built"]] == ["s1"]
+    assert [b["step"] for b in g["built"]] == ["s1", "s2"]
     assert g["confusions_answered"][0]["then"] == "why does the error go backwards??"
     assert e["sociability"]["count"] == 1 and e["sociability"]["shared"][0]["who"] == "my sister"
     assert {"text": "is momentum like a ball rolling?"}.items() <= e["opportunities"]["still_open"][0].items()
@@ -66,3 +67,40 @@ def test_reports_save_list_and_set_the_next_period(ws):
         ws.reports.save_report(" ", "a", "b")
     with pytest.raises(HarnessError):
         ws.reports.record_shared("bragged", "x")
+
+
+def _struggle(ws):
+    j = ws.journal
+    q = j.annotate("why does the error go backwards??", kind="confusion", anchor="step", project="net", step="s2")
+    ws.record_attempt("net", "s1", "a 1x3 times a 3x2 gives a 1x2")
+    ws.set_status("net", "s1", "drafted", "tutor")
+    j.annotate("each layer only needs the slope after it", kind="insight", project="net", responds_to=q["saved"])
+    j.record_error("net", "s2", "added slopes instead of multiplying", "procedure")
+
+
+def test_report_with_others_present_waits_for_the_learners_consent(ws):
+    _struggle(ws)
+    asked = ws.reports.report_evidence(audience="parent", modality="phone")
+    assert asked["delivery"]["needs_consent"] and "parent" in asked["delivery"]["ask"]
+    assert "growth" not in asked and "error go backwards" not in json.dumps(asked)
+    positive = ws.reports.report_evidence(audience="group", consent="positive")
+    text = json.dumps(positive)
+    assert [b["step"] for b in positive["growth"]["built"]] == ["s1"]
+    assert "error go backwards" not in text and "added slopes" not in text
+    assert set(positive["growth"]) == {"built", "defended"}
+    assert set(positive["opportunities"]) == {"next", "next_on_arc"}
+    none = ws.reports.report_evidence(audience="tutor", consent="none")
+    assert set(none) == {"period", "delivery", "opportunities"}
+    everything = ws.reports.report_evidence(audience="tutor", consent="all")
+    assert everything["growth"]["confusions_answered"] and everything["delivery"]["shared_with"] == "tutor"
+
+
+def test_report_delivery_follows_modality(ws):
+    alone = ws.reports.report_evidence(modality="voice")
+    assert "Spoken" in alone["delivery"]["how"] and "growth" in alone
+    assert "Five short lines" in ws.reports.report_evidence(modality="phone")["delivery"]["how"]
+    with pytest.raises(HarnessError):
+        ws.reports.report_evidence(modality="hologram")
+    saved = ws.reports.save_report("Built a tiny network.", "2026-11-01", "2026-11-14", audience="parent",
+                                   consent="positive")
+    assert "shared_with: parent" in (ws.root / saved["saved"]).read_text()

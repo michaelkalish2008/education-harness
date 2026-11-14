@@ -22,7 +22,19 @@ def s(tmp_path):
 def test_the_surface_is_small(s):
     names = {t.name for t in asyncio.run(s.list_tools())}
     assert names == {"where_am_i", "set_arc", "write_plan", "note", "look_back", "reveal", "set_status",
-                     "bookmark", "save_doc", "profile", "library", "setup", "check_links", "catalog"}
+                     "bookmark", "save_doc", "profile", "library", "setup", "check_links", "catalog", "standards",
+                     "knowledge_map"}
+
+
+def test_knowledge_map_is_exposed_as_an_embedded_mcp_app(s):
+    tools = {t.name: t for t in asyncio.run(s.list_tools())}
+    meta = tools["knowledge_map"].meta
+    assert meta["ui"]["resourceUri"] == "ui://education-harness/knowledge-map"
+    resources = asyncio.run(s.list_resources())
+    assert any(str(r.uri) == "ui://education-harness/knowledge-map" for r in resources)
+    view = asyncio.run(s.read_resource("ui://education-harness/knowledge-map"))
+    text = view.contents[0].text if hasattr(view, "contents") else view[0].content
+    assert "Knowledge map" in text and "<h1 class=\"title\">TurboQuant" not in text
 
 
 def test_lazy_first_session_then_coming_back(s):

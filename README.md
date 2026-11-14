@@ -64,6 +64,8 @@ An optional **academic advisor** works across the catalog. It helps the learner 
 
 Learning already underway elsewhere belongs in the same picture. The advisor can incorporate learner-confirmed activity from NotebookLM, Coursera, Udemy or other tools through a conversation, pasted list, syllabus, public URL, screenshot, certificate or export. No MCP connection or account credentials are required; inaccessible systems are never treated as if the harness inspected them.
 
+With optional local smart search enabled, **“show my knowledge map”** opens an embedded interactive view in MCP-App-capable Claude, Claude Code, Codex and ChatGPT Work hosts, with a private `KNOWLEDGE-MAP.html` fallback beside the learner's other local pages. It projects the TurboQuant-compressed embeddings into three dimensions with PCA and provides rotation, zoom, search, record-type filters, details and nearest-neighbor exploration. The view reports how much variance the three axes retain and describes the compression/projection limits; it is an exploratory view, not a score or literal representation of what the learner understands.
+
 ## How it works
 
 - **One voice.** A tutor that works toward an understanding with you. Anything can be seen whenever you ask: hints, the answer, the method. Seeing it is never a failure; a similar problem is offered once.
@@ -72,6 +74,8 @@ Learning already underway elsewhere belongs in the same picture. The advisor can
 - **Sharing, lightly.** Each project ends with a chance to explain it to someone (a coworker, a friend, a post), in your own words. You share it yourself; the harness never posts.
 - **Looking back.** When a project is done: a short retrospective, then a report on your growth, strengths and what's next, quoting you. No grades, scores or comparisons, ever.
 - **Slips are kept only if you say so.**
+- **Standards, recorded as you go.** If you load the open math standards, each lesson keeps a sidecar, `projects/<lesson>/standards.yaml`: what each step cites (decided when the plan is written, candidates accepted or declined then, additions during a session with your words), marked exercised with a date when a step is drafted or defended. Reports and the catalog read only this file, so reports over time agree.
+- **Ask how it works.** "How does the education harness work?" or "Show me how this works" gets an overview fitted to how you learn (a diagram, your own files, a spoken walk-through), from `skills/start/references/how-it-works.md`.
 - **Fast and lazy.** One call to open a chat, about one per turn after that; nothing loads until it's needed.
 
 Optional: your own library of articles and notes ("add this folder to my library"); smart search, a small local model; Common Core math standards as reference points.
@@ -100,9 +104,21 @@ Adults (18+). Your record stays on your computer in `~/learning`; private record
 
 Standards data, if you load it: Knowledge Graph is provided by CZI-E under the CC BY-4.0 license. CZI-E received state standards and written permission under CC BY-4.0 from 1EdTech.
 
+## Neutrality, ownership and the spirit of it
+
+The harness teaches people to understand, not what to think. It follows Wikipedia's content standards: a neutral point of view with due weight, verifiable sources, and opinions attributed rather than asserted. Lesson goals and external expectation sets must name what a learner will know, do, explain or evaluate; goals that demand belief, allegiance or condemnation are refused by the tools (principle 19).
+
+**Disclaimer.** Education Harness is open-source software that runs on your own computer. Whoever installs it controls it (v0 is designed for adults; a young person using a copy does so under their guardian): they can change its files, skills and settings, and they are responsible for how they use it. The maintainer cannot see, supervise or enforce how any copy is used, makes no guarantee that its safeguards will hold in a modified copy, and provides it as is under the MIT license, without warranty.
+
+What the harness can do is keep a stance in its own voice. In the spirit of John Dewey's *Democracy and Education*, it encourages positivity without flattery, growth and maturity, a healthy view of oneself, and good faith toward others: learning as shared life in a democratic society, safe and secure for the people in it (principle 20).
+
 ## Status
 
-v0.10.0: public-URL, document, image and video sources for lesson planning; a local learning catalog with archive, priority and ranking controls; portfolio analytics; external-course intake; and an optional academic advisor. 14 tools; 5 skills; 3 optional agents. Earlier, v0.9.0 added review run-throughs and the journey map. **Not yet tested with a real learner**; see [`docs/TEST-PLAN.md`](docs/TEST-PLAN.md).
+v0.12.0: reports fit the learner's device or voice and ask consent before sharing progress with anyone present; skills load detail lazily from references/ (cores about 40% smaller); expectation sets fold into the standards tool. v0.11.0 added standards sidecars per lesson, external and personal expectation sets, the "how it works" overview, and principles 19 (neutral point of view) and 20 (ownership and a culture of growth). 16 tools; 5 skills; 3 optional agents. v0.10.0 added public-URL, document, image and video sources for lesson planning; a local learning catalog with archive, priority and ranking controls; portfolio analytics; external-course intake; and an optional academic advisor. Earlier, v0.9.0 added review run-throughs and the journey map. **Not yet tested with a real learner**; see [`docs/TEST-PLAN.md`](docs/TEST-PLAN.md).
+
+## Maintaining a fork
+
+Say "update plugin" in Claude Code, Codex or ChatGPT (the skill is in `.claude/skills/` and `.agents/skills/`) to test, bump the version, build the `.plugin`, commit on a branch, push and open a pull request. It reads your remote and git identity, so it works unchanged in a fork.
 
 ## License
 

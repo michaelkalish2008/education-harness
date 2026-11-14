@@ -16,7 +16,7 @@ A run-through brings back what the learner already worked out, in their own word
 ## Each card (one per turn)
 
 1. **Prompt without the answer.** Name the concept and ask an open question that their saved words answer, e.g. "Standard error and views: how do they move together, and why?" In an interview context (`learner.learning_context`), ask it the way an interviewer would. Don't show their saved words yet.
-2. **They say it.** Typed or spoken, rough is fine. In a voice session follow the tutor's *Voice sessions* rules: short, no symbols, no hypothetical numbers.
+2. **They say it.** Typed or spoken, rough is fine. In a voice session follow `../tutor/references/voice.md`: short, no symbols, no hypothetical numbers.
 3. **Then show their earlier words** from the card (`your_words`, `insights`, `then_and_now`) next to what they just said. Ask what changed, or name one thing that's now sharper or one piece that dropped out. Never call the earlier version "the answer"; it's their own earlier wording, and either version can be the better one.
 4. **Check before you state.** If either version has a factual or numeric error, say so plainly and fix it together (run the numbers). Don't let a review re-teach a slip into memory.
 5. **Record it.** `note(kind="review", responds_to=<card id>, text=<what they said this time, in their words>)`. Their words go in as said; tighten only if they ask, and then save the tightened version as theirs only on their yes.

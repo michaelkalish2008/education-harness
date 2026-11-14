@@ -35,6 +35,7 @@ PHRASES = [
     ("Let's go", "pick up where you left off, or start"),
     ("Where am I?", "what's done, what's now, what's next"),
     ("Show my catalog", "browse, prioritize or archive learning paths"),
+    ("Show my knowledge map", "explore local semantic connections in 3D"),
     ("Note this", "keep a thought in your words, half-formed is fine"),
     ("Bookmark this", "save where your thinking is right now"),
     ("Look back", "your notes and what you've done, brought back together"),
@@ -268,6 +269,11 @@ class Orientation:
                              if s.get("terms") else {})})
         if not clean:
             raise HarnessError("A plan needs at least one step.")
+        from .neutrality import check_all
+        issues = check_all("question", [question]) + [
+            i for s in clean for i in check_all(f"step {s['id']}", [s["does"], *s["strong_version_shows"]])]
+        if issues:
+            raise HarnessError("Neutral point of view (principle 19): " + " | ".join(issues))
         old = _read_yaml(d / "program.yaml", {}) or {}
         plan: dict[str, Any] = {"schema": SCHEMA}
         if idea:
@@ -299,7 +305,7 @@ class Orientation:
         _write_yaml(d / "progress.yaml", prog)
         self.ws.load_program_graph()
         return {"saved": f"projects/{project}/program.yaml", "steps": [s["id"] for s in clean],
-                "kept_as_retired": retired}
+                "kept_as_retired": retired, "standards": self.ws.alignment.align_plan(project, clean)}
 
     def _plan_brief(self, project: str) -> dict:
         from .core import _read_yaml

@@ -1,3 +1,4 @@
+import pytest
 import json
 from pathlib import Path
 
@@ -11,7 +12,7 @@ def test_visible_portable_manifest_and_starter_prompts():
     plugin = json.loads((ROOT / "plugin.json").read_text())
     ui = plugin["extensions"]["com.openai"]["interface"]
     assert plugin["$schema"] == "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
-    assert plugin["name"] == "education-harness" and plugin["version"] == "0.10.0"
+    assert plugin["name"] == "education-harness" and plugin["version"] == "0.12.0"
     assert ui["displayName"] == "Education Harness"
     assert len(ui["shortDescription"]) <= 30
     assert len(ui["defaultPrompt"]) == 3
@@ -24,7 +25,7 @@ def test_compatibility_manifests_keep_identity_in_sync():
     codex = json.loads((ROOT / ".codex-plugin/plugin.json").read_text())
     claude = json.loads((ROOT / ".claude-plugin/plugin.json").read_text())
     assert {(m["name"], m["version"]) for m in (root, codex, claude)} == {
-        ("education-harness", "0.10.0")}
+        ("education-harness", "0.12.0")}
 
 
 def test_local_mcp_and_start_skill_are_discoverable():
@@ -56,3 +57,39 @@ def test_catalog_and_academic_advisor_ship_together():
     advisor = (ROOT / "agents/academic-advisor.md").read_text()
     assert "suggestions are opt-in" in advisor.lower()
     assert "notebooklm" in advisor.lower()
+    assert (ROOT / "skills/start/knowledge-map.html").exists()
+
+
+def test_how_it_works_ships_with_start_and_names_the_real_files():
+    text = (ROOT / "skills/start/references/how-it-works.md").read_text()
+    assert "references/how-it-works.md" in (ROOT / "skills/start/SKILL.md").read_text()
+    for name in ("program.yaml", "progress.yaml", "standards.yaml", "learner.yaml", "MAP.md", "PRINCIPLES.md"):
+        assert name in text
+
+
+def test_maintainer_release_skill_is_in_the_repo_but_not_the_package():
+    claude = ROOT / ".claude/skills/update-plugin/SKILL.md"
+    codex = ROOT / ".agents/skills/update-plugin/SKILL.md"
+    assert claude.read_text() == codex.read_text(), "edit both copies of the update-plugin skill together"
+    policy = yaml.safe_load((codex.parent / "agents/openai.yaml").read_text())["policy"]
+    assert policy["allow_implicit_invocation"] is False
+    build = (ROOT / "scripts/build-plugin.sh").read_text()
+    assert '".claude/*"' in build and '".agents/*"' in build
+
+
+CORE_WORDS = {"start": 900, "tutor": 1400, "plan": 900, "reflect": 950, "review": 600}
+
+
+@pytest.mark.parametrize("name,limit", sorted(CORE_WORDS.items()))
+def test_skill_cores_stay_small_and_their_references_exist(name, limit):
+    """Skill bodies load whole; detail lives in references/ and loads only when a pointer says so."""
+    import re
+    folder = ROOT / "skills" / name
+    body = (folder / "SKILL.md").read_text().split("---", 2)[-1]
+    assert len(body.split()) <= limit, f"{name} core is {len(body.split())} words; move detail to references/"
+    links = re.findall(r"((?:\.\./[\w-]+/)?references/[\w-]+\.md)", body)
+    for link in links:
+        assert (folder / link).resolve().exists(), f"{name} points to missing {link}"
+    pointed = {l.split("/")[-1] for l in links if not l.startswith("..")}
+    shipped = {p.name for p in (folder / "references").glob("*.md")} if (folder / "references").exists() else set()
+    assert shipped <= pointed, f"{name} has unreferenced files: {sorted(shipped - pointed)}"

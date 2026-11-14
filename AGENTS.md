@@ -7,3 +7,7 @@ Read `PRINCIPLES.md` before acting; where a skill and the principles disagree, t
 - Words for the learner: goal, step, notes, bookmark.
 - Learner state lives in `~/learning` and changes only through the harness's tools.
 - Optional agents: `validator` (a defense, from a clean context) and `lesson-planner` (solutions kept out of sight).
+
+## Releasing
+
+To release a new version of the plugin, say "update plugin". The same skill lives in `.agents/skills/update-plugin/` (Codex and ChatGPT) and `.claude/skills/update-plugin/` (Claude Code); edit both together, a test checks they match. It is a maintainer tool, runs only when asked, and is not shipped in the learner package.

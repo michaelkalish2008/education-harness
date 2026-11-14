@@ -10,7 +10,7 @@ How the tutor builds an interactive page for an idea with a dial. Learned from r
 
 ## Shape
 
-- Start from `explorer-template.html` in this folder: a working scene engine (fixed 16:9 stage, Back/Next and arrow keys, scene dots, Present and Study modes, prediction boxes, a Details drawer). Replace the scenes; keep the engine.
+- Start from `explorer-template.html` in the tutor skill's folder (one level up): a working scene engine (fixed 16:9 stage, Back/Next and arrow keys, scene dots, Present and Study modes, prediction boxes, a Details drawer). Replace the scenes; keep the engine.
 - Scenes, not scrolling panels. One fixed screen that never scrolls, one scene at a time (a picture, a one-sentence caption, the scene's one control, Back/Next with arrow keys), so the learner never scrolls to a setting and back to its effect. A Present mode (picture and caption only, video-sized type) and a Study mode (prediction boxes and a Details drawer with the algebra and definitions). Predict-then-reveal is a scene state: "?" on the picture, then Next reveals it.
 - Design one picture of the whole idea before building, not a panel per sub-idea: the same object transforms step by step ("Next step" changes one thing), at a consistent scale (say when it zooms), with one row of numbers that fills in as each step is reached. For a picture the learner has said isn't working, propose the redesign in a few lines and ask before rebuilding; don't patch.
 - Build each picture from objects the learner has already met (the table's rows become rectangles), never a new abstraction introduced to explain them. Name both axes on any chart, keep the caption to one line, and let the picture carry the explanation rather than a paragraph beside it.

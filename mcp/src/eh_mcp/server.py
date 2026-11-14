@@ -35,20 +35,20 @@ def workspace_root() -> Path:
     return Path(os.environ.get("EH_WORKSPACE", Path.home() / "learning")).expanduser()
 
 
-CHANGES_THE_MAP = {"set_arc", "write_plan", "note", "reveal", "set_status", "bookmark", "save_doc", "profile", "catalog"}
+CHANGES_THE_MAP = {"set_arc", "write_plan", "standards", "note", "reveal", "set_status", "bookmark", "save_doc", "profile", "catalog"}
 
 NOTE_KINDS = ("attempt", "question", "confusion", "insight", "thought", "keep", "slip", "shared", "heard_back",
               "diary", "session", "review")
 
 CHATGPT_TOOLS = {
     "where_am_i", "set_arc", "write_plan", "note", "look_back", "reveal", "bookmark", "profile",
-    "catalog",
+    "catalog", "knowledge_map",
 }
 
 
 def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServer:
     ws = Workspace(root or workspace_root())
-    server = MCPServer(name="education-harness", version="0.10.0", instructions=INSTRUCTIONS)
+    server = MCPServer(name="education-harness", version="0.12.0", instructions=INSTRUCTIONS)
 
     def tool(fn):
         if chatgpt and fn.__name__ not in CHATGPT_TOOLS:
@@ -106,6 +106,31 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
         external:<name>. Returns catalog data,
         the generated CATALOG.html file and its template. The learner controls every organization change."""
         return ws.catalog.manage(action, item, priority, rank, kind, title, provider, progress, notes, url)
+
+    @server.resource("ui://education-harness/knowledge-map", name="knowledge_map_view",
+                     title="Knowledge Map", description="Interactive 3D PCA view of the local TurboQuant knowledge base.",
+                     mime_type="text/html;profile=mcp-app",
+                     meta={"ui": {"prefersBorder": False, "csp": {"connectDomains": [],
+                                                                    "resourceDomains": []}}})
+    def knowledge_map_view() -> str:
+        from .knowledge_map import PLACEHOLDER, template_path
+        empty = {"points": [], "count": 0, "scope": "domain", "explained_variance": [0, 0, 0],
+                 "note": "Waiting for the local knowledge-map data."}
+        return template_path().read_text(encoding="utf-8").replace(PLACEHOLDER, json.dumps(empty), 1)
+
+    @server.tool(title="Explore knowledge map", structured_output=True,
+                 meta={"ui": {"resourceUri": "ui://education-harness/knowledge-map",
+                               "visibility": ["model", "app"]},
+                       "openai/ui": {"entrypoints": [{"type": "global"}, {"type": "thread"}]}})
+    def knowledge_map(scope: str = "domain", max_points: int = 600) -> dict[str, Any]:
+        """Open an embedded interactive 3D PCA explorer for local TurboQuant vectors. scope:
+        domain (default), reflection, reference, meta or all; max_points: 3-2000. Requires optional local
+        smart search. Also saves KNOWLEDGE-MAP.html as a host-independent fallback."""
+        try:
+            return ws.knowledge_map.write(scope, max_points)
+        except HarnessError as e:
+            return {"refused": str(e), "data": {"points": [], "count": 0, "scope": scope,
+                                                  "explained_variance": [0, 0, 0], "note": str(e)}}
 
     @tool
     def write_plan(project: str, question: str, steps: list[dict], example: str = "", audience: str = "",
@@ -178,18 +203,21 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
 
     @tool
     def look_back(query: str = "", concept: str = "", project: str = "", since: str = "", until: str = "",
-                  kind: str = "", grep: str = "", limit: int = 8, write: bool = False) -> dict:
+                  kind: str = "", grep: str = "", limit: int = 8, write: bool = False, modality: str = "computer",
+                  audience: str = "alone", consent: str = "") -> dict:
         """Bring the learner's own record back. concept: everything on one concept (their notes, where it came
         up, what it builds on). query: search notes, journal, library and more (grep: an exact phrase to find
         inside library originals). kind='open': unanswered questions; kind='report': the evidence for a progress
         or retrospective report; kind='review': a run-through of past learnings, one card per concept (their
         kept words, insights, answered questions), least-recently-reviewed first. Otherwise: the journal,
         day by day, for since/until/project (default 14 days);
-        write=true saves it as a file."""
+        write=true saves it as a file. Report: modality computer|phone|voice; audience (who else is present);
+        consent all|positive|none once the learner answers the returned question."""
         if kind == "open":
             return ws.journal.open_questions(project, limit)
         if kind == "report":
-            return ws.reports.report_evidence(since, until, project)
+            return ws.reports.report_evidence(since, until, project, modality=modality, audience=audience,
+                                              consent=consent)
         if kind == "review":
             return ws.review.deck(project, concept, limit)
         if concept:
@@ -211,6 +239,22 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
         """Mark a step 'seen' or 'drafted' (the learner's own work exists). 'defended' only from the validator,
         with checklist {explained, questions_worked (>=3), path_not_taken, limit_named}."""
         return ws.set_status(project, step, status, role, checklist)
+
+    @tool
+    def standards(action: str = "show", project: str = "", step: str = "", code: str = "", decision: str = "",
+                  evidence: str = "", set: str = "", origin: str = "", issuer: str = "", source: dict | None = None,
+                  items: list[dict] | None = None, query: str = "", confirmed: bool = False) -> dict:
+        """Lesson sidecar (reports read only this): show, review (code, decision accept|decline), add (code, step,
+        evidence), drop. Expectation sets: sets, create (set, origin external|personal, issuer+source if external),
+        items (set, items [{statement}], confirmed after the learner's yes), retire (set, code), search (query)."""
+        if action in ("show", "review", "add", "drop"):
+            return ws.alignment.manage(action, project, step, code, decision, evidence)
+        a = {"sets": "list", "items": "add", "retire": "retire", "create": "create", "search": "search",
+             "archive": "archive", "restore": "restore", "show_set": "show"}.get(action)
+        if not a:
+            raise HarnessError("action: show, review, add, drop, sets, create, items, show_set, retire, archive, "
+                               "restore or search.")
+        return ws.expectations.manage(a, set, origin, "", issuer, None, source, items, code, query, confirmed)
 
     # -------------------------------------------------------------- bookmark
     @tool
@@ -240,7 +284,7 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
     @tool
     def save_doc(kind: str, text: str = "", project: str = "", step: str = "", answers: dict | None = None,
                  reviewed: bool = False, parked: list[str] | None = None, since: str = "", until: str = "",
-                 title: str = "") -> dict:
+                 title: str = "", audience: str = "alone", consent: str = "") -> dict:
         """Save something the learner has read or written. kind: report (since/until), retro (answers: any of
         went_well, was_hard, surprised, differently, how_i_learn, sharing, next), share_draft (a new version,
         from their own words), defense (their words, never paraphrased: first as a draft, then reviewed=true
@@ -248,7 +292,7 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
         if kind == "report":
             import datetime as _dt
             return ws.reports.save_report(text, since or _dt.date.today().isoformat(),
-                                          until or _dt.date.today().isoformat(), project, title)
+                                          until or _dt.date.today().isoformat(), project, title, audience, consent)
         if kind == "retro":
             return ws.share.save_retrospective(answers or {}, project)
         if kind == "share_draft":
@@ -305,10 +349,11 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
         raise HarnessError("action must be add, add_url, summarize, list, check, use, tidy, tier or forget.")
 
     @tool
-    def setup(action: str = "status") -> dict:
+    def setup(action: str = "status", scope: str = "domain", max_points: int = 600) -> dict:
         """Opt-in features. action: status; smart_search_on / smart_search_off (a small local model, about
         70 MB once); load_standards (pin openly licensed Common Core math standards from a download on this
-        computer, with attribution); rebuild_index."""
+        computer, with attribution); rebuild_index; knowledge_map (scope: domain/reflection/reference/meta/all,
+        max_points up to 2000) writes a private interactive 3D PCA view of TurboQuant vectors."""
         if action == "status":
             return {"smart_search": ws.semantic.status(), "standards": ws.knowledge._state().get("standards_source")}
         if action in ("smart_search_on", "smart_search_off"):
@@ -318,7 +363,9 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
             return ws.knowledge.load_standards(str(default_folder()))
         if action == "rebuild_index":
             return ws.rebuild_index()
-        raise HarnessError("action must be status, smart_search_on, smart_search_off, load_standards or rebuild_index.")
+        if action == "knowledge_map":
+            return ws.knowledge_map.write(scope, max_points)
+        raise HarnessError("action must be status, smart_search_on, smart_search_off, load_standards, rebuild_index or knowledge_map.")
 
     @tool
     def check_links(urls: list[str]) -> dict:
