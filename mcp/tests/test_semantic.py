@@ -149,6 +149,29 @@ def test_turboquant_vectors_project_to_a_private_3d_map(ws):
     assert "<h1 class=\"title\">TurboQuant" not in page
 
 
+def test_standard_map_points_use_readable_titles_and_canonical_links(ws):
+    ws.enable_semantic_search("on", embedder_factory=FakeEmbedder)
+    assert wait_on(ws) == "on"
+    ws.index.upsert("std:u1", "standard", "HSS-MD.B Use probability to evaluate outcomes of decisions",
+                    {"scope": "reference", "code": "HSS-MD.B",
+                     "title": "HSS-MD.B", "statement": "Use probability to evaluate outcomes of decisions",
+                     "domain": ["Statistics & Probability", "Using Probability to Make Decisions"],
+                     "grade": ["9", "10", "11", "12"]}, "standards:standards")
+    point = ws.index.pca_projection("reference")["points"][0]
+    assert point["title"] == "Use probability to evaluate outcomes of decisions"
+    assert point["code"] == "HSS-MD.B"
+    assert point["url"].endswith("/CFItems/u1")
+    assert point["domain"][-1] == "Using Probability to Make Decisions"
+    ws.index.upsert("std:u2", "standard", "1.OA.C Add and subtract within 20",
+                    {"scope": "reference", "code": "1.OA.C", "title": "1.OA.C",
+                     "statement": "Add and subtract within 20", "grade": ["1"]}, "standards:standards")
+    (ws.private / "learner.yaml").write_text("schema: 1\nlearning_context: job-interview\n")
+    adult = ws.knowledge_map.data("all")
+    assert adult["standards_min_grade"] == 9
+    ids = [p["id"] for p in adult["points"]]
+    assert ids.index("std:u1") < ids.index("std:u2")
+
+
 def test_knowledge_map_requires_smart_search(ws):
     from eh_mcp.core import HarnessError
     with pytest.raises(HarnessError, match="Smart search must be on"):

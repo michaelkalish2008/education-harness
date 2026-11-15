@@ -5,6 +5,8 @@ import json
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+import yaml
+
 if TYPE_CHECKING:
     from .core import Workspace
 
@@ -23,7 +25,18 @@ class KnowledgeMap:
         if scope not in ("domain", "reflection", "reference", "meta", "all"):
             from .core import HarnessError
             raise HarnessError("scope must be domain, reflection, reference, meta or all.")
-        return self.ws.index.pca_projection(scope, max_points)
+        learner_path = self.ws.private / "learner.yaml"
+        learner = yaml.safe_load(learner_path.read_text(encoding="utf-8")) if learner_path.exists() else {}
+        learner = learner or {}
+        context, school_level = learner.get("learning_context"), str(learner.get("school_level", "")).lower()
+        min_grade = None
+        if context != "school" or any(x in school_level for x in ("high", "college", "university", "adult")):
+            min_grade = 9
+        data = self.ws.index.pca_projection(scope, max_points, standards_min_grade=min_grade)
+        data["standards_min_grade"] = min_grade
+        data["standards_default_note"] = ("High-school-and-above standards are shown by default for this learning context."
+                                           if min_grade else "Standards follow the learner's school level.")
+        return data
 
     def render(self, data: dict) -> str | None:
         path = template_path()
