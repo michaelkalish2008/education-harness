@@ -190,7 +190,8 @@ class Index:
         mats = mats / np.maximum(np.linalg.norm(mats, axis=1, keepdims=True), 1e-9)
         return {r[0]: mats[i] for i, r in enumerate(rows)}
 
-    def pca_projection(self, scope: str = "domain", max_points: int = 600) -> dict:
+    def pca_projection(self, scope: str = "domain", max_points: int = 600,
+                       standards_min_grade: int | None = None) -> dict:
         """Project TurboQuant-dequantized vectors to 3D with PCA for local exploration.
 
         The stored vectors are in the fixed rotated space; an orthogonal rotation preserves
@@ -203,8 +204,21 @@ class Index:
         with self._conn() as c:
             rows = c.execute(
                 "SELECT v.id, v.codes, d.kind, d.file, d.meta, d.body FROM vec v "
-                "JOIN docs d ON d.id = v.id AND d.hash = v.hash ORDER BY v.id LIMIT ?", (max_points,)).fetchall()
+                "JOIN docs d ON d.id = v.id AND d.hash = v.hash ORDER BY v.id LIMIT 2000").fetchall()
         rows = [r for r in rows if scope == "all" or json.loads(r[4]).get("scope") == scope]
+        if standards_min_grade:
+            def relevance(row):
+                if row[2] != "standard":
+                    return 0
+                meta = json.loads(row[4])
+                grades = meta.get("grade") or []
+                if not isinstance(grades, list):
+                    grades = [grades]
+                numeric = [int(g) for g in grades if str(g).isdigit()]
+                is_relevant = any(g >= standards_min_grade for g in numeric) or str(meta.get("code", "")).startswith("HS")
+                return 1 if is_relevant else 2
+            rows.sort(key=lambda row: (relevance(row), row[0]))
+        rows = rows[:max_points]
         if not rows:
             return {"points": [], "note": f"No TurboQuant vectors are available in the {scope!r} scope."}
         x = self._quantizer(self._embedder.dim).decode_many([r[1] for r in rows]).astype(np.float64)
@@ -228,8 +242,19 @@ class Index:
         points = []
         for i, row in enumerate(rows):
             meta = json.loads(row[4])
+            is_standard = row[2] == "standard"
+            standard_code = meta.get("code", "") if is_standard else ""
+            standard_url = meta.get("url", "") if is_standard else ""
+            record_date = (meta.get("date") or meta.get("added") or meta.get("at")
+                           or meta.get("created") or meta.get("updated") or "")
+            if is_standard and not standard_url and row[0].startswith("std:"):
+                standard_url = f"https://satchelcommons.com/ims/case/v1p0/CFItems/{row[0][4:]}"
             points.append({"id": row[0], "kind": row[2], "scope": meta.get("scope", "domain"),
-                           "title": meta.get("title") or meta.get("name") or Path(row[3]).stem or row[0],
+                           "title": (meta.get("statement") if is_standard else None)
+                                    or meta.get("title") or meta.get("name") or Path(row[3]).stem or row[0],
+                           "code": standard_code, "url": standard_url,
+                           "domain": meta.get("domain", []), "grade": meta.get("grade", []),
+                           "date": str(record_date)[:10],
                            "file": row[3],
                            "area": meta.get("area", ""), "project": meta.get("project", ""),
                            "tier": meta.get("tier", ""), "snippet": _plain_snippet(row[5], 22),

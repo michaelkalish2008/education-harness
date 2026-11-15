@@ -376,6 +376,7 @@ class Knowledge:
             code = o.get("statementCode") or o.get("humanCodingScheme") or ""
             uid = str(o.get("caseIdentifierUUID") or o.get("identifier") or code)
             items[uid] = {"code": str(code), "text": str(text_), "subject": subj, "jurisdiction": jur,
+                          "url": str(o.get("caseIdentifierURI") or ""),
                           "license": lic, "attribution": str(o.get("attributionStatement") or ""),
                           "grade": o.get("gradeLevel") or "", "type": o.get("normalizedStatementType") or ""}
         edges = []
@@ -412,7 +413,7 @@ class Knowledge:
                                     "grade": it["grade"], "subject": it["subject"], "domain": domain,
                                     "jurisdiction": it["jurisdiction"], "license": it["license"],
                                     "attribution": it["attribution"], "type": it["type"],
-                                    "statement": it["text"]}
+                                    "statement": it["text"], "url": it["url"]}
             body = " ".join([it["code"], it["text"], *domain[-2:]])
             self.ws.index.upsert(f"std:{uid}", "standard", body, meta, f"standards:{src.name}")
             id_by_code[it["code"]] = f"std:{uid}"
