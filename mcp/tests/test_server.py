@@ -96,3 +96,14 @@ def test_review_run_through_through_the_tools(s):
     out = call(s, "note", kind="review", responds_to=card, text="sparse items lean on the prior")
     assert out["times_reviewed"] == 1
     assert call(s, "look_back", kind="review")["never_reviewed"] == 0
+
+
+def test_catalog_is_exposed_as_an_embedded_mcp_app(s):
+    tools = {t.name: t for t in asyncio.run(s.list_tools())}
+    assert tools["catalog"].meta["ui"]["resourceUri"] == "ui://education-harness/catalog"
+    resources = asyncio.run(s.list_resources())
+    assert any(str(r.uri) == "ui://education-harness/catalog" for r in resources)
+    view = asyncio.run(s.read_resource("ui://education-harness/catalog"))
+    text = view.contents[0].text if hasattr(view, "contents") else view[0].content
+    assert "Your learning catalog" in text and "__CATALOG_DATA__" not in text
+    assert "ui/notifications/tool-result" in text

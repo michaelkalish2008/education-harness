@@ -12,7 +12,7 @@ def test_visible_portable_manifest_and_starter_prompts():
     plugin = json.loads((ROOT / "plugin.json").read_text())
     ui = plugin["extensions"]["com.openai"]["interface"]
     assert plugin["$schema"] == "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
-    assert plugin["name"] == "education-harness" and plugin["version"] == "0.12.0"
+    assert plugin["name"] == "education-harness" and plugin["version"] == "0.13.0"
     assert ui["displayName"] == "Education Harness"
     assert len(ui["shortDescription"]) <= 30
     assert len(ui["defaultPrompt"]) == 3
@@ -25,7 +25,7 @@ def test_compatibility_manifests_keep_identity_in_sync():
     codex = json.loads((ROOT / ".codex-plugin/plugin.json").read_text())
     claude = json.loads((ROOT / ".claude-plugin/plugin.json").read_text())
     assert {(m["name"], m["version"]) for m in (root, codex, claude)} == {
-        ("education-harness", "0.12.0")}
+        ("education-harness", "0.13.0")}
 
 
 def test_local_mcp_and_start_skill_are_discoverable():
@@ -113,3 +113,10 @@ def test_skill_cores_stay_small_and_their_references_exist(name, limit):
     pointed = {l.split("/")[-1] for l in links if not l.startswith("..")}
     shipped = {p.name for p in (folder / "references").glob("*.md")} if (folder / "references").exists() else set()
     assert shipped <= pointed, f"{name} has unreferenced files: {sorted(shipped - pointed)}"
+
+
+def test_catalog_scope_hides_zero_rows_and_mixed_bars():
+    page = (ROOT / "skills/start/catalog.html").read_text()
+    assert "nonzero(" in page and "if(active<5)return''" in page
+    assert "'priority: '+k" not in page  # types and priorities are no longer one mixed bar list
+    assert "No lesson has recorded standards yet" in page

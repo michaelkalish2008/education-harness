@@ -48,9 +48,11 @@ CHATGPT_TOOLS = {
 
 def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServer:
     ws = Workspace(root or workspace_root())
-    server = MCPServer(name="education-harness", version="0.12.0", instructions=INSTRUCTIONS)
+    server = MCPServer(name="education-harness", version="0.13.0", instructions=INSTRUCTIONS)
 
-    def tool(fn):
+    def tool(fn=None, *, meta: dict | None = None):
+        if fn is None:
+            return lambda f: tool(f, meta=meta)
         if chatgpt and fn.__name__ not in CHATGPT_TOOLS:
             return fn
         @functools.wraps(fn)
@@ -62,7 +64,7 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
             if fn.__name__ in CHANGES_THE_MAP:
                 ws.orient.refresh_map()
             return out
-        return server.tool()(wrapped)
+        return server.tool(meta=meta)(wrapped) if meta else server.tool()(wrapped)
 
     # ---------------------------------------------------------------- where
     @tool
@@ -95,7 +97,15 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
             return ws.orient.set_arc_space(name, space, lens, cadence)
         return ws.orient.set_arc(goal, path, why, change, name, space, lens, cadence)
 
-    @tool
+    @server.resource("ui://education-harness/catalog", name="catalog_view", title="Learning catalog",
+                     description="The learner's local catalog of lessons and trajectories.",
+                     mime_type="text/html;profile=mcp-app",
+                     meta={"ui": {"prefersBorder": False, "csp": {"connectDomains": [], "resourceDomains": []}}})
+    def catalog_view() -> str:
+        return ws.catalog.render(ws.catalog.data()) or ""
+
+    @tool(meta={"ui": {"resourceUri": "ui://education-harness/catalog", "visibility": ["model", "app"]},
+                "openai/ui": {"entrypoints": [{"type": "thread"}]}})
     def catalog(action: str = "show", item: str = "", priority: str = "", rank: int = 0,
                 kind: str = "", title: str = "", provider: str = "", progress: str = "",
                 notes: str = "", url: str = "") -> dict:
@@ -103,8 +113,8 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
         (item, priority: now/next/later/someday); rank (item, positive rank); classify (item, kind:
         ad-hoc/developing/structured/continuous); add_external (title, optional provider/progress/notes/url/kind/
         priority) for learner-reported work in tools without MCP access. item is a project slug, arc:<name> or
-        external:<name>. Returns catalog data,
-        the generated CATALOG.html file and its template. The learner controls every organization change."""
+        external:<name>. Opens the catalog inline where the app shows embedded views; also returns catalog
+        data and the generated CATALOG.html file. The learner controls every organization change."""
         return ws.catalog.manage(action, item, priority, rank, kind, title, provider, progress, notes, url)
 
     @server.resource("ui://education-harness/knowledge-map", name="knowledge_map_view",
