@@ -71,7 +71,7 @@ def test_knowledge_map_has_standalone_click_feedback_and_context_exploration():
                    'id="firstRunNote"', 'The first map takes longer.',
                    'Later updates normally process only new or changed material',
                    'if(parent===window)hostReady=false', '~/learning/KNOWLEDGE-MAP.html',
-                   'id="kindOptions"', 'id="edgeToggle"', 'id="clusterToggle"',
+                   'id="kindOptions"', 'id="clusterToggle"',
                    'View standard details', 'Open source file', 'Ask why these items are nearby',
                    'id="copyStandard"', 'Copy standard name', 'Standard name copied.',
                    'View standards graph', 'Return to similarity map',
@@ -94,6 +94,12 @@ def test_knowledge_map_has_standalone_click_feedback_and_context_exploration():
             assert marker in page
     assert "semantic vectors" not in page
     assert "See how your learning connects" in page
+
+
+def test_knowledge_map_always_shows_connections_and_faces_standards_graph():
+    page = (ROOT / "skills/start/knowledge-map.html").read_text()
+    assert "edgeToggle" not in page and "graphEdges" not in page
+    assert page.count("ax=standardClusters?-1.25:-.28;ay=standardClusters?0:.62;zoom=standardClusters?1.6:1;") == 2
 
 
 def test_how_it_works_ships_with_start_and_names_the_real_files():
