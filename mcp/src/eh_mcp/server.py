@@ -50,7 +50,7 @@ CHATGPT_TOOLS = {
 
 def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServer:
     ws = Workspace(root or workspace_root())
-    server = MCPServer(name="education-harness", version="0.17.0", instructions=INSTRUCTIONS)
+    server = MCPServer(name="education-harness", version="0.18.0", instructions=INSTRUCTIONS)
 
     def tool(fn=None, *, meta: dict | None = None):
         if fn is None:
