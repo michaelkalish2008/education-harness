@@ -107,3 +107,22 @@ def test_catalog_is_exposed_as_an_embedded_mcp_app(s):
     text = view.contents[0].text if hasattr(view, "contents") else view[0].content
     assert "Your learning catalog" in text and "__CATALOG_DATA__" not in text
     assert "ui/notifications/tool-result" in text
+
+
+def arc_call(s, **kw):
+    r = asyncio.run(s.call_tool("set_arc", kw))
+    content = r.content if hasattr(r, "content") else r[0]
+    return json.loads(content[0].text)
+
+
+def test_set_arc_without_goal_keeps_the_new_path(s):
+    arc_call(s, goal="Prepare for an interview", name="interview",
+         path=[{"title": "Experiments"}, {"title": "Identification"}])
+    call(s, "write_plan", project="experiments", question="q", steps=[{"id": "s1", "does": "d", "concepts": ["c"],
+                                                                     "strong_version_shows": ["x"]}])
+    arc_call(s, name="interview", change="link part 1",
+         path=[{"title": "Experiments", "project": "experiments"}, {"title": "Identification"}])
+    arc = call(s, "where_am_i", focus="interview")["arc"]
+    assert arc["goal"] == "Prepare for an interview"
+    assert arc["path"][0].get("project") == "experiments"
+    assert arc_call(s, name="interview", cadence="daily")["cadence"] == "daily"

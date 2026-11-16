@@ -93,7 +93,7 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
         ('causal-inference'), a new one adds a goal beside the others; lens: math, philosophy or general;
         space: the Claude project; cadence: how often they want to check in, in their words. With only
         name plus space, lens or cadence, updates those on an existing goal."""
-        if not goal and name:
+        if not goal and name and path is None and not why and not change:
             return ws.orient.set_arc_space(name, space, lens, cadence)
         return ws.orient.set_arc(goal, path, why, change, name, space, lens, cadence)
 
