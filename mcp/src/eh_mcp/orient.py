@@ -57,6 +57,15 @@ def _write(path: Path, data: Any) -> None:
     tmp.replace(path)
 
 
+
+def _as_list(v: Any) -> list:
+    """A single string is one item, never a list of its characters."""
+    if v is None:
+        return []
+    if isinstance(v, str):
+        return [v] if v.strip() else []
+    return list(v)
+
 class Orientation:
     def __init__(self, ws: "Workspace"):
         self.ws = ws
@@ -189,6 +198,11 @@ class Orientation:
         from .lenses import LENSES
         if lens and lens not in LENSES:
             raise HarnessError(f"lens must be one of {sorted(LENSES)}.")
+        if not (goal or "").strip() and name:
+            existing = self._resolve_arc(name)
+            if existing:
+                goal = self._arcs()[existing].get("goal", "")
+                name = existing
         if not (goal or "").strip():
             raise HarnessError("An arc needs a goal in the learner's own words.")
         path = path or [{"title": goal.strip()}]
@@ -256,15 +270,15 @@ class Orientation:
             for key in ("does", "concepts", "strong_version_shows"):
                 if not s.get(key):
                     raise HarnessError(f"Step {sid} needs '{key}'.")
-            bad = [r for r in s.get("requires", []) if r not in seen]
+            bad = [r for r in _as_list(s.get("requires", [])) if r not in seen]
             if bad:
                 raise HarnessError(f"Step {sid} requires {bad}, which must come earlier in the plan.")
             seen.add(sid)
-            clean.append({"id": sid, "does": s["does"], "concepts": list(s["concepts"]),
+            clean.append({"id": sid, "does": s["does"], "concepts": _as_list(s["concepts"]),
                           **({"standards_cited": list(s["standards_cited"])} if s.get("standards_cited") else {}),
                           "format": s.get("format", "solve-it"),
-                          "strong_version_shows": list(s["strong_version_shows"]),
-                          "requires": list(s.get("requires", [])),
+                          "strong_version_shows": _as_list(s["strong_version_shows"]),
+                          "requires": _as_list(s.get("requires", [])),
                           **({"terms": {str(k): str(v) for k, v in dict(s["terms"]).items()}}
                              if s.get("terms") else {})})
         if not clean:

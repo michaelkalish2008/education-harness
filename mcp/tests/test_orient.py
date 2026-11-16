@@ -208,3 +208,11 @@ def test_plan_terms_reach_the_tutor(ws):
     ws.orient.write_plan("terms", "What is the spread of one view?", steps)
     s = ws.orient.where_am_i(focus="terms")
     assert s["plan"]["steps"][0]["terms"]["average"].startswith("the average score")
+
+
+def test_a_string_where_a_list_belongs_is_one_item_not_characters(ws):
+    ws.orient.write_plan("coffee", "q", [{"id": "s1", "does": "plot it", "concepts": "scatter-plot",
+                                          "strong_version_shows": "axes named with units"}])
+    step = ws.orient._plan_brief("coffee")["steps"][0]
+    assert step["strong_version_shows"] == ["axes named with units"]
+    assert step["concepts"] == ["scatter-plot"]
