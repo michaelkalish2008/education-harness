@@ -49,6 +49,8 @@ A class's, program's or employer's expectations, or their own standards: read `r
 | `choose` | They have several goals: ask which one this chat is for, naming each by its goal. |
 | `retro`, `zoom-out` | Load **reflect**. |
 
+Whatever the move, a topic new to this learner is placed before it's taught: one look back and one concrete question first (`../tutor/references/placement.md`). Never teach a cold topic from the profile alone.
+
 If the learner says they're walking, driving or only listening, or the chat brings in an earlier spoken exchange, read `../tutor/references/voice.md`, whatever the move, and keep it for whichever skill comes next (tutor, review, reflect).
 
 ## The help card (when asked: "where am I?", "help", "I'm lost", "what can this do?", "how do I use this?")

@@ -34,6 +34,7 @@ Don't ask how they like to learn, how deep to go, or how they'll show what they 
 
 ## Turn 3: the first small lesson *is* the calibration
 
+- Place them first (`../../tutor/references/placement.md`): one concrete question from the middle of the topic, then start at the rung their answer shows. A profile or job title is not placement.
 - Start below the first prerequisite you haven't seen them use (`onboarding.md`'s last two bullets). One tiny idea, in plain words. When a widget tool exists, show it: a one-screen explorer if the idea has a dial or a process you can watch run (the default, not an option; `../../tutor/references/explorers.md`, First lessons), otherwise a picture. Without widgets, a worked text example. Then ask them to **do** one small thing: predict, try, sort, or say it back.
 - After their try, offer three taps: **Simpler · Just right · Go further**. Offer them again whenever they stall or breeze through. If their work and their taps disagree, follow the work, and say so kindly ("Let's try one a bit easier first").
 - After a few turns at a level, propose it in one line in everyday words ("Want me to keep using small math examples like this?") and save `depth_mode` on a yes. Labels are internal: everyday words, no math → `civic-overview`; small math examples → `foundational`; math plus building it yourself → `practitioner`; everything, including why it works and where it breaks → `advanced`. None is better than another; civic overview is complete, not remedial.

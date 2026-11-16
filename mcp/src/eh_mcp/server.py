@@ -55,7 +55,7 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
     guests = Guests(root or workspace_root(), Workspace)
     guests.sweep()
     ws = ActiveWorkspace(guests)
-    server = MCPServer(name="education-harness", version="0.19.0", instructions=INSTRUCTIONS)
+    server = MCPServer(name="education-harness", version="0.20.0", instructions=INSTRUCTIONS)
 
     def tool(fn=None, *, meta: dict | None = None):
         if fn is None:
