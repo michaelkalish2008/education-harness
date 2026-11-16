@@ -112,6 +112,8 @@ class Workspace:
         self.expectations = Expectations(self)
         self.knowledge_map = KnowledgeMap(self)
         self.review = Review(self)
+        from .tour import Tour
+        self.tour = Tour(self)
 
     # ------------------------------------------------------------------ paths
     @property

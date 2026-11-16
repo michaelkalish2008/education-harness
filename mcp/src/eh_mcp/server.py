@@ -19,6 +19,8 @@ INSTRUCTIONS = (
     "Treat 'Let's learn' as the canonical explicit invocation. If selected without a specific request or asked "
     "what it does, name Education Harness and show these starters: 'Let's learn', 'Teach me <topic>', 'Show me the data-science path', "
     "'Let's go', and 'Where am I?'. Never require the learner to know MCP, tool or skill names. "
+    "A brand-new learner's first lesson is the tour (where_am_i suggests move 'tour'; start it with "
+    "setup(action='tour'), or setup(action='skip_tour') if they'd rather go straight to a topic). "
     "Be fast: call where_am_i once at the start of a chat, then use about one tool call per learner turn, "
     "made alongside your reply. For a new learner, ask their goal, lesson mode (structured, semi-structured "
     "or free-form), sociability (group, guided or solo), mastery mode (written/practical, spoken or both), "
@@ -42,13 +44,13 @@ NOTE_KINDS = ("attempt", "question", "confusion", "insight", "thought", "keep", 
 
 CHATGPT_TOOLS = {
     "where_am_i", "set_arc", "write_plan", "note", "look_back", "reveal", "bookmark", "profile",
-    "catalog", "knowledge_map",
+    "catalog", "knowledge_map", "setup", "save_doc",
 }
 
 
 def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServer:
     ws = Workspace(root or workspace_root())
-    server = MCPServer(name="education-harness", version="0.15.0", instructions=INSTRUCTIONS)
+    server = MCPServer(name="education-harness", version="0.16.0", instructions=INSTRUCTIONS)
 
     def tool(fn=None, *, meta: dict | None = None):
         if fn is None:
@@ -145,11 +147,12 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
     @tool
     def write_plan(project: str, question: str, steps: list[dict], example: str = "", audience: str = "",
                    audience_format: str = "walkthrough", idea: str = "", solutions: dict | None = None,
-                   sources: list[dict] | None = None) -> dict:
+                   sources: list[dict] | None = None, audience_where: str = "") -> dict:
         """Write a project plan (creating the project). Each step: {id, does, concepts, strong_version_shows,
         requires?, format? ('share-out' for the last step), terms? ({word: its one meaning here,
         as a concrete phrase} for words with an everyday meaning)}. audience: who the learner would show it to, as a
-        relationship or place, never a name; audience_format: walkthrough, post, explainer or show-and-tell.
+        relationship or place, never a name; audience_format: walkthrough, post, explainer, show-and-tell or
+        portfolio (optional for any lesson; audience_where: github, web, post or other).
         solutions: optional {step_id: {hints, answer, method, follow_ons}}, only where an answer needs computed
         numbers worth checking ahead of time. sources: lesson sources actually consulted, such as
         [{kind: 'url', url, title?, library_id?}], [{kind: 'image', title, library_id?}] or
@@ -157,8 +160,9 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
         unread or non-visible content. Steps with work on them are never dropped."""
         out = ws.orient.write_plan(project, question, steps, example, idea=idea, sources=sources)
         if audience:
-            kind = "public" if audience_format == "post" else "person"
-            out["audience"] = ws.share.set_audience(project, audience, kind, audience_format)["audience"]
+            kind = "public" if audience_format in ("post", "portfolio") else "person"
+            out["audience"] = ws.share.set_audience(project, audience, kind, audience_format,
+                                                    audience_where)["audience"]
         for sid, sol in (solutions or {}).items():
             ws.write_solution(project, sid, sol.get("hints", []), sol.get("answer", ""), sol.get("method", ""),
                               sol.get("follow_ons", []))
@@ -169,13 +173,14 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
     # ---------------------------------------------------------------- notes
     @tool
     def note(text: str, kind: str, project: str = "", step: str = "", concept: str = "", responds_to: str = "",
-             who: str = "", how: str = "", where: str = "", helped: str = "", follow_on: str = "") -> dict:
+             who: str = "", how: str = "", where: str = "", helped: str = "", follow_on: str = "",
+             link: str = "") -> dict:
         """Keep something in the learner's own words. kind:
         attempt (their work on a step; follow_on if on a sibling problem), question or confusion (stays open
         until a later note answers it via responds_to), insight or thought, keep (what they understand about a
         concept, for later recall; needs concept), slip (where work went sideways and what helped, only if the
         learner agreed to keep slips), shared (they explained, showed or posted it: who as a relationship, how,
-        where), heard_back (how it landed), diary, session (one line at the end of a session), review (a run-through
+        where, link if they posted it), heard_back (how it landed), diary, session (one line at the end of a session), review (a run-through
         of one review card: responds_to is the card id from look_back(kind='review'), text is what they said
         this time, kept on the concept)."""
         if kind not in NOTE_KINDS:
@@ -193,8 +198,8 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
                 raise HarnessError("A slip needs the project and step.")
             return ws.journal.record_error(project, step, text, "slip", helped)
         if kind == "shared":
-            if project and ws.share._share_step(project):
-                return ws.share.mark_shared(project, how or "explained", where, who, note=text)
+            if project and (ws.share._share_step(project) or link or how == "posted"):
+                return ws.share.mark_shared(project, how or "explained", where, who, link=link, note=text)
             return ws.reports.record_shared(how if how in ("explained", "worked-with", "helped", "asked", "showed")
                                             else "explained", text, who, project, step)
         if kind == "heard_back":
@@ -294,11 +299,14 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
     @tool
     def save_doc(kind: str, text: str = "", project: str = "", step: str = "", answers: dict | None = None,
                  reviewed: bool = False, parked: list[str] | None = None, since: str = "", until: str = "",
-                 title: str = "", audience: str = "alone", consent: str = "") -> dict:
+                 title: str = "", audience: str = "alone", consent: str = "", target: str = "",
+                 files: dict | None = None, include: list[str] | None = None) -> dict:
         """Save something the learner has read or written. kind: report (since/until), retro (answers: any of
         went_well, was_hard, surprised, differently, how_i_learn, sharing, next), share_draft (a new version,
         from their own words), defense (their words, never paraphrased: first as a draft, then reviewed=true
-        after they've read it)."""
+        after they've read it), portfolio (optional for any lesson: target github|web|post|other, files
+        {relative path: text from their words}, include [project-relative paths of their own work]; written to
+        projects/<project>/portfolio/<target>/, never published by the harness)."""
         if kind == "report":
             import datetime as _dt
             return ws.reports.save_report(text, since or _dt.date.today().isoformat(),
@@ -309,7 +317,9 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
             return ws.share.save_share_draft(project, text)
         if kind == "defense":
             return ws.record_defense(project, step, text, parked, reviewed)
-        raise HarnessError("kind must be report, retro, share_draft or defense.")
+        if kind == "portfolio":
+            return ws.share.build_portfolio(project, target, files, include, title)
+        raise HarnessError("kind must be report, retro, share_draft, defense or portfolio.")
 
     @tool
     def profile(action: str = "show", change: dict | None = None, proposal_id: str = "", reason: str = "") -> dict:
@@ -360,12 +370,20 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
 
     @tool
     def setup(action: str = "status", scope: str = "domain", max_points: int = 600) -> dict:
-        """Opt-in features. action: status; smart_search_on / smart_search_off (a small local model, about
+        """Opt-in features. action: status; tour (seed and start the first lesson on using the harness) /
+        skip_tour; smart_search_on / smart_search_off (a small local model, about
         70 MB once); load_standards (pin openly licensed Common Core math standards from a download on this
         computer, with attribution); rebuild_index; knowledge_map (scope: domain/reflection/reference/meta/all,
         max_points up to 2000) writes a private interactive 3D PCA view of TurboQuant vectors."""
         if action == "status":
-            return {"smart_search": ws.semantic.status(), "standards": ws.knowledge._state().get("standards_source")}
+            return {"smart_search": ws.semantic.status(), "standards": ws.knowledge._state().get("standards_source"),
+                    "tour": ws.tour.summary()}
+        if action == "tour":
+            out = ws.tour.start()
+            ws.orient.refresh_map()
+            return out
+        if action == "skip_tour":
+            return ws.tour.skip()
         if action in ("smart_search_on", "smart_search_off"):
             return ws.enable_semantic_search("on" if action.endswith("on") else "off")
         if action == "load_standards":
@@ -375,7 +393,7 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
             return ws.rebuild_index()
         if action == "knowledge_map":
             return ws.knowledge_map.write(scope, max_points)
-        raise HarnessError("action must be status, smart_search_on, smart_search_off, load_standards, rebuild_index or knowledge_map.")
+        raise HarnessError("action must be status, tour, skip_tour, smart_search_on, smart_search_off, load_standards, rebuild_index or knowledge_map.")
 
     @tool
     def check_links(urls: list[str]) -> dict:

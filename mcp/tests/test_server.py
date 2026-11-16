@@ -39,7 +39,8 @@ def test_knowledge_map_is_exposed_as_an_embedded_mcp_app(s):
 
 def test_lazy_first_session_then_coming_back(s):
     first = call(s, "where_am_i")
-    assert first["suggested"]["move"] == "begin"
+    assert first["suggested"]["move"] == "tour"
+    assert call(s, "setup", action="skip_tour")["state"] == "skipped"
     steps = [{"id": "s1", "does": "differentiate (3x+1)^2 by the chain rule", "concepts": ["chain-rule"],
               "strong_version_shows": ["outer and inner named"]},
              {"id": "s2", "does": "explain it to a coworker", "concepts": ["chain-rule"], "format": "share-out",

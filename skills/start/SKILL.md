@@ -16,6 +16,7 @@ Education Harness helps you learn something and remembers your place, questions 
 
 You can say:
 • "Let's learn" to start
+• "Show me how this works" for a ten-minute first lesson on using it
 • "Teach me <topic>"
 • "Show me the data-science path"
 • "Let's go" to continue
@@ -31,7 +32,7 @@ Catalog ("show my catalog", organizing, courses elsewhere) or knowledge map ("sh
 
 ## How it works
 
-Read `references/how-it-works.md` only now; it is the only source. Fit it to `profile`: a loop diagram if visual, their own lesson files if hands-on, under a minute spoken if listening, else one screen. Lead with the loop, answer what they asked, offer one "under the hood" question.
+Read `references/how-it-works.md` only now; it is the only source. If `tour.state` is not `finished`, end by offering the tour in one line ("say 'show me how this works' to try it on something you pick"). Fit it to `profile`: a loop diagram if visual, their own lesson files if hands-on, under a minute spoken if listening, else one screen. Lead with the loop, answer what they asked, offer one "under the hood" question.
 
 ## Expectation sets
 
@@ -44,8 +45,9 @@ A class's, program's or employer's expectations, or their own standards: read `r
 
 | move | Do |
 | --- | --- |
-| `continue` | One line on where they are, in plain words, quoting their newest open question or bookmark if there is one. Then load **tutor** and start the step. |
-| `begin` | Read `references/onboarding.md` and follow it; no lesson yet. Then load **plan** and **tutor**. |
+| `tour` | A brand-new learner. Read `references/tour.md` and follow it: the tour is the first lesson (`setup(action="tour")`), and a topic they already asked for becomes its first step. |
+| `continue` | If `current.project` is `how-this-works`, read `references/tour.md` and resume the tour. Otherwise one line on where they are, in plain words, quoting their newest open question or bookmark if there is one. Then load **tutor** and start the step. |
+| `begin` | (Tour skipped or done.) Read `references/onboarding.md` and follow it; no lesson yet. Then load **plan** and **tutor**. |
 | `plan` | Load **plan** for the next part of their goal, then **tutor**. |
 | `choose` | They have several goals: ask which one this chat is for, naming each by its goal. |
 | `retro`, `zoom-out` | Load **reflect**. |
@@ -76,7 +78,7 @@ Add once, the first time: "MAP.md in your learning folder shows this too, even w
 
 ## Fresh-start calibration
 
-On move `begin`, or any fresh learner: read `references/onboarding.md` and follow it before any content.
+"Show me how this works" or "take the tour", any time: read `references/tour.md`. On move `begin`, or any fresh learner who skipped the tour: read `references/onboarding.md` and follow it before any content.
 
 ## Setup
 
