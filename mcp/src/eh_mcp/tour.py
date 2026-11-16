@@ -1,7 +1,10 @@
 """The tour: the default first lesson, which teaches the harness by using it.
 
 - A new learner (no projects, no goals, the tour never taken or skipped) gets the move
-  ``tour`` from ``where_am_i``. Nothing is written until they start it: setup stays lazy.
+  ``welcome`` from ``where_am_i``: topic first, one question, then a first small lesson.
+  The tour is opt-in ("show me how this works"). Nothing is written until they start: setup stays lazy.
+- ``introduce`` records which phrases ("hint", "note this", "bookmark this", ...) the learner has
+  been shown, so each is taught once, at the moment it is first useful, across chats.
 - ``start`` seeds ``projects/how-this-works/`` from ``programs/harness-tour/program.yaml``.
   It is an ordinary project: notes, reveals, bookmarks and statuses all work on it, so every
   step practises a real feature on a tiny topic the learner chooses.
@@ -18,6 +21,9 @@ if TYPE_CHECKING:
     from .core import Workspace
 
 TOUR_PROJECT = "how-this-works"
+# Phrases taught just in time, in roughly the order a new learner first needs them.
+FEATURES = ("hint", "note this", "place saved", "lets go", "look back", "where am i",
+            "another way", "explain it back", "catalog", "knowledge map", "portfolio")
 
 
 class Tour:
@@ -70,9 +76,29 @@ class Tour:
         return {"state": "skipped", "next": "Go straight to what they want to learn; the tour stays available "
                                             "if they say 'show me how this works'."}
 
+    def introduced(self) -> list[str]:
+        from .core import _read_yaml
+        return list((_read_yaml(self._file, {}) or {}).get("introduced", []))
+
+    def introduce(self, feature: str) -> dict:
+        """Record that the learner has been shown one phrase or feature (once)."""
+        from .core import SCHEMA, HarnessError, _read_yaml, _write_yaml
+        feature = (feature or "").strip().lower()
+        if feature not in FEATURES:
+            raise HarnessError(f"feature must be one of: {', '.join(FEATURES)}.")
+        self.ws.ensure_workspace()
+        rec = _read_yaml(self._file, {}) or {"schema": SCHEMA, "status": "none"}
+        have = rec.setdefault("introduced", [])
+        if feature not in have:
+            have.append(feature)
+            _write_yaml(self._file, rec)
+        return {"introduced": list(have), "not_yet": [f for f in FEATURES if f not in have]}
+
     def offer(self) -> bool:
         """True when a brand-new learner should be offered the tour first."""
         return self.state() == "none"
 
     def summary(self) -> dict[str, Any]:
-        return {"state": self.state(), "project": TOUR_PROJECT}
+        have = self.introduced()
+        return {"state": self.state(), "project": TOUR_PROJECT, "introduced": have,
+                "not_yet": [f for f in FEATURES if f not in have]}

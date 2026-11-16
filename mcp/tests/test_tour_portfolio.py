@@ -20,7 +20,7 @@ def finish_step(ws, step, text):
 
 def test_new_learner_is_offered_the_tour_lazily(ws):
     s = ws.orient.where_am_i()
-    assert s["suggested"]["move"] == "tour" and s["suggested"]["say"] == "Show me how this works"
+    assert s["suggested"]["move"] == "welcome" and s["suggested"]["say"] == "Let's learn"
     assert not ws.project_dir(TOUR_PROJECT).exists()          # nothing written until they start
     assert "Show me how this works" in s["welcome"]["starters"]
     assert "Show me how this works" in (ws.root / "MAP.md").read_text()
@@ -102,7 +102,7 @@ def test_tour_and_portfolio_through_the_tools(tmp_path):
     from test_server import call
     from eh_mcp.server import build_server
     s = build_server(tmp_path / "learning")
-    assert call(s, "where_am_i")["suggested"]["move"] == "tour"
+    assert call(s, "where_am_i")["suggested"]["move"] == "welcome"
     started = call(s, "setup", action="tour")
     assert started["project"] == TOUR_PROJECT
     assert call(s, "setup")["tour"]["state"] == "started"
@@ -117,3 +117,21 @@ def test_tour_and_portfolio_through_the_tools(tmp_path):
     chat = build_server(tmp_path / "learning", chatgpt=True)
     import asyncio
     assert {"setup", "save_doc"} <= {t.name for t in asyncio.run(chat.list_tools())}
+
+
+def test_phrases_are_introduced_once_and_remembered(ws):
+    assert ws.orient.where_am_i()["tour"]["introduced"] == []
+    ws.tour.introduce("hint")
+    out = ws.tour.introduce("Hint")                            # idempotent, case-insensitive
+    assert out["introduced"] == ["hint"] and "note this" in out["not_yet"]
+    assert ws.orient.where_am_i()["tour"]["introduced"] == ["hint"]
+    assert ws.tour.state() == "none"                           # introducing a phrase isn't taking the tour
+    with pytest.raises(Exception):
+        ws.tour.introduce("teleport")
+
+
+def test_introduced_through_the_tool(tmp_path):
+    from test_server import call
+    from eh_mcp.server import build_server
+    s = build_server(tmp_path / "learning")
+    assert call(s, "setup", action="introduced", feature="note this")["introduced"] == ["note this"]

@@ -27,7 +27,7 @@ def accept_interests(w):
 
 def test_a_fresh_learner_starts_learning_at_once(ws):
     s = ws.orient.where_am_i()
-    assert s["suggested"]["move"] == "tour" and s["tour"]["state"] == "none"
+    assert s["suggested"]["move"] == "welcome" and s["tour"]["state"] == "none"
     ws.tour.skip()                      # straight to learning instead
     s = ws.orient.where_am_i()
     assert s["suggested"]["move"] == "begin" and s["suggested"]["say"] == "Let's learn"
@@ -60,7 +60,7 @@ def test_fresh_topic_focus_calibrates_and_surfaces_relevant_standards(ws):
     s = ws.orient.where_am_i(focus="Intro to Transformers and neural networks",
                              space="Intro to Transformers and NN")
 
-    assert s["suggested"]["move"] == "tour"
+    assert s["suggested"]["move"] == "welcome"
     assert s["focus"] == "Intro to Transformers and neural networks"
     assert s["standards"]["loaded"]
     assert s["standards"]["matches"][0]["code"] == "HSN-VM.C.8"
@@ -69,7 +69,7 @@ def test_fresh_topic_focus_calibrates_and_surfaces_relevant_standards(ws):
 
 def test_fresh_orientation_is_explicit_when_standards_are_not_loaded(ws):
     s = ws.orient.where_am_i(focus="transformers")
-    assert s["suggested"]["move"] == "tour"
+    assert s["suggested"]["move"] == "welcome"
     assert s["standards"] == {"loaded": False, "query": "transformers", "matches": [],
                               "note": "No standards are loaded; do not claim they were checked."}
 

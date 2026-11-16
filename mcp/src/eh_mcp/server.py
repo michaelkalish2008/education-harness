@@ -19,15 +19,15 @@ INSTRUCTIONS = (
     "Treat 'Let's learn' as the canonical explicit invocation. If selected without a specific request or asked "
     "what it does, name Education Harness and show these starters: 'Let's learn', 'Teach me <topic>', 'Show me the data-science path', "
     "'Let's go', and 'Where am I?'. Never require the learner to know MCP, tool or skill names. "
-    "A brand-new learner's first lesson is the tour (where_am_i suggests move 'tour'; start it with "
-    "setup(action='tour'), or setup(action='skip_tour') if they'd rather go straight to a topic). "
+    "A brand-new learner gets move 'welcome': topic first (parse their first message), at most one plain "
+    "question, then a first small lesson they do something in; teach phrases just in time and record each "
+    "with setup(action='introduced', feature=...). The guided tour is opt-in: setup(action='tour') when they "
+    "say 'show me how this works'. "
     "Be fast: call where_am_i once at the start of a chat, then use about one tool call per learner turn, "
-    "made alongside your reply. For a new learner, ask their goal, lesson mode (structured, semi-structured "
-    "or free-form), sociability (group, guided or solo), mastery mode (written/practical, spoken or both), "
-    "depth mode (civic overview, foundational, practitioner or advanced), "
-    "learning context (interview, school and level, "
-    "curiosity/personal growth, or professional role growth), and relevant notation/background before presenting "
-    "content; inspect relevant loaded standards as prerequisite evidence. "
+    "made alongside your reply. Never show internal profile labels; ask in everyday words, one question a turn, "
+    "and calibrate level from the learner's work, not self-report. Defer lesson mode, sociability and mastery "
+    "mode until they matter; save any profile value only on the learner's yes. "
+    "Inspect relevant loaded standards as prerequisite evidence. "
     "One voice; end each reply with the next step. A refusal comes back as {'refused': reason}: "
     "say it plainly and offer the closest thing you can do."
 )
@@ -50,7 +50,7 @@ CHATGPT_TOOLS = {
 
 def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServer:
     ws = Workspace(root or workspace_root())
-    server = MCPServer(name="education-harness", version="0.16.0", instructions=INSTRUCTIONS)
+    server = MCPServer(name="education-harness", version="0.17.0", instructions=INSTRUCTIONS)
 
     def tool(fn=None, *, meta: dict | None = None):
         if fn is None:
@@ -369,9 +369,10 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
         raise HarnessError("action must be add, add_url, summarize, list, check, use, tidy, tier or forget.")
 
     @tool
-    def setup(action: str = "status", scope: str = "domain", max_points: int = 600) -> dict:
-        """Opt-in features. action: status; tour (seed and start the first lesson on using the harness) /
-        skip_tour; smart_search_on / smart_search_off (a small local model, about
+    def setup(action: str = "status", scope: str = "domain", max_points: int = 600, feature: str = "") -> dict:
+        """Opt-in features. action: status; tour (seed and start the opt-in guided tour of the harness) /
+        skip_tour; introduced (feature: a phrase just taught to the learner, e.g. "hint", "note this",
+        "place saved", "lets go", "look back", "where am i"; recorded once so it isn't taught again); smart_search_on / smart_search_off (a small local model, about
         70 MB once); load_standards (pin openly licensed Common Core math standards from a download on this
         computer, with attribution); rebuild_index; knowledge_map (scope: domain/reflection/reference/meta/all,
         max_points up to 2000) writes a private interactive 3D PCA view of TurboQuant vectors."""
@@ -384,6 +385,8 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
             return out
         if action == "skip_tour":
             return ws.tour.skip()
+        if action == "introduced":
+            return ws.tour.introduce(feature)
         if action in ("smart_search_on", "smart_search_off"):
             return ws.enable_semantic_search("on" if action.endswith("on") else "off")
         if action == "load_standards":
@@ -393,7 +396,7 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
             return ws.rebuild_index()
         if action == "knowledge_map":
             return ws.knowledge_map.write(scope, max_points)
-        raise HarnessError("action must be status, tour, skip_tour, smart_search_on, smart_search_off, load_standards, rebuild_index or knowledge_map.")
+        raise HarnessError("action must be status, tour, skip_tour, introduced, smart_search_on, smart_search_off, load_standards, rebuild_index or knowledge_map.")
 
     @tool
     def check_links(urls: list[str]) -> dict:

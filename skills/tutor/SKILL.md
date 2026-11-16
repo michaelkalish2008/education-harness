@@ -63,6 +63,10 @@ Listening only (walking, driving, `voice_mode` set, speech-like text) or an earl
 - A step with `format: share-out`, or "help me write this up", "they asked…", "how am I doing?", "let's do a retro": load **reflect**.
 - "I'm ready to explain this": an optional defense. Use the **validator** agent if available (clean context: give it only the project and step); otherwise run it yourself from **reflect**'s defense section. Never a test; every defense ends with a next step.
 
+## Phrases and saving, just in time
+
+Teach phrases when first useful; save their place unasked each step: `references/phrases.md`.
+
 ## Ending ("I'm stopping here")
 
 One call: `bookmark(action="save", auto=True, thinking=<their words>, next_move=…, open_question=…)`. Then one line: what they did, the next step, and "next time, just say 'let's go'."

@@ -9,22 +9,19 @@ Get the learner oriented quickly enough that the first explanation fits them. Pr
 
 ## Welcome and discoverability
 
-When the learner selects Education Harness, asks what it does, asks how to use it, or arrives without a learning request, identify it by name and show this compact entry card before asking one question:
+When the learner selects Education Harness, asks what it does, or arrives without a learning request, and they're **new** (move `welcome`), don't show a card: follow `references/welcome.md`, which opens with a picture and one question. For a returning learner who asks what it can do, show this short card in plain words:
 
 ```text
-Education Harness helps you learn something and remembers your place, questions and own words across chats.
+Education Harness helps you learn one small step at a time, and remembers your place and your questions.
 
 You can say:
-• "Let's learn" to start
-• "Show me how this works" for a ten-minute first lesson on using it
-• "Teach me <topic>"
-• "Show me the data-science path"
-• "Let's go" to continue
-• "Where am I?" for your current step
-• "Show my catalog" to browse and organize all your learning
-• "Show my knowledge map" to explore semantic connections in 3D
-• "Run through what I've learned" to practice past ideas
+• "Let's go" to pick up where you stopped
+• "Teach me <topic>" to start something new
+• "Where am I?" to see your steps
+• "Show me how this works" for a short guided tour
 ```
+
+Mention more phrases ("show my catalog", "show my knowledge map", "run through what I've learned") only once they've finished a first lesson, or when asked.
 
 Treat **"Let's learn"** as the canonical explicit invocation and begin onboarding. Do not mention MCP, tools, skills, arcs, focus or setup machinery. Ordinary language is the interface. If they already asked to learn a specific thing, skip the card and act on their request.
 
@@ -32,7 +29,7 @@ Catalog ("show my catalog", organizing, courses elsewhere) or knowledge map ("sh
 
 ## How it works
 
-Read `references/how-it-works.md` only now; it is the only source. If `tour.state` is not `finished`, end by offering the tour in one line ("say 'show me how this works' to try it on something you pick"). Fit it to `profile`: a loop diagram if visual, their own lesson files if hands-on, under a minute spoken if listening, else one screen. Lead with the loop, answer what they asked, offer one "under the hood" question.
+Read `references/how-it-works.md` only now; it is the only source. Start from the four-step picture (pick something, small steps, I remember your questions, come back anytime). If `tour.state` is not `finished`, end by offering the tour in one line ("say 'show me how this works' to try it on something you pick"). Fit it to `profile`: a loop diagram if visual, their own lesson files if hands-on, under a minute spoken if listening, else one screen. Lead with the loop, answer what they asked, offer one "under the hood" question.
 
 ## Expectation sets
 
@@ -45,9 +42,9 @@ A class's, program's or employer's expectations, or their own standards: read `r
 
 | move | Do |
 | --- | --- |
-| `tour` | A brand-new learner. Read `references/tour.md` and follow it: the tour is the first lesson (`setup(action="tour")`), and a topic they already asked for becomes its first step. |
+| `welcome` | A brand-new learner. Read `references/welcome.md` and follow it: topic first, at most one plain question, then a first small lesson. The guided tour (`references/tour.md`) is only for "show me how this works". |
 | `continue` | If `current.project` is `how-this-works`, read `references/tour.md` and resume the tour. Otherwise one line on where they are, in plain words, quoting their newest open question or bookmark if there is one. Then load **tutor** and start the step. |
-| `begin` | (Tour skipped or done.) Read `references/onboarding.md` and follow it; no lesson yet. Then load **plan** and **tutor**. |
+| `begin` | (Tour skipped or done, no goal yet.) Read `references/welcome.md` from Turn 2; `references/onboarding.md` has the calibration rules. Then load **plan** and **tutor**. |
 | `plan` | Load **plan** for the next part of their goal, then **tutor**. |
 | `choose` | They have several goals: ask which one this chat is for, naming each by its goal. |
 | `retro`, `zoom-out` | Load **reflect**. |
@@ -68,17 +65,17 @@ Goal: <goal>
 Say "let's go" to pick up here. Anytime: "note this" · "bookmark this" · "look back" · "run through what I've learned"
 ```
 
-Add once, the first time: "MAP.md in your learning folder shows this too, even with the app closed."
+Add once, the first time, only on a computer: "There's a file called MAP.md in your learning folder that shows this too, even with the app closed." Record it with `setup(action="introduced", feature="where am i")`.
 
 ## Goals and chats
 
 - Words to use with the learner: **goal**, **step**, **notes**, **bookmark**. Internally a goal is an arc; don't say arc, space, lens or focus to them.
 - Several goals can share one Claude project. If a chat drifts to another goal, suggest a new chat: "In a new chat, say 'let's go on <goal>'." Never insist.
-- `ask_later` lists what isn't known yet; for a fresh learner, `references/onboarding.md` says what comes before content.
+- `ask_later` lists what isn't known yet; for a fresh learner, `references/welcome.md` says which one to ask, if any, and when.
 
 ## Fresh-start calibration
 
-"Show me how this works" or "take the tour", any time: read `references/tour.md`. On move `begin`, or any fresh learner who skipped the tour: read `references/onboarding.md` and follow it before any content.
+"Show me how this works" or "take the tour", any time: read `references/tour.md`. A new learner (move `welcome` or `begin`): read `references/welcome.md`. Calibration happens inside the first small lesson, not before it.
 
 ## Setup
 

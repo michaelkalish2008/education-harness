@@ -626,9 +626,9 @@ class Orientation:
             move = {"move": "choose", "say": f"Let's go on {recent['name']}",
                     "why": "you have several arcs; say which one this chat is for (each gets its own chat)"}
         elif not all_arcs and not projects and self.ws.tour.offer():
-            move = {"move": "tour", "say": "Show me how this works",
-                    "why": "a first lesson of about ten minutes that teaches the harness by using it on "
-                           "something you choose; skip it any time by saying what you want to learn"}
+            move = {"move": "welcome", "say": "Let's learn",
+                    "why": "new here: pick a topic, answer one quick question, and start a first small "
+                           "lesson; 'show me how this works' gives the guided tour instead"}
         else:
             move = _suggest(setup, fv["path"] if fv else [], current)
         retro = self.ws.share.retro_due()
