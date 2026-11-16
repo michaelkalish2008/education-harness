@@ -77,6 +77,10 @@ Add once, the first time, only on a computer: "There's a file called MAP.md in y
 
 "Show me how this works" or "take the tour", any time: read `references/tour.md`. A new learner (move `welcome` or `begin`): read `references/welcome.md`. Calibration happens inside the first small lesson, not before it.
 
+## Guest mode
+
+"Let's try this as a guest", "guest mode", or someone else trying it on this computer: read `references/guest.md` first. If `where_am_i` returns `guest`, everything about the owner (memory, preferences, past chats) stays out of the chat.
+
 ## Setup
 
 "How should I set this up?", or the harness tools are missing: read `references/setup.md`.
