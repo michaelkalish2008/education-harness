@@ -112,6 +112,25 @@ class Workspace:
         self.review = Review(self)
 
     # ------------------------------------------------------------------ paths
+    @property
+    def views_dir(self) -> Path:
+        """Generated pages for everything: views/CATALOG.html, JOURNEY.html, KNOWLEDGE-MAP.html."""
+        return self.root / "views"
+
+    @property
+    def goals_dir(self) -> Path:
+        """One folder per goal (arc), holding that goal's JOURNEY.html."""
+        return self.root / "goals"
+
+    def retire_root_page(self, name: str) -> None:
+        """Remove a generated page left at the workspace root by an older version (now in views/)."""
+        old = self.root / name
+        try:
+            if old.is_file():
+                old.unlink()
+        except OSError:
+            pass
+
     def project_dir(self, project: str) -> Path:
         return self.root / "projects" / _check_name(project, "project")
 

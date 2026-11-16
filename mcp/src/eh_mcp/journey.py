@@ -3,8 +3,10 @@
 ``data()`` gathers the goals (arcs) and their stops, every project and its steps, the learner's
 own notes (annotations, concept notes, attempts, diary, slips), bookmarks, open questions and
 links, as plain JSON. ``write()`` puts that JSON into the bundled page template
-(``skills/start/journey.html``) and saves ``JOURNEY.html`` beside ``MAP.md`` in the learner's
-workspace, so it opens in a browser even when the app is closed. The tutor publishes the same
+(``skills/start/journey.html``) and saves one page per goal at ``goals/<goal>/JOURNEY.html`` plus an
+all-goals page at ``views/JOURNEY.html`` in the learner's workspace, so they open in a browser even
+when the app is closed. Project folders stay flat under ``projects/``: a project can move between
+goals or serve two without its files moving. The tutor publishes the same
 template with the same data as an artifact in the Claude app.
 """
 from __future__ import annotations
@@ -50,8 +52,11 @@ class Journey:
         return {"artifact": data["artifact"]}
 
     # ------------------------------------------------------------------ data
-    def data(self, move: dict | None = None) -> dict:
+    def data(self, move: dict | None = None, arc: str = "") -> dict:
+        """Everything for the journey page. arc: one goal's name, to keep only that goal, its
+        projects and the notes, links and bookmarks on them."""
         from .core import _now
+        goal = arc
         orient = self.ws.orient
         arcs_raw = orient._arcs()
         projects = orient._projects()
@@ -108,6 +113,16 @@ class Journey:
                 links.append({"url": u.rstrip(".,;"), "note": n["id"], "at": n["at"],
                               "project": n.get("project", ""), "step": n.get("step", ""),
                               "concept": n.get("concept", "")})
+        bookmarks = orient.list_checkpoints(limit=50)["checkpoints"]
+        if goal:
+            arcs = [a for a in arcs if a["name"] == goal]
+            keep = {i["project"] for a in arcs for i in a["path"] if i["project"]}
+            proj_out = [p for p in proj_out if p["project"] in keep]
+            notes = [n for n in notes if n.get("project") in keep]
+            links = [x for x in links if x.get("project") in keep]
+            bookmarks = [b for b in bookmarks
+                         if b.get("where", "").split(":", 1)[0].split(" / ", 1)[0] in keep]
+            current = max((p for p in proj_out if p["now"]), key=lambda p: p["touched"], default=None)
         state = _read(self._state_file, {}) or {}
         return {
             "schema": 1,
@@ -116,7 +131,8 @@ class Journey:
             "projects": sorted(proj_out, key=lambda p: -p["touched"]),
             "current": {"project": current["project"], "step": current["now"]} if current else None,
             "notes": notes,
-            "bookmarks": orient.list_checkpoints(limit=50)["checkpoints"],
+            "bookmarks": bookmarks,
+            "goal": goal,
             "links": links,
             "next": move,
             "artifact": state.get("artifact", ""),
@@ -179,13 +195,23 @@ class Journey:
         return t.read_text(encoding="utf-8").replace(PLACEHOLDER, payload, 1)
 
     def write(self, move: dict | None = None) -> dict:
-        """Save JOURNEY.html in the workspace. Returns the data and where the page went.
+        """Save views/JOURNEY.html (every goal) and goals/<goal>/JOURNEY.html (one per goal).
+        Returns the all-goals data and where the pages went.
         move: the suggested next move from where_am_i, shown at the foot of the page."""
         data = self.data(move)
         page = self.render(data)
         out: dict[str, Any] = {"data": data, "template": str(template_path())}
-        if page is not None:
-            path = self.ws.root / "JOURNEY.html"
-            path.write_text(page, encoding="utf-8")
-            out["file"] = str(path)
+        if page is None:
+            return out
+        path = self.ws.views_dir / "JOURNEY.html"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(page, encoding="utf-8")
+        out["file"] = str(path)
+        out["goals"] = {}
+        for a in data["arcs"]:
+            gp = self.ws.goals_dir / a["name"] / "JOURNEY.html"
+            gp.parent.mkdir(parents=True, exist_ok=True)
+            gp.write_text(self.render(self.data(move, arc=a["name"])) or "", encoding="utf-8")
+            out["goals"][a["name"]] = str(gp)
+        self.ws.retire_root_page("JOURNEY.html")
         return out

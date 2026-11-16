@@ -46,7 +46,7 @@ def test_journey_gathers_goals_steps_and_every_kind_of_note(ws):
 def test_where_am_i_writes_a_page_with_the_data_inside(ws):
     ws.orient.write_plan("clicks", "How sure is a click rate? </script>", STEPS)
     ws.orient.where_am_i()
-    page = (ws.root / "JOURNEY.html").read_text()
+    page = (ws.root / "views" / "JOURNEY.html").read_text()
     assert PLACEHOLDER not in page
     raw = page.split('id="journey-data" type="application/json">', 1)[1].split("</script>", 1)[0]
     data = json.loads(raw)                     # the </ in the question is escaped, so the page stays whole
@@ -68,3 +68,24 @@ def test_where_am_i_tool_returns_the_journey_on_request(tmp_path):
     payload = json.loads(content[0].text)
     assert payload["journey"]["template"].endswith("journey.html")
     assert "arcs" in payload["journey"]["data"]
+
+
+def test_each_goal_gets_its_own_journey_page_and_old_root_pages_retire(ws):
+    (ws.root / "JOURNEY.html").write_text("old")
+    ws.orient.write_plan("clicks", "How sure is a click rate?", STEPS)
+    ws.orient.write_plan("market", "Does the label raise fill rate?", STEPS)
+    ws.orient.set_arc("Understand recommenders", [{"title": "Probability", "project": "clicks"}], name="recs")
+    ws.orient.set_arc("Prepare for the interview", [{"title": "Experiments", "project": "market"}], name="interview")
+    ws.record_attempt("market", "s1", "nurses are the shared soil")
+    ws.record_attempt("clicks", "s1", "3 of 10 is 0.3")
+    ws.orient.where_am_i()
+    assert not (ws.root / "JOURNEY.html").exists()
+    assert (ws.root / "views" / "JOURNEY.html").exists()
+    one = ws.journey.data(arc="interview")
+    assert [a["name"] for a in one["arcs"]] == ["interview"]
+    assert [p["project"] for p in one["projects"]] == ["market"]
+    assert {n["project"] for n in one["notes"]} == {"market"}
+    page = (ws.root / "goals" / "interview" / "JOURNEY.html").read_text()
+    assert "nurses are the shared soil" in page and "3 of 10 is 0.3" not in page
+    assert (ws.root / "goals" / "recs" / "JOURNEY.html").exists()
+    assert (ws.root / "projects" / "market").is_dir()            # project folders stay flat

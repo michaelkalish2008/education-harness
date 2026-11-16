@@ -144,7 +144,7 @@ def test_turboquant_vectors_project_to_a_private_3d_map(ws):
     assert data["count"] == 3 and len(data["explained_variance"]) == 3
     assert data["preprocessing"] == {"row_normalization": "l2", "centered": True, "whitened": False}
     assert all(set(("x", "y", "z", "neighbors")) <= set(p) for p in data["points"])
-    page = (ws.root / "KNOWLEDGE-MAP.html").read_text()
+    page = (ws.root / "views" / "KNOWLEDGE-MAP.html").read_text()
     assert "__KNOWLEDGE_MAP_DATA__" not in page and "Knowledge map" in page
     assert "<h1 class=\"title\">TurboQuant" not in page
 

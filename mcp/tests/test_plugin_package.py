@@ -70,7 +70,7 @@ def test_knowledge_map_has_standalone_click_feedback_and_context_exploration():
                    'attempt<1800', "stopBuild('Check status','Still working')",
                    'id="firstRunNote"', 'The first map takes longer.',
                    'Later updates normally process only new or changed material',
-                   'if(parent===window)hostReady=false', '~/learning/KNOWLEDGE-MAP.html',
+                   'if(parent===window)hostReady=false', '~/learning/views/KNOWLEDGE-MAP.html',
                    'id="kindOptions"', 'id="clusterToggle"',
                    'View standard details', 'Open source file', 'Ask why these items are nearby',
                    'id="copyStandard"', 'Copy standard name', 'Standard name copied.',
