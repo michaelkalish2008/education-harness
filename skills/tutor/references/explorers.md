@@ -6,7 +6,7 @@ How the tutor builds an interactive page for an idea with a dial. Learned from r
 
 - Early in the step, before text has had a chance to fail. Define the step's `terms` on the page itself.
 - Publish it as an artifact when the app offers one, so the learner can come back to it, and keep its link in their notes (`note(kind="thought")`). Point to it from then on instead of re-explaining in paragraphs.
-- First lessons (the tour's s1, a new learner's first small lesson): if the idea has a dial or a process you can watch run, the explorer comes in the same reply as the idea, inline in the chat (a widget), so the learner plays before reading. Keep it to one screen and one or two controls, run its numbers in code first, and offer once to keep it as a page they can come back to.
+- First lessons (the tour's s1, a new learner's first small lesson): if the idea has a dial or a process you can watch run, the explorer comes in the same reply as the idea, inline in the chat (a widget), so the learner plays before reading. Placement comes first (`placement.md`), and every label, control and number on screen uses only words the learner already has or that the screen defines beside it. Keep it to one screen and one or two controls, run its numbers in code first, and offer once to keep it as a page they can come back to.
 - Not in a voice session.
 
 ## Shape

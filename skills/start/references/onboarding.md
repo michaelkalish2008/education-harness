@@ -11,4 +11,5 @@
 - Infer formats from the device and from requests like "show me another way". Don't ask how they learn best; self-report is weak evidence. Keep an inference unsaved until the learner confirms it.
 - Read `standards.matches` before planning quantitative material. Inspect statements, not codes alone. Use relevant standards to identify prerequisites worth checking; ignore irrelevant matches and never let standards determine scope.
 - Do not infer calculus or matrix notation comfort from one technically correct remark. Start below the first unconfirmed prerequisite, with plain language and a tiny example. Introduce symbols only after naming what each symbol means, then check that the representation works for the learner.
+- Placement on the topic itself (what they can already do with it) comes before the first explanation: `../../tutor/references/placement.md`.
 - Self-reported level and observed work can disagree. Follow the work, offer "Simpler · Just right · Go further" when they stall or breeze through, and propose a change in one line before saving it.

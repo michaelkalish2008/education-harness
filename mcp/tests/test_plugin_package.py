@@ -12,7 +12,7 @@ def test_visible_portable_manifest_and_starter_prompts():
     plugin = json.loads((ROOT / "plugin.json").read_text())
     ui = plugin["extensions"]["com.openai"]["interface"]
     assert plugin["$schema"] == "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
-    assert plugin["name"] == "education-harness" and plugin["version"] == "0.19.0"
+    assert plugin["name"] == "education-harness" and plugin["version"] == "0.20.0"
     assert ui["displayName"] == "Education Harness"
     assert len(ui["shortDescription"]) <= 30
     assert len(ui["defaultPrompt"]) == 3
@@ -25,7 +25,7 @@ def test_compatibility_manifests_keep_identity_in_sync():
     codex = json.loads((ROOT / ".codex-plugin/plugin.json").read_text())
     claude = json.loads((ROOT / ".claude-plugin/plugin.json").read_text())
     assert {(m["name"], m["version"]) for m in (root, codex, claude)} == {
-        ("education-harness", "0.19.0")}
+        ("education-harness", "0.20.0")}
 
 
 def test_local_mcp_and_start_skill_are_discoverable():
@@ -142,3 +142,15 @@ def test_catalog_scope_hides_zero_rows_and_mixed_bars():
     assert "nonzero(" in page and "if(active<5)return''" in page
     assert "'priority: '+k" not in page  # types and priorities are no longer one mixed bar list
     assert "No lesson has recorded standards yet" in page
+
+
+def test_cold_topics_are_placed_before_they_are_taught():
+    """A profile says how someone learns, not what they know: every first-lesson path places them first."""
+    ref = ROOT / "skills/tutor/references/placement.md"
+    text = ref.read_text()
+    for must in ("look_back", "ladder", "Not sure", "Every word on screen is earned", "I don't understand"):
+        assert must in text
+    for path in ("skills/start/SKILL.md", "skills/tutor/SKILL.md", "skills/start/references/tour.md",
+                 "skills/start/references/welcome.md", "skills/start/references/onboarding.md",
+                 "skills/tutor/references/explorers.md"):
+        assert "placement.md" in (ROOT / path).read_text(), f"{path} must point to placement.md"
