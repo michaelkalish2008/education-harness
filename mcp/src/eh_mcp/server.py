@@ -23,6 +23,8 @@ INSTRUCTIONS = (
     "question, then a first small lesson they do something in; teach phrases just in time and record each "
     "with setup(action='introduced', feature=...). The guided tour is opt-in: setup(action='tour') when they "
     "say 'show me how this works'. "
+    "Guest mode ('let's try this as a guest'): setup(action='guest_start') switches every tool to a blank, "
+    "short-lived space; while where_am_i shows 'guest', use nothing stored about the owner. "
     "Be fast: call where_am_i once at the start of a chat, then use about one tool call per learner turn, "
     "made alongside your reply. Never show internal profile labels; ask in everyday words, one question a turn, "
     "and calibrate level from the learner's work, not self-report. Defer lesson mode, sociability and mastery "
@@ -49,8 +51,11 @@ CHATGPT_TOOLS = {
 
 
 def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServer:
-    ws = Workspace(root or workspace_root())
-    server = MCPServer(name="education-harness", version="0.18.0", instructions=INSTRUCTIONS)
+    from .guest import ActiveWorkspace, Guests
+    guests = Guests(root or workspace_root(), Workspace)
+    guests.sweep()
+    ws = ActiveWorkspace(guests)
+    server = MCPServer(name="education-harness", version="0.19.0", instructions=INSTRUCTIONS)
 
     def tool(fn=None, *, meta: dict | None = None):
         if fn is None:
@@ -60,6 +65,7 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
         @functools.wraps(fn)
         def wrapped(*args: Any, **kwargs: Any) -> dict:
             try:
+                guests.touch()
                 out = fn(*args, **kwargs)
             except HarnessError as e:
                 return {"refused": str(e)}
@@ -82,6 +88,8 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
         if journey_url:
             ws.journey.set_link(journey_url)
         out = ws.orient.where_am_i(focus, space)
+        if ws.is_guest:
+            out["guest"] = guests.status()["active"]
         if journey or journey_url:
             j = ws.journey.write(out.get("suggested"))
             out["journey"] = {"data": j["data"], "template": j["template"], "file": j.get("file", "")}
@@ -371,7 +379,10 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
     @tool
     def setup(action: str = "status", scope: str = "domain", max_points: int = 600, feature: str = "") -> dict:
         """Opt-in features. action: status; tour (seed and start the opt-in guided tour of the harness) /
-        skip_tour; introduced (feature: a phrase just taught to the learner, e.g. "hint", "note this",
+        skip_tour; guest_start (feature: optional guest name; a blank, separate space so a guest, or the owner
+        testing, starts as a brand-new learner) / guest_keep (feature: session, day or week) / guest_end
+        (feature: '' deletes the space now, or day/week keeps it) / guest_resume (feature: id) / guest_status;
+        introduced (feature: a phrase just taught to the learner, e.g. "hint", "note this",
         "place saved", "lets go", "look back", "where am i"; recorded once so it isn't taught again); smart_search_on / smart_search_off (a small local model, about
         70 MB once); load_standards (pin openly licensed Common Core math standards from a download on this
         computer, with attribution); rebuild_index; knowledge_map (scope: domain/reflection/reference/meta/all,
@@ -385,6 +396,16 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
             return out
         if action == "skip_tour":
             return ws.tour.skip()
+        if action == "guest_start":
+            return guests.start(feature)
+        if action == "guest_keep":
+            return guests.keep(feature or "session")
+        if action == "guest_end":
+            return guests.end(feature)
+        if action == "guest_resume":
+            return guests.resume(feature)
+        if action == "guest_status":
+            return guests.status()
         if action == "introduced":
             return ws.tour.introduce(feature)
         if action in ("smart_search_on", "smart_search_off"):
@@ -396,7 +417,7 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
             return ws.rebuild_index()
         if action == "knowledge_map":
             return ws.knowledge_map.write(scope, max_points)
-        raise HarnessError("action must be status, tour, skip_tour, introduced, smart_search_on, smart_search_off, load_standards, rebuild_index or knowledge_map.")
+        raise HarnessError("action must be status, tour, skip_tour, guest_start, guest_keep, guest_end, guest_resume, guest_status, introduced, smart_search_on, smart_search_off, load_standards, rebuild_index or knowledge_map.")
 
     @tool
     def check_links(urls: list[str]) -> dict:
