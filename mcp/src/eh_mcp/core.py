@@ -40,6 +40,8 @@ REVEALS = ("hint", "answer", "method")
 ROLES = ("tutor", "mentor", "validator", "organizer", "lesson planner", "facilitator", "archivist")
 
 WORKSPACE_GITIGNORE = "# Private records never leave this computer\n.private/\nMAP.md\n"
+# Generated pages carry the learner's notes, so they stay private too (older versions wrote them at the root).
+GENERATED_IGNORES = ("MAP.md", "views/", "goals/", "JOURNEY.html", "CATALOG.html", "KNOWLEDGE-MAP.html")
 PRIVATE_DIRS = ("diary", "log", "attempts", "handoff", "learnings", "library", "index", "checkpoints", "concepts", "reflection", "journal", "reports", "share", "arcs")
 
 
@@ -152,9 +154,12 @@ class Workspace:
         gi = self.root / ".gitignore"
         if not gi.exists():
             _write_text(gi, WORKSPACE_GITIGNORE)
-        elif "MAP.md" not in gi.read_text(encoding="utf-8"):
+        have = set(gi.read_text(encoding="utf-8").split())
+        missing = [x for x in GENERATED_IGNORES if x not in have]
+        if missing:
+            text = gi.read_text(encoding="utf-8")
             with gi.open("a", encoding="utf-8") as f:
-                f.write("MAP.md\n")
+                f.write(("" if text.endswith("\n") else "\n") + "\n".join(missing) + "\n")
         if not (self.private / "learner.yaml").exists():
             _write_yaml(self.private / "learner.yaml", {"schema": SCHEMA})
         if not (self.private / "proposals.yaml").exists():

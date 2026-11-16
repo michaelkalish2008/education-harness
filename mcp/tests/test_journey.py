@@ -89,3 +89,15 @@ def test_each_goal_gets_its_own_journey_page_and_old_root_pages_retire(ws):
     assert "nurses are the shared soil" in page and "3 of 10 is 0.3" not in page
     assert (ws.root / "goals" / "recs" / "JOURNEY.html").exists()
     assert (ws.root / "projects" / "market").is_dir()            # project folders stay flat
+
+
+def test_generated_pages_are_gitignored(tmp_path):
+    root = tmp_path / "learning"
+    root.mkdir()
+    (root / ".gitignore").write_text("# mine\n.private/\nMAP.md")      # an older workspace's file
+    Workspace(root).ensure_workspace()
+    lines = (root / ".gitignore").read_text().split()
+    assert {"views/", "goals/", "JOURNEY.html", "CATALOG.html", "KNOWLEDGE-MAP.html", "MAP.md"} <= set(lines)
+    assert "# mine" in (root / ".gitignore").read_text()
+    Workspace(root).ensure_workspace()
+    assert (root / ".gitignore").read_text().count("views/") == 1        # idempotent
