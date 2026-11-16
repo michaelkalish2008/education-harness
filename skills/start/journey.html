@@ -144,8 +144,15 @@ footer .say b { color: var(--trail); }
   const S = { arc: 0, tab: "here", sel: null, filter: "all", q: "" };
   const projects = Object.fromEntries((D.projects || []).map(p => [p.project, p]));
   const arc = () => (D.arcs || [])[S.arc] || null;
+  // With several goals on one page, notes, bookmarks and links follow the chosen goal's projects.
+  const goalProjects = () => { const a = arc(); return a && (D.arcs || []).length > 1 ? new Set(a.path.map(x => x.project).filter(Boolean)) : null; };
+  const inGoal = project => { const g = goalProjects(); return !g || g.has(project); };
+  const bmProject = k => (k.where || "").split(":")[0].split(" / ")[0];
+  const notes = () => (D.notes || []).filter(n => inGoal(n.project));
+  const bookmarks = () => (D.bookmarks || []).filter(k => inGoal(bmProject(k)));
+  const links = () => (D.links || []).filter(l => inGoal(l.project));
   const notesFor = (project, step) => (D.notes || []).filter(n => n.project === project && (!step || n.step === step));
-  const openNotes = () => (D.notes || []).filter(n => n.open);
+  const openNotes = () => notes().filter(n => n.open);
   const sideTrails = () => (D.projects || []).filter(p => !p.placed);
 
   // ---------- default selection: where you are
@@ -172,9 +179,9 @@ footer .say b { color: var(--trail); }
     const open = openNotes().length;
     $("stats").innerHTML =
       (total ? `<button class="stat" data-tab="here"><b>${done}</b> of <b>${total}</b> stops done</button>` : "") +
-      `<button class="stat" data-tab="notes"><b>${(D.notes || []).length}</b> notes</button>` +
+      `<button class="stat" data-tab="notes"><b>${notes().length}</b> notes</button>` +
       `<button class="stat" data-tab="open"><b>${open}</b> still open</button>` +
-      `<button class="stat" data-tab="links"><b>${(D.links || []).length}</b> explorers &amp; links</button>`;
+      `<button class="stat" data-tab="links"><b>${links().length}</b> explorers &amp; links</button>`;
     $("stats").querySelectorAll("button").forEach(b => b.addEventListener("click", () => { S.tab = b.dataset.tab; if (S.tab === "here") S.sel = hereSel(); render(); }));
     const n = D.next;
     $("footer").innerHTML = (n ? `<span class="say">Next: say <b>“${esc(n.say)}”</b>, ${esc(n.why || "")}</span>` : "") +
@@ -283,7 +290,7 @@ footer .say b { color: var(--trail); }
   // ---------- panel
   const TABS = [["here", "This stop"], ["notes", "Notes"], ["open", "Still open"], ["bookmarks", "Bookmarks"], ["links", "Explorers"]];
   function drawTabs() {
-    const counts = { notes: (D.notes || []).length, open: openNotes().length, bookmarks: (D.bookmarks || []).length, links: (D.links || []).length };
+    const counts = { notes: notes().length, open: openNotes().length, bookmarks: bookmarks().length, links: links().length };
     $("tabs").innerHTML = TABS.map(([k, t]) => `<button role="tab" aria-selected="${S.tab === k}" data-tab="${k}">${t}${counts[k] != null ? `<span class="n">${counts[k]}</span>` : ""}</button>`).join("");
     $("tabs").querySelectorAll("button").forEach(b => b.addEventListener("click", () => { S.tab = b.dataset.tab; if (S.tab === "here" && !S.sel) S.sel = hereSel(); render(); }));
   }
@@ -324,18 +331,18 @@ footer .say b { color: var(--trail); }
         }
       }
     } else if (S.tab === "notes") {
-      const kinds = ["all", ...new Set((D.notes || []).map(n => n.kind))];
+      const kinds = ["all", ...new Set(notes().map(n => n.kind))];
       h += `<input type="search" id="q" placeholder="Search your notes" value="${esc(S.q)}" aria-label="Search your notes">`;
       h += `<div class="filters">${kinds.map(k => `<button aria-pressed="${S.filter === k}" data-filter="${esc(k)}">${esc(k === "all" ? "All" : KIND[k] || k)}</button>`).join("")}</div>`;
       const q = S.q.toLowerCase();
-      h += notesList((D.notes || []).filter(n => (S.filter === "all" || n.kind === S.filter) && (!q || (n.text + " " + n.concept + " " + n.step).toLowerCase().includes(q))));
+      h += notesList(notes().filter(n => (S.filter === "all" || n.kind === S.filter) && (!q || (n.text + " " + n.concept + " " + n.step).toLowerCase().includes(q))));
     } else if (S.tab === "open") {
       h += `<h2>Still open</h2><p class="crumb">Questions and confusions no later note has answered yet.</p>${notesList(openNotes())}`;
     } else if (S.tab === "bookmarks") {
-      const bm = D.bookmarks || [];
+      const bm = bookmarks();
       h += `<h2>Bookmarks</h2>` + (bm.length ? bm.map(k => `<div class="card ${k.auto ? "auto" : ""}"><b>${esc(k.label)}${k.auto ? " · where you stopped" : ""}${k.resolved ? " · done" : ""}</b><span class="crumb">${esc(k.when)}</span><span>${esc(k.where)}</span></div>`).join("") : `<p class="empty">No bookmarks yet. Say “Bookmark this” in a chat.</p>`);
     } else if (S.tab === "links") {
-      const ls = D.links || [];
+      const ls = links();
       h += `<h2>Explorers &amp; links</h2><p class="crumb">Every link you've kept in a note.</p>` + (ls.length ? ls.map(l => `<div class="card"><a href="${esc(l.url)}" target="_blank" rel="noopener" style="color:var(--trail);overflow-wrap:anywhere">${esc(l.url)}</a><span class="crumb">${esc(when(l.at))}${l.concept ? " · " + esc(words(l.concept)) : ""}${l.step ? " · " + esc(words(l.step)) : ""}</span></div>`).join("") : `<p class="empty">No links yet.</p>`);
     }
     b.innerHTML = h; b.scrollTop = 0;
