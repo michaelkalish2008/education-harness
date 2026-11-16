@@ -18,7 +18,7 @@ Plans are built backward from the learner's question, never from a syllabus. Kee
 8. **The question** comes from their life or words. For the data-science path, use the idea's `example_hint`.
    - A URL, document, screenshot, photo or video as source: read `references/sources.md` before planning (a syllabus or other expectations they want tracked goes to `../start/references/expectations.md` instead).
    - On the default data-science path: read `references/data-science-planning.md`.
-9. **A tiny example** is workable by hand and comes from their interests when known.
+9. **The example** (read `../tutor/references/examples.md`): for interview or professional growth, realistic scale and mechanism, posed as an interviewer would (a by-hand miniature only as a labeled stepping stone); otherwise tiny and from their interests. Write its generating rules into `example` and say whether they are stipulated or a noisy sample. Its numbers come from a seeded script or closed form, run before shown and saved with the lesson.
 10. **Plan size:** structured uses three to five steps; semi-structured uses one or two. Each step is `{id, does, concepts, strong_version_shows, requires, terms?, standards_cited?}`.
     - `terms`: each word the step uses that has an everyday meaning, with the one meaning it has here as a concrete phrase, e.g. `{"average": "the average score over all views, with a click scored 1 and a non-click 0 (1 click in 10 views is 0.1)"}`. Pick one word per idea and don't reuse a word for a second thing.
 11. **Explorers:** for a step whose idea turns on a quantity the learner can vary, name the explorer in `strong_version_shows` (what to vary, what to watch), so the tutor builds it at the start of the step.

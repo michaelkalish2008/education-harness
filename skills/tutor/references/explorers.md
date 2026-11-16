@@ -24,6 +24,7 @@ How the tutor builds an interactive page for an idea with a dial. Learned from r
 
 ## Check before showing
 
+- The page's data comes from the lesson's saved generator or a closed form (`examples.md`): the starting scene matches its `expected.json`, and any randomness is seeded so a setting reproduces.
 - Run the page's numbers against the formula (a simulation's spread against the standard error, a factoring at several values).
 - Drive it in a real browser at a laptop size (for example 1280 × 720): every scene, every state, every control. Confirm nothing scrolls and the console has no errors. Look at one screenshot of each scene before publishing.
 - For an explorer the learner wants to show other people (a video, a team), get a fresh-context review of its UX first (an agent that hasn't seen it being built), and propose the changes to the learner before rebuilding.
