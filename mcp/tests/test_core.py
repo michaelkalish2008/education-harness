@@ -177,3 +177,19 @@ def test_search_and_rebuild(ws):
 def test_check_links_rejects_non_http(ws):
     r = ws.check_links(["ftp://x", "not a link"])
     assert r["dead"] == ["ftp://x", "not a link"]
+
+
+def test_every_project_gets_its_own_python_environment(tmp_path):
+    from eh_mcp.core import Workspace
+    ws = Workspace(tmp_path / "learning")
+    ws.init_project("two-sided", "q")
+    py = (ws.root / "projects" / "two-sided" / "pyproject.toml").read_text()
+    assert 'name = "two-sided"' in py and '"numpy"' in py and "package = false" in py
+    assert ".venv/" in (ws.root / "projects" / "two-sided" / ".gitignore").read_text()
+    (ws.root / "projects" / "two-sided" / "pyproject.toml").write_text("mine")      # never overwritten
+    old = ws.root / "projects" / "older"                                            # a project from before
+    old.mkdir()
+    (old / "program.yaml").write_text("schema: 1\n")
+    ws.ensure_workspace()
+    assert (ws.root / "projects" / "two-sided" / "pyproject.toml").read_text() == "mine"
+    assert (old / "pyproject.toml").exists()

@@ -30,7 +30,7 @@ You bring something you want to understand. A short plan turns it into a project
 
 ## Where everything lives (all in `~/learning` on your computer)
 
-- `MAP.md` (top of the folder), `goals/<goal>/JOURNEY.html` (one per goal), and `views/` (`JOURNEY.html` for all goals, `CATALOG.html`, `KNOWLEDGE-MAP.html`): views, regenerated from your records. Project folders stay flat under `projects/`, so a project can move between goals without its files moving.
+- `MAP.md` (top of the folder), `goals/<goal>/JOURNEY.html` (one per goal), and `views/` (`JOURNEY.html` for all goals, `CATALOG.html`, `KNOWLEDGE-MAP.html`): views, regenerated from your records. Each project folder has its own Python environment (`pyproject.toml`, built by `uv` on first run). Project folders stay flat under `projects/`, so a project can move between goals without its files moving.
 - `projects/<lesson>/program.yaml`: the plan. `progress.yaml`: status of each step. `standards.yaml`: the standards sidecar. `solutions/`: worked solutions, if any.
 - `.private/` (git-ignored): your profile (`learner.yaml`), expectation sets, notes and journal, bookmarks, defenses and handoffs, retrospectives, reports, catalog settings, the search index.
 - What you say in chat is processed by the model provider, under its terms. Nothing is posted anywhere by the harness.

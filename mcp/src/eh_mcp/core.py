@@ -42,6 +42,16 @@ ROLES = ("tutor", "mentor", "validator", "organizer", "lesson planner", "facilit
 WORKSPACE_GITIGNORE = "# Private records never leave this computer\n.private/\nMAP.md\n"
 # Generated pages carry the learner's notes, so they stay private too (older versions wrote them at the root).
 GENERATED_IGNORES = ("MAP.md", "views/", "goals/", "JOURNEY.html", "CATALOG.html", "KNOWLEDGE-MAP.html")
+PYPROJECT_TEMPLATE = """[project]
+name = "{name}"
+version = "0.1.0"
+description = "Learning project: its own environment, managed by the education harness."
+requires-python = ">=3.10"
+dependencies = ["numpy", "ipykernel"]
+
+[tool.uv]
+package = false
+"""
 PRIVATE_DIRS = ("diary", "log", "attempts", "handoff", "learnings", "library", "index", "checkpoints", "concepts", "reflection", "journal", "reports", "share", "arcs")
 
 
@@ -160,11 +170,27 @@ class Workspace:
             text = gi.read_text(encoding="utf-8")
             with gi.open("a", encoding="utf-8") as f:
                 f.write(("" if text.endswith("\n") else "\n") + "\n".join(missing) + "\n")
+        projects = self.root / "projects"
+        for d in sorted(projects.iterdir()) if projects.exists() else []:
+            if (d / "program.yaml").exists():
+                self.ensure_python_env(d)
         if not (self.private / "learner.yaml").exists():
             _write_yaml(self.private / "learner.yaml", {"schema": SCHEMA})
         if not (self.private / "proposals.yaml").exists():
             _write_yaml(self.private / "proposals.yaml", {"schema": SCHEMA, "proposals": []})
         self.load_program_graph()
+
+    def ensure_python_env(self, dest: Path) -> None:
+        """Every project is its own uv project, so its packages never mix with another's:
+        pyproject.toml (numpy and ipykernel to start; tutors `uv add` more) and a .gitignore for .venv/.
+        Never overwrites; the environment itself is built by `uv run`/`uv sync` on first use."""
+        py = dest / "pyproject.toml"
+        if not py.exists():
+            name = re.sub(r"[^a-z0-9-]+", "-", dest.name.lower()).strip("-") or "project"
+            _write_text(py, PYPROJECT_TEMPLATE.format(name=name))
+        gi = dest / ".gitignore"
+        if not gi.exists():
+            _write_text(gi, ".venv/\n__pycache__/\n.ipynb_checkpoints/\n")
 
     def init_project(self, project: str, question: str = "", from_program: str | None = None) -> dict:
         """Create the workspace if needed, then a project folder (copied or empty)."""
@@ -187,6 +213,7 @@ class Workspace:
             })
         for d in ("data", "solutions", "work", "portfolio"):
             (dest / d).mkdir(exist_ok=True)
+        self.ensure_python_env(dest)
         if not (dest / "commitment.md").exists():
             _write_text(dest / "commitment.md", "# Commitment\n\nCadence: not set yet (the learner chooses, including none).\n")
         plan = _read_yaml(dest / "program.yaml", {})

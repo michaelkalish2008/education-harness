@@ -10,7 +10,7 @@ How the tutor and planner build an example. Learned from an interview-prep sessi
    - **Noisy sample:** say n, where the noise comes from, and that uncertainty is part of the question.
    A missing rule is a missing fact: if the learner asks "where do they come from?", the rules were incomplete; add the rule and say it was missing.
 3. **Data is regenerable.** It comes from a seeded script (the seed is a named constant at the top) or a closed form. Same seed, same numbers, every time.
-4. **Every number shown was run.** Run the script and copy its output; never type, round by eye or estimate a number. Save the generator with the lesson so it can be re-verified:
+4. **Every number shown was run.** Run the script with `uv run` from the project folder (see `environments.md`) and copy its output; never type, round by eye or estimate a number. Save the generator with the lesson so it can be re-verified:
    - `projects/<project>/examples/<step>/example.py`: the rules in its docstring, the seed and sizes as constants, and one printed JSON object of the outputs.
    - `projects/<project>/examples/<step>/expected.json`: exactly what it printed, the numbers the learner saw.
    - Before reusing a number in a later session, or when the learner doubts one, re-run and compare with `expected.json`; a mismatch is said and corrected (principle 7).
