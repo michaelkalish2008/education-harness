@@ -12,7 +12,7 @@ def test_visible_portable_manifest_and_starter_prompts():
     plugin = json.loads((ROOT / "plugin.json").read_text())
     ui = plugin["extensions"]["com.openai"]["interface"]
     assert plugin["$schema"] == "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
-    assert plugin["name"] == "education-harness" and plugin["version"] == "0.14.0"
+    assert plugin["name"] == "education-harness" and plugin["version"] == "0.15.0"
     assert ui["displayName"] == "Education Harness"
     assert len(ui["shortDescription"]) <= 30
     assert len(ui["defaultPrompt"]) == 3
@@ -25,7 +25,7 @@ def test_compatibility_manifests_keep_identity_in_sync():
     codex = json.loads((ROOT / ".codex-plugin/plugin.json").read_text())
     claude = json.loads((ROOT / ".claude-plugin/plugin.json").read_text())
     assert {(m["name"], m["version"]) for m in (root, codex, claude)} == {
-        ("education-harness", "0.14.0")}
+        ("education-harness", "0.15.0")}
 
 
 def test_local_mcp_and_start_skill_are_discoverable():
@@ -70,7 +70,7 @@ def test_knowledge_map_has_standalone_click_feedback_and_context_exploration():
                    'attempt<1800', "stopBuild('Check status','Still working')",
                    'id="firstRunNote"', 'The first map takes longer.',
                    'Later updates normally process only new or changed material',
-                   'if(parent===window)hostReady=false', '~/learning/KNOWLEDGE-MAP.html',
+                   'if(parent===window)hostReady=false', '~/learning/views/KNOWLEDGE-MAP.html',
                    'id="kindOptions"', 'id="clusterToggle"',
                    'View standard details', 'Open source file', 'Ask why these items are nearby',
                    'id="copyStandard"', 'Copy standard name', 'Standard name copied.',

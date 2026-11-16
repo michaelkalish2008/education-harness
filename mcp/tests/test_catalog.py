@@ -35,7 +35,7 @@ def test_catalog_page_embeds_data_and_where_am_i_refreshes_it(tmp_path):
     ws = Workspace(tmp_path / "learning")
     ws.orient.write_plan("gravity", "Why does an apple fall?", STEPS)
     ws.orient.where_am_i()
-    page = (ws.root / "CATALOG.html").read_text()
+    page = (ws.root / "views" / "CATALOG.html").read_text()
     assert PLACEHOLDER not in page and "Your learning catalog" in page
     raw = page.split('id="catalog-data" type="application/json">', 1)[1].split("</script>", 1)[0]
     assert json.loads(raw)["items"][0]["slug"] == "gravity"

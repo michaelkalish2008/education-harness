@@ -233,7 +233,9 @@ class Catalog:
                     st[k] = [c["code"] if isinstance(c, dict) else c for c in st[k]]
         out: dict[str, Any] = {"data": slim, "template": str(template_path())}
         if page is not None:
-            path = self.ws.root / "CATALOG.html"
+            path = self.ws.views_dir / "CATALOG.html"
+            path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(page, encoding="utf-8")
+            self.ws.retire_root_page("CATALOG.html")
             out["file"] = str(path)
         return out

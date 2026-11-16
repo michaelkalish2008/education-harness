@@ -147,7 +147,7 @@ $('panToggle').onclick=()=>{graphPanMode=!graphPanMode;$('panToggle').setAttribu
 C.addEventListener('pointermove',()=>{if(hover?.kind==='standard'&&!$('tooltip').hidden){$('tooltip').innerHTML=`<strong>${escapeHtml(standardArea(hover))}: ${escapeHtml(hover.title)}</strong><span>${escapeHtml(hover.code||'High-school standard')} · Click to review context</span>`}});
 if(raw.startsWith('__')&&parent===window){
   hostReady=false;
-  $('emptyText').textContent='This is the plugin preview, so it does not contain your saved learning data. Build the map through Education Harness, then reopen ~/learning/KNOWLEDGE-MAP.html.';
+  $('emptyText').textContent='This is the plugin preview, so it does not contain your saved learning data. Build the map through Education Harness, then reopen ~/learning/views/KNOWLEDGE-MAP.html.';
   $('ask').textContent='Copy build request';
 }
 </script></body></html>

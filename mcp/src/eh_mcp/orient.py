@@ -697,7 +697,7 @@ class Orientation:
         out["space"] = space
         out["unplaced_arcs"] = [k for k, v in all_arcs.items() if not v.get("space")] if space else []
         self.write_map(all_views, by_name, move)
-        try:  # JOURNEY.html beside MAP.md; never breaks orientation
+        try:  # journey pages (views/, goals/<goal>/) and catalog; never breaks orientation
             self.ws.journey.write(move)
             self.ws.catalog.write()
         except Exception:

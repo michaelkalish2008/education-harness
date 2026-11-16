@@ -48,7 +48,7 @@ CHATGPT_TOOLS = {
 
 def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServer:
     ws = Workspace(root or workspace_root())
-    server = MCPServer(name="education-harness", version="0.14.0", instructions=INSTRUCTIONS)
+    server = MCPServer(name="education-harness", version="0.15.0", instructions=INSTRUCTIONS)
 
     def tool(fn=None, *, meta: dict | None = None):
         if fn is None:
@@ -74,7 +74,7 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
         what is still unknown about them (ask_later), defined onboarding choices, relevant loaded math
         standards for prerequisite calibration, and one suggested move. For a new learner, focus may be the
         topic/project title even when no saved goal exists. space: the Claude project's name. Rewrites MAP.md
-        and JOURNEY.html. journey=true (the learner asks to see their journey or map) also returns the journey
+        and the journey pages (views/JOURNEY.html, goals/<goal>/JOURNEY.html). journey=true (the learner asks to see their journey or map) also returns the journey
         map's data and its page template path: fill the template's __JOURNEY_DATA__ with the data and publish
         it. journey_url: after publishing, pass the page's URL once so later updates republish the same page."""
         if journey_url:
@@ -114,7 +114,7 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
         ad-hoc/developing/structured/continuous); add_external (title, optional provider/progress/notes/url/kind/
         priority) for learner-reported work in tools without MCP access. item is a project slug, arc:<name> or
         external:<name>. Opens the catalog inline where the app shows embedded views; also returns catalog
-        data and the generated CATALOG.html file. The learner controls every organization change."""
+        data and the generated views/CATALOG.html file. The learner controls every organization change."""
         return ws.catalog.manage(action, item, priority, rank, kind, title, provider, progress, notes, url)
 
     @server.resource("ui://education-harness/knowledge-map", name="knowledge_map_view",
@@ -135,7 +135,7 @@ def build_server(root: Path | None = None, *, chatgpt: bool = False) -> MCPServe
     def knowledge_map(scope: str = "domain", max_points: int = 600) -> dict[str, Any]:
         """Open an embedded interactive 3D PCA explorer for local TurboQuant vectors. scope:
         domain (default), reflection, reference, meta or all; max_points: 3-2000. Requires optional local
-        smart search. Also saves KNOWLEDGE-MAP.html as a host-independent fallback."""
+        smart search. Also saves views/KNOWLEDGE-MAP.html as a host-independent fallback."""
         try:
             return ws.knowledge_map.write(scope, max_points)
         except HarnessError as e:
