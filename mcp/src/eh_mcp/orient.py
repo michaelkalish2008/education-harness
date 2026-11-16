@@ -32,6 +32,7 @@ LEARNER_FIELDS = ("lesson_mode", "sociability", "mastery_mode", "depth_mode", "l
 
 PHRASES = [
     ("Let's learn", "start a new learning path"),
+    ("Show me how this works", "a short first lesson that teaches the harness by using it"),
     ("Let's go", "pick up where you left off, or start"),
     ("Where am I?", "what's done, what's now, what's next"),
     ("Show my catalog", "browse, prioritize or archive learning paths"),
@@ -624,6 +625,10 @@ class Orientation:
             recent = max(views.values(), key=lambda v: v["_touched"])
             move = {"move": "choose", "say": f"Let's go on {recent['name']}",
                     "why": "you have several arcs; say which one this chat is for (each gets its own chat)"}
+        elif not all_arcs and not projects and self.ws.tour.offer():
+            move = {"move": "welcome", "say": "Let's learn",
+                    "why": "new here: pick a topic, answer one quick question, and start a first small "
+                           "lesson; 'show me how this works' gives the guided tour instead"}
         else:
             move = _suggest(setup, fv["path"] if fv else [], current)
         retro = self.ws.share.retro_due()
@@ -642,7 +647,7 @@ class Orientation:
                "welcome": {"name": "Education Harness",
                            "summary": "Learn something with a path that remembers your place and your own words.",
                            "starters": ["Let's learn", "Teach me <topic>", "Show me the data-science path",
-                                        "Let's go", "Where am I?"]},
+                                        "Let's go", "Where am I?", "Show me how this works"]},
                "arc": {k: v for k, v in fv.items() if not k.startswith("_")} if fv else None,
                "arcs": [{"name": v["name"], "goal": v["goal"], "now": now_of(v),
                          "project": (v["_current"] or {}).get("project")} for v in views.values()],
@@ -692,6 +697,7 @@ class Orientation:
                            "retrospective_due": retro},
                "learner": {k: learner[k] for k in LEARNER_FIELDS if learner.get(k) not in (None, "", [])},
                "suggested": move,
+               "tour": self.ws.tour.summary(),
                "phrases": [{"say": s_, "does": d} for s_, d in PHRASES],
                "map": "MAP.md"}
         out["space"] = space

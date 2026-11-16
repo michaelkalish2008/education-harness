@@ -17,13 +17,28 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+import re
+import shutil
+
 import yaml
 
 if TYPE_CHECKING:
     from .core import Workspace
 
 AUDIENCE_KINDS = ("person", "group", "public")
-FORMATS = ("walkthrough", "post", "explainer", "show-and-tell")
+FORMATS = ("walkthrough", "post", "explainer", "show-and-tell", "portfolio")
+# A portfolio piece is optional for any lesson: a package of the learner's work, in their words,
+# written to projects/<project>/portfolio/<target>/. The learner publishes it; the harness never does.
+PORTFOLIO_TARGETS = {
+    "github": {"needs": "README.md", "does": "a folder ready to become a GitHub repository"},
+    "web": {"needs": "index.html", "does": "a self-contained web page for any site or host"},
+    "post": {"needs": ("post.md", "post.txt"), "does": "a post for a blog, Substack, LinkedIn or similar"},
+    "other": {"needs": None, "does": "any other format the learner asks for (slides, notebook, PDF source)"},
+}
+PORTFOLIO_EXTS = {".md", ".txt", ".html", ".css", ".js", ".svg", ".py", ".ipynb", ".csv", ".json", ".yaml",
+                  ".yml", ".toml", ".r", ".sql", ".tex", ".png", ".jpg", ".jpeg", ".gif", ".webp", ".pdf"}
+PORTFOLIO_MAX_BYTES = 5_000_000
+GITHUB_GITIGNORE = ".DS_Store\n__pycache__/\n.venv/\n.ipynb_checkpoints/\n"
 RETRO_QUESTIONS = ("went_well", "was_hard", "surprised", "differently", "how_i_learn", "sharing", "next")
 
 
@@ -153,6 +168,81 @@ class Share:
         self.ws.reports.record_shared("heard-back", text, who=from_whom, project=project)
         return {"saved": str(f.relative_to(self.ws.root)), "items": len(data["items"])}
 
+    # ----------------------------------------------------------------- portfolio
+    def build_portfolio(self, project: str, target: str, files: dict | None = None,
+                        include: list[str] | None = None, title: str = "") -> dict:
+        """Write an optional portfolio piece for any lesson: files ({relative path: text}) composed
+        from the learner's own words, plus include (project-relative paths of their work to copy in).
+        Never publishes; returns how the learner can publish it themselves, and privacy flags."""
+        from .core import HarnessError, _now
+        d = self.ws._require_project(project)
+        if target not in PORTFOLIO_TARGETS:
+            raise HarnessError(f"target must be one of {tuple(PORTFOLIO_TARGETS)}.")
+        dest = d / "portfolio" / target
+        written: list[str] = []
+        flags: list[str] = []
+
+        def safe(rel: str) -> Path:
+            rel = str(rel).strip().lstrip("/")
+            pr = Path(rel)
+            if not rel or ".." in pr.parts or pr.is_absolute():
+                raise HarnessError(f"{rel!r} must be a plain path inside the portfolio folder.")
+            if pr.suffix.lower() not in PORTFOLIO_EXTS and pr.name != ".gitignore":
+                raise HarnessError(f"{rel!r}: file type not supported for a portfolio piece.")
+            return dest / pr
+
+        planned: dict[Path, Any] = {}
+        for rel, text in (files or {}).items():
+            body = str(text)
+            if len(body.encode("utf-8")) > PORTFOLIO_MAX_BYTES:
+                raise HarnessError(f"{rel!r} is too large for a portfolio file.")
+            planned[safe(rel)] = body
+            flags += [f"{rel}: {f}" for f in _privacy_flags(body)]
+        for rel in include or []:
+            src = (d / str(rel)).resolve()
+            if d.resolve() not in src.parents or not src.is_file():
+                raise HarnessError(f"{rel!r} isn't a file in this project.")
+            if "solutions" in src.relative_to(d.resolve()).parts:
+                raise HarnessError("Worked solutions aren't the learner's work; include their own files.")
+            if src.stat().st_size > PORTFOLIO_MAX_BYTES:
+                raise HarnessError(f"{rel!r} is too large for a portfolio file.")
+            planned[safe(Path(rel).name if Path(rel).parts[0] in ("work", "data") else rel)] = src
+            if src.suffix.lower() in {".md", ".txt", ".py", ".ipynb", ".csv", ".json", ".html"}:
+                flags += [f"{rel}: {f}" for f in _privacy_flags(src.read_text(encoding="utf-8", errors="ignore"))]
+        need = PORTFOLIO_TARGETS[target]["needs"]
+        names = {p.relative_to(dest).as_posix() for p in planned} | (
+            {p.relative_to(dest).as_posix() for p in dest.rglob("*") if p.is_file()} if dest.exists() else set())
+        if need and not (set([need] if isinstance(need, str) else need) & names):
+            raise HarnessError(f"A {target} piece needs {need if isinstance(need, str) else ' or '.join(need)}.")
+        for path, body in planned.items():
+            path.parent.mkdir(parents=True, exist_ok=True)
+            if isinstance(body, Path):
+                shutil.copyfile(body, path)
+            else:
+                path.write_text(body if body.endswith("\n") else body + "\n", encoding="utf-8")
+            written.append(str(path.relative_to(self.ws.root)))
+        if target == "github" and not (dest / ".gitignore").exists():
+            (dest / ".gitignore").write_text(GITHUB_GITIGNORE, encoding="utf-8")
+            written.append(str((dest / ".gitignore").relative_to(self.ws.root)))
+        mf = d / "portfolio" / "portfolio.yaml"
+        man = _read(mf, {}) or {"schema": 1, "pieces": {}}
+        piece = man["pieces"].setdefault(target, {"created": _now().isoformat(timespec="minutes"), "builds": 0})
+        piece.update({"title": title.strip() or piece.get("title", ""), "updated": _now().isoformat(timespec="minutes"),
+                      "builds": piece.get("builds", 0) + 1,
+                      "files": sorted(p.relative_to(dest).as_posix() for p in dest.rglob("*") if p.is_file())})
+        _write(mf, man)
+        step = self._share_step(project)
+        if step:
+            self.ws.record_attempt(project, step, f"[portfolio {target}] {', '.join(piece['files'])}")
+        return {"folder": str(dest.relative_to(self.ws.root)), "absolute_folder": str(dest),
+                "written": written, "privacy_flags": flags, "publish": _publish_hint(target, dest),
+                "next": "Show the learner the piece and every privacy flag. They publish it themselves; "
+                        "afterwards note(kind='shared', how='posted', link=...)."}
+
+    def portfolio(self, project: str) -> dict:
+        d = self.ws._require_project(project)
+        return _read(d / "portfolio" / "portfolio.yaml", {}) or {"pieces": {}}
+
     # ------------------------------------------------------------ retrospective
     def save_retrospective(self, answers: dict, project: str = "", period: str = "") -> dict:
         """The learner's look back, in their words. answers: any of went_well, was_hard,
@@ -193,8 +283,43 @@ class Share:
 
     def retro_due(self) -> list[str]:
         """Projects whose steps are all done but that have no retrospective yet."""
+        from .tour import TOUR_PROJECT
         done = []
         for p in self.ws.orient._projects():
+            if p["project"] == TOUR_PROJECT:  # the tour ends in a real plan, not a retrospective
+                continue
             if p["steps"] and not p["now"] and not self.retrospectives(project=p["project"]):
                 done.append(p["project"])
         return done
+
+
+_EMAIL = re.compile(r"[\w.+-]+@[\w-]+\.[\w.]+")
+_HOME = re.compile(r"(/Users/|/home/|C:\\Users\\)[^\s/\\]+")
+
+
+def _privacy_flags(text: str) -> list[str]:
+    """Things worth a second look before anything leaves the computer. Flags, never refusals."""
+    out = []
+    if _EMAIL.search(text):
+        out.append("contains an email address")
+    if _HOME.search(text):
+        out.append("contains a path with a computer user name")
+    if ".private/" in text:
+        out.append("refers to private harness records (.private/)")
+    if re.search(r"(?i)(api[_-]?key|secret|password|token)\s*[:=]", text):
+        out.append("may contain a key, password or token")
+    return out
+
+
+def _publish_hint(target: str, dest: Path) -> list[str]:
+    if target == "github":
+        return [f"cd \"{dest}\"", "git init && git add . && git commit -m \"First version\"",
+                "gh repo create <name> --public --source . --push   (or create the repo on github.com and push)",
+                "Optional: turn on GitHub Pages in the repo settings to show an index.html as a site."]
+    if target == "web":
+        return ["Open index.html in a browser to check it.",
+                "Upload it to any host you use (your own site, GitHub Pages, Netlify Drop), "
+                "or ask to publish it as a private Claude page you can share."]
+    if target == "post":
+        return ["Paste it into the blog, Substack, LinkedIn or forum you choose; add images by hand there."]
+    return ["Open the folder and send or upload the files wherever you planned."]

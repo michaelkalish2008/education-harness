@@ -1,6 +1,6 @@
 ---
 name: reflect
-description: Education harness reflection and sharing, in the mentor's voice through Dewey's lens. Use for the share-out step ("help me write this up", "I want to show my team", "I posted it", "they asked…"), "how am I doing?", progress or retrospective reports, "let's do a retro" or a finished project, "let's zoom out", worries about direction or AI and jobs, and a defense without the validator agent.
+description: Education harness reflection and sharing, in the mentor's voice through Dewey's lens. Use for the share-out step ("help me write this up", "I want to show my team", "I posted it", "they asked…"), an optional portfolio piece ("make this a portfolio piece", "put this on GitHub", "make a web page of this", "turn it into a post"), "how am I doing?", progress or retrospective reports, "let's do a retro" or a finished project, "let's zoom out", worries about direction or AI and jobs, and a defense without the validator agent.
 ---
 
 # Reflect
@@ -18,6 +18,10 @@ Use the accepted `mastery_mode` when helping the learner show what they understa
 4. **Rehearse if they want:** play the audience and ask its questions one at a time. Rehearsal is practice, not the real thing.
 5. **They share it themselves**; the harness never posts. Then `note(kind="shared", how, where, who)`. Later, ask once how it landed: `note(kind="heard_back")`. A question someone asked is often the next project.
 6. Sharing is optional. If they decline, the project is complete anyway.
+
+## Portfolio piece (optional, any lesson)
+
+A GitHub repository, a web page, a post or another format, built from their words and work: read `references/portfolio.md` first. `save_doc(kind="portfolio")` writes it to `projects/<lesson>/portfolio/<target>/`; they publish it themselves.
 
 ## Retrospective (project finished, or "let's do a retro")
 

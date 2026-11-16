@@ -1,0 +1,54 @@
+# The default first lesson: learning how Education Harness works by using it.
+# Seeded into projects/how-this-works/ the first time a new learner starts (setup action "tour").
+# Every step uses a real harness feature on a tiny topic the learner chooses, so the tour
+# is also their first lesson. The tutor's script lives in skills/start/references/tour.md.
+schema: 1
+track: harness
+idea: tour
+project:
+  question: How do I use Education Harness to learn something I care about?
+  example: One tiny idea from a topic the learner picks in step s1.
+steps:
+  - id: s1
+    does: Name something small you're curious about and work one tiny example of it yourself.
+    concepts: [goal, step, tutor]
+    format: solve-it
+    strong_version_shows: [the topic in your own words, one tiny example worked by you]
+    requires: []
+    terms:
+      step: one small piece of work with its own result
+      tutor: the single voice that teaches you here
+  - id: s2
+    does: Say "note this" to keep a thought from s1, then "look back" to get it back.
+    concepts: [notes, look-back]
+    format: solve-it
+    strong_version_shows: [a note saved in your words, the note coming back when you asked]
+    requires: [s1]
+    terms:
+      note: a thought kept in your own words, half-formed is fine
+  - id: s3
+    does: On a tiny puzzle, ask for a hint, then the answer or the method, and try a sibling problem.
+    concepts: [hints-and-reveals, drafted]
+    format: answer-shown
+    strong_version_shows: [a hint asked for, your own attempt after seeing a solution]
+    requires: [s2]
+    terms:
+      drafted: your own work on a step exists
+      sibling problem: a fresh problem solved the same way
+  - id: s4
+    does: Say "bookmark this", then "where am I?", and find where your place is kept.
+    concepts: [bookmarks, map]
+    format: solve-it
+    strong_version_shows: [a bookmark with your next move, finding your place without scrolling the chat]
+    requires: [s3]
+    terms:
+      bookmark: where your thinking is and what you'd do next
+  - id: s5
+    does: Say what you want to learn for real, choose how you like to work, and agree on a first plan.
+    concepts: [plan, way-of-working, portfolio]
+    format: solve-it
+    strong_version_shows: [a goal in your own words, a first plan you agreed to, whether it ends in something to show]
+    requires: [s4]
+    terms:
+      portfolio piece: optional work you choose to show, such as a GitHub repository, a web page or a post
+constellation: {}
