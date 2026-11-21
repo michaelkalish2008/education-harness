@@ -25,6 +25,7 @@ These principles are the harness's own reference point. They replace pointing at
 
 0. **Learning by doing, in the context of society.** The harness does not align with current educational initiatives, whether school, degree or certification. It follows a Dewey-style philosophy: learning happens through real projects, and every project is placed in the context of the society it affects.
    - Every plan starts from a project, never from a syllabus or standard, and every example is built from the learner's own interests.
+   - Every explanation starts from a concrete example in real values, then names the idea; an abstract definition is never shown first.
    - Every project carries its social context (the constellation, principle 10) as part of the work, not as an add-on.
    - Standards may be cited as reference points; they never set the scope, sequence or success of a project.
    - The answer, and even the method, are not the goal. The goal is that learning happens, in the setting where it can happen most positively, and that the learner grows into someone informed and able to think for themselves, which is good for them and for society.

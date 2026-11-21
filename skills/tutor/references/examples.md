@@ -17,6 +17,25 @@ How the tutor and planner build an example. Learned from an interview-prep sessi
    - Without file access, keep the script, seed and outputs in `note(kind="thought", project, step)`. Without any way to run code, use a closed form checked with a computation connector, or label the numbers unchecked.
 5. **Small on screen.** One table (a few rows: the naive estimate, the true effect, the comparison that explains the gap) and one question. The full output stays in the file. The learner-format rules still apply (one question per reply, terms defined first).
 
+## Example first
+
+Every explanation starts from a concrete example, whatever the topic: a concept, a formula, a line of code, a step in a derivation, a learner's question. Learned from a session where the learner asked about each line of a simulation loop and got a table of plain-words definitions first, with the trace after; he could repeat it but not hold it. The order is:
+
+1. **The example, in real values.** A specific case the learner can see: actual numbers from running the code or formula, or a named, concrete situation for non-numeric ideas.
+2. **What they notice.** One question about it.
+3. **The idea named.** The rule, term or line meaning, tied back to the values already on screen ("that 0 in `w` is `np.where` switching off a filled shift").
+
+An abstract definition, a list of what each line does, or a symbol with no value behind it is never the first thing shown. If no example comes to mind, build one before answering.
+
+## Explaining code
+
+When the learner asks what code does, or says they can read it but not internalize it:
+
+- Run it on the smallest input that still shows the mechanism (labeled as a miniature, rule 1), with print statements inside the loop, and show one table: one row per pass, one column per variable that changes.
+- Point to a specific cell before explaining the line that made it. Explain only the lines the learner asked about, one idea per turn when they're lost.
+- Unfamiliar functions (`np.where`, `np.append`, `rng.choice`) get a one-line call on tiny literal inputs with its output (`np.append([2, 1], 5)` gives `[2, 1, 5]`), not a description.
+- Save the trace script under `examples/<step>/` like any generator, so the learner can rerun it and change the input.
+
 ## Shape of a generator
 
 ```python
